@@ -134,7 +134,7 @@ public abstract class BaseStepControllerImpl implements IExecutionElementControl
         try {
             invokePreStepArtifacts();    //Call PartitionReducer and StepListener(s)
             invokeCoreStep();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // We're going to continue on so that we can execute the afterStep() and analyzer
             try {
                 final StringWriter sw = new StringWriter();

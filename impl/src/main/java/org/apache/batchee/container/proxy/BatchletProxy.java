@@ -21,10 +21,8 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import javax.batch.api.Batchlet;
 
 public class BatchletProxy extends AbstractProxy<Batchlet> implements Batchlet {
-
-    BatchletProxy(Batchlet delegate) {
+    public BatchletProxy(Batchlet delegate) {
         super(delegate);
-
     }
 
     @Override

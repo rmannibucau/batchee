@@ -17,6 +17,7 @@
 package org.apache.batchee.container.proxy;
 
 import org.apache.batchee.container.impl.StepContextImpl;
+import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
 import org.apache.batchee.container.validation.ArtifactValidationException;
 import org.apache.batchee.spi.services.IBatchArtifactFactory;
@@ -36,14 +37,22 @@ import javax.batch.api.partition.PartitionReducer;
  * Introduce a level of indirection so proxies are not instantiated directly by newing them up.
  */
 public class ProxyFactory {
-    private static IBatchArtifactFactory batchArtifactFactory = ServicesManagerImpl.getInstance().getDelegatingArtifactFactory();
+    private static IBatchArtifactFactory batchArtifactFactory = ServicesManagerImpl.getInstance().getArtifactFactory();
 
     private static ThreadLocal<InjectionReferences> injectionContext = new ThreadLocal<InjectionReferences>();
 
-    protected static Object loadArtifact(final String id, final InjectionReferences injectionReferences) {
+    protected static Object loadArtifact(final String id, final InjectionReferences injectionReferences, final RuntimeJobExecution execution) {
         injectionContext.set(injectionReferences);
         try {
-            return batchArtifactFactory.load(id);
+            final IBatchArtifactFactory.Instance instance = batchArtifactFactory.load(id);
+            if (instance == null) {
+                return null;
+            }
+
+            if (instance.getReleasable() != null && execution != null) {
+                execution.addReleasable(instance.getReleasable());
+            }
+            return instance.getValue();
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
@@ -56,15 +65,15 @@ public class ProxyFactory {
     /*
      * Decider
      */
-    public static DeciderProxy createDeciderProxy(String id, InjectionReferences injectionRefs) throws ArtifactValidationException {
-        return new DeciderProxy(Decider.class.cast(loadArtifact(id, injectionRefs)));
+    public static DeciderProxy createDeciderProxy(final String id, final InjectionReferences injectionRefs, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        return new DeciderProxy(Decider.class.cast(loadArtifact(id, injectionRefs, execution)));
     }
 
     /*
      * Batchlet artifact
      */
-    public static BatchletProxy createBatchletProxy(String id, InjectionReferences injectionRefs, StepContextImpl stepContext) throws ArtifactValidationException {
-        final Batchlet loadedArtifact = (Batchlet) loadArtifact(id, injectionRefs);
+    public static BatchletProxy createBatchletProxy(final String id, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        final Batchlet loadedArtifact = (Batchlet) loadArtifact(id, injectionRefs, execution);
         final BatchletProxy proxy = new BatchletProxy(loadedArtifact);
         proxy.setStepContext(stepContext);
         return proxy;
@@ -74,29 +83,29 @@ public class ProxyFactory {
      * The four main chunk-related artifacts
      */
 
-    public static CheckpointAlgorithmProxy createCheckpointAlgorithmProxy(String id, InjectionReferences injectionRefs, StepContextImpl stepContext) throws ArtifactValidationException {
-        final CheckpointAlgorithm loadedArtifact = (CheckpointAlgorithm) loadArtifact(id, injectionRefs);
+    public static CheckpointAlgorithmProxy createCheckpointAlgorithmProxy(final String id, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        final CheckpointAlgorithm loadedArtifact = (CheckpointAlgorithm) loadArtifact(id, injectionRefs, execution);
         final CheckpointAlgorithmProxy proxy = new CheckpointAlgorithmProxy(loadedArtifact);
         proxy.setStepContext(stepContext);
         return proxy;
     }
 
-    public static ItemReaderProxy createItemReaderProxy(String id, InjectionReferences injectionRefs, StepContextImpl stepContext) throws ArtifactValidationException {
-        final ItemReader loadedArtifact = (ItemReader) loadArtifact(id, injectionRefs);
+    public static ItemReaderProxy createItemReaderProxy(final String id, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        final ItemReader loadedArtifact = (ItemReader) loadArtifact(id, injectionRefs, execution);
         final ItemReaderProxy proxy = new ItemReaderProxy(loadedArtifact);
         proxy.setStepContext(stepContext);
         return proxy;
     }
 
-    public static ItemProcessorProxy createItemProcessorProxy(String id, InjectionReferences injectionRefs, StepContextImpl stepContext) throws ArtifactValidationException {
-        final ItemProcessor loadedArtifact = (ItemProcessor) loadArtifact(id, injectionRefs);
+    public static ItemProcessorProxy createItemProcessorProxy(final String id, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        final ItemProcessor loadedArtifact = (ItemProcessor) loadArtifact(id, injectionRefs, execution);
         final ItemProcessorProxy proxy = new ItemProcessorProxy(loadedArtifact);
         proxy.setStepContext(stepContext);
         return proxy;
     }
 
-    public static ItemWriterProxy createItemWriterProxy(String id, InjectionReferences injectionRefs, StepContextImpl stepContext) throws ArtifactValidationException {
-        final ItemWriter loadedArtifact = (ItemWriter) loadArtifact(id, injectionRefs);
+    public static ItemWriterProxy createItemWriterProxy(final String id, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        final ItemWriter loadedArtifact = (ItemWriter) loadArtifact(id, injectionRefs, execution);
         final ItemWriterProxy proxy = new ItemWriterProxy(loadedArtifact);
         proxy.setStepContext(stepContext);
         return proxy;
@@ -106,29 +115,29 @@ public class ProxyFactory {
      * The four partition-related artifacts
      */
 
-    public static PartitionReducerProxy createPartitionReducerProxy(String id, InjectionReferences injectionRefs, StepContextImpl stepContext) throws ArtifactValidationException {
-        final PartitionReducer loadedArtifact = (PartitionReducer) loadArtifact(id, injectionRefs);
+    public static PartitionReducerProxy createPartitionReducerProxy(final String id, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        final PartitionReducer loadedArtifact = (PartitionReducer) loadArtifact(id, injectionRefs, execution);
         final PartitionReducerProxy proxy = new PartitionReducerProxy(loadedArtifact);
         proxy.setStepContext(stepContext);
         return proxy;
     }
 
-    public static PartitionMapperProxy createPartitionMapperProxy(String id, InjectionReferences injectionRefs, StepContextImpl stepContext) throws ArtifactValidationException {
-        final PartitionMapper loadedArtifact = (PartitionMapper) loadArtifact(id, injectionRefs);
+    public static PartitionMapperProxy createPartitionMapperProxy(final String id, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        final PartitionMapper loadedArtifact = (PartitionMapper) loadArtifact(id, injectionRefs, execution);
         final PartitionMapperProxy proxy = new PartitionMapperProxy(loadedArtifact);
         proxy.setStepContext(stepContext);
         return proxy;
     }
 
-    public static PartitionAnalyzerProxy createPartitionAnalyzerProxy(String id, InjectionReferences injectionRefs, StepContextImpl stepContext) throws ArtifactValidationException {
-        final PartitionAnalyzer loadedArtifact = (PartitionAnalyzer) loadArtifact(id, injectionRefs);
+    public static PartitionAnalyzerProxy createPartitionAnalyzerProxy(final String id, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        final PartitionAnalyzer loadedArtifact = (PartitionAnalyzer) loadArtifact(id, injectionRefs, execution);
         final PartitionAnalyzerProxy proxy = new PartitionAnalyzerProxy(loadedArtifact);
         proxy.setStepContext(stepContext);
         return proxy;
     }
 
-    public static PartitionCollectorProxy createPartitionCollectorProxy(String id, InjectionReferences injectionRefs, StepContextImpl stepContext) throws ArtifactValidationException {
-        final PartitionCollector loadedArtifact = (PartitionCollector) loadArtifact(id, injectionRefs);
+    public static PartitionCollectorProxy createPartitionCollectorProxy(final String id, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) throws ArtifactValidationException {
+        final PartitionCollector loadedArtifact = (PartitionCollector) loadArtifact(id, injectionRefs, execution);
         final PartitionCollectorProxy proxy = new PartitionCollectorProxy(loadedArtifact);
         proxy.setStepContext(stepContext);
         return proxy;

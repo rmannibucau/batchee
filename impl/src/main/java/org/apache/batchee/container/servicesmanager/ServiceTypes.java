@@ -28,12 +28,9 @@ public class ServiceTypes {
         JOB_STATUS_MANAGEMENT_SERVICE,
         BATCH_THREADPOOL_SERVICE,
         BATCH_KERNEL_SERVICE,
-        JOB_ID_MANAGEMENT_SERVICE,
         CALLBACK_SERVICE,
-        JOBXML_LOADER_SERVICE,                // Preferred
-        DELEGATING_JOBXML_LOADER_SERVICE,      // Delegating wrapper
-        CONTAINER_ARTIFACT_FACTORY_SERVICE,   // Preferred
-        DELEGATING_ARTIFACT_FACTORY_SERVICE  // Delegating wrapper
+        JOBXML_LOADER_SERVICE,
+        CONTAINER_ARTIFACT_FACTORY_SERVICE
     }
 
     public static final String J2SE_MODE = "J2SE_MODE"; // Trying to preserve  this value since we already shared it.
@@ -42,12 +39,9 @@ public class ServiceTypes {
     public static final String JOB_STATUS_MANAGEMENT_SERVICE = "JOB_STATUS_MANAGEMENT_SERVICE";
     public static final String BATCH_THREADPOOL_SERVICE = "BATCH_THREADPOOL_SERVICE";
     public static final String BATCH_KERNEL_SERVICE = "BATCH_KERNEL_SERVICE";
-    public static final String JOB_ID_MANAGEMENT_SERVICE = "JOB_ID_MANAGEMENT_SERVICE";
     public static final String CALLBACK_SERVICE = "CALLBACK_SERVICE";
     public static final String JOBXML_LOADER_SERVICE = "JOBXML_LOADER_SERVICE";
-    public static final String DELEGATING_JOBXML_LOADER_SERVICE = "DELEGATING_JOBXML_LOADER_SERVICE";
     public static final String CONTAINER_ARTIFACT_FACTORY_SERVICE = "CONTAINER_ARTIFACT_FACTORY_SERVICE";
-    public static final String DELEGATING_ARTIFACT_FACTORY_SERVICE = "DELEGATING_ARTIFACT_FACTORY_SERVICE";
 
     // The purpose of the awkwardness of complexity of treating SE vs EE as a
     // "service" is to emphasize the fact that it's something an
@@ -59,15 +53,11 @@ public class ServiceTypes {
     private static final String DEFAULT_JOBSTATUS_MGR_SERVICE = "org.apache.batchee.container.services.impl.JobStatusManagerImpl";
     private static final String DEFAULT_BATCH_THREADPOOL_SERVICE = "org.apache.batchee.container.services.impl.GrowableThreadPoolServiceImpl";
     private static final String DEFAULT_BATCH_KERNEL_SERVICE = "org.apache.batchee.container.impl.BatchKernelImpl";
-    private static final String DEFAULT_JOBID_MGR_SERVICE = "org.apache.batchee.container.services.impl.JobIdManagerImpl";
     private static final String DEFAULT_CALLBACK_SERVICE = "org.apache.batchee.container.callback.JobEndCallbackManagerImpl";
-    private static final String DEFAULT_JOBXML_LOADER_SERVICE = "org.apache.batchee.container.services.impl.DelegatingJobXMLLoaderServiceImpl";
-    private static final String DEFAULT_DELEGATING_JOBXML_LOADER_SERVICE = "org.apache.batchee.container.services.impl.DelegatingJobXMLLoaderServiceImpl";
-    private static final String DEFAULT_CONTAINER_ARTIFACT_FACTORY_SERVICE = "org.apache.batchee.container.services.impl.DelegatingBatchArtifactFactoryImpl";
-    private static final String DEFAULT_DELEGATING_ARTIFACT_FACTORY_SERVICE = "org.apache.batchee.container.services.impl.DelegatingBatchArtifactFactoryImpl";
+    private static final String DEFAULT_JOBXML_LOADER_SERVICE = "org.apache.batchee.container.services.impl.DefaultJobXMLLoaderServiceImpl";
+    private static final String DEFAULT_CONTAINER_ARTIFACT_FACTORY_SERVICE = "org.apache.batchee.container.services.impl.DefaultBatchArtifactFactoryImpl";
 
     private static Map<String, Name> servicePropertyNames;
-
     static {
         servicePropertyNames = new ConcurrentHashMap<String, Name>();
         servicePropertyNames.put(J2SE_MODE, Name.JAVA_EDITION_IS_SE_DUMMY_SERVICE);
@@ -76,12 +66,9 @@ public class ServiceTypes {
         servicePropertyNames.put(JOB_STATUS_MANAGEMENT_SERVICE, Name.JOB_STATUS_MANAGEMENT_SERVICE);
         servicePropertyNames.put(BATCH_THREADPOOL_SERVICE, Name.BATCH_THREADPOOL_SERVICE);
         servicePropertyNames.put(BATCH_KERNEL_SERVICE, Name.BATCH_KERNEL_SERVICE);
-        servicePropertyNames.put(JOB_ID_MANAGEMENT_SERVICE, Name.JOB_ID_MANAGEMENT_SERVICE);
         servicePropertyNames.put(CALLBACK_SERVICE, Name.CALLBACK_SERVICE);
         servicePropertyNames.put(JOBXML_LOADER_SERVICE, Name.JOBXML_LOADER_SERVICE);
-        servicePropertyNames.put(DELEGATING_JOBXML_LOADER_SERVICE, Name.DELEGATING_JOBXML_LOADER_SERVICE);
         servicePropertyNames.put(CONTAINER_ARTIFACT_FACTORY_SERVICE, Name.CONTAINER_ARTIFACT_FACTORY_SERVICE);
-        servicePropertyNames.put(DELEGATING_ARTIFACT_FACTORY_SERVICE, Name.DELEGATING_ARTIFACT_FACTORY_SERVICE);
     }
 
     public static Map<String, Name> getServicePropertyNames() {
@@ -99,12 +86,9 @@ public class ServiceTypes {
         serviceImplClassNames.put(Name.JOB_STATUS_MANAGEMENT_SERVICE, DEFAULT_JOBSTATUS_MGR_SERVICE);
         serviceImplClassNames.put(Name.BATCH_THREADPOOL_SERVICE, DEFAULT_BATCH_THREADPOOL_SERVICE);
         serviceImplClassNames.put(Name.BATCH_KERNEL_SERVICE, DEFAULT_BATCH_KERNEL_SERVICE);
-        serviceImplClassNames.put(Name.JOB_ID_MANAGEMENT_SERVICE, DEFAULT_JOBID_MGR_SERVICE);
         serviceImplClassNames.put(Name.CALLBACK_SERVICE, DEFAULT_CALLBACK_SERVICE);
         serviceImplClassNames.put(Name.JOBXML_LOADER_SERVICE, DEFAULT_JOBXML_LOADER_SERVICE);
-        serviceImplClassNames.put(Name.DELEGATING_JOBXML_LOADER_SERVICE, DEFAULT_DELEGATING_JOBXML_LOADER_SERVICE);
         serviceImplClassNames.put(Name.CONTAINER_ARTIFACT_FACTORY_SERVICE, DEFAULT_CONTAINER_ARTIFACT_FACTORY_SERVICE);
-        serviceImplClassNames.put(Name.DELEGATING_ARTIFACT_FACTORY_SERVICE, DEFAULT_DELEGATING_ARTIFACT_FACTORY_SERVICE);
     }
 
     public static Map<Name, String> getServiceImplClassNames() {

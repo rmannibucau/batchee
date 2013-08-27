@@ -33,7 +33,6 @@ import org.apache.batchee.jaxb.Step;
 import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 /**
  * When a partitioned step is run, this controller will only be used for the partition threads,
@@ -43,10 +42,6 @@ import java.util.logging.Logger;
  * separate main thread with controller).
  */
 public abstract class SingleThreadedStepControllerImpl extends BaseStepControllerImpl implements IController {
-
-    private final static String sourceClass = SingleThreadedStepControllerImpl.class.getName();
-    private final static Logger logger = Logger.getLogger(sourceClass);
-
     // Collector only used from partition threads, not main thread
     protected PartitionCollectorProxy collectorProxy = null;
 
@@ -60,7 +55,7 @@ public abstract class SingleThreadedStepControllerImpl extends BaseStepControlle
         // set up listeners
 
         InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, null);
-        this.stepListeners = jobExecutionImpl.getListenerFactory().getStepListeners(step, injectionRef, stepContext);
+        this.stepListeners = jobExecutionImpl.getListenerFactory().getStepListeners(step, injectionRef, stepContext, jobExecutionImpl);
 
         // set up collectors if we are running a partitioned step
         if (step.getPartition() != null) {
@@ -75,7 +70,7 @@ public abstract class SingleThreadedStepControllerImpl extends BaseStepControlle
                 injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, propList);
 
                 try {
-                    this.collectorProxy = ProxyFactory.createPartitionCollectorProxy(collector.getRef(), injectionRef, this.stepContext);
+                    this.collectorProxy = ProxyFactory.createPartitionCollectorProxy(collector.getRef(), injectionRef, this.stepContext, jobExecutionImpl);
                 } catch (ArtifactValidationException e) {
                     throw new BatchContainerServiceException("Cannot create the collector [" + collector.getRef() + "]", e);
                 }

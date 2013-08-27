@@ -24,7 +24,10 @@ import org.apache.batchee.jaxb.JSLJob;
 
 import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobInstance;
+import java.io.Closeable;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
 
@@ -38,6 +41,7 @@ public class RuntimeJobExecution {
     private ListenerFactory listenerFactory;
     private IJobExecution operatorJobExecution = null;
     private Integer partitionInstance = null;
+    private Collection<Closeable> releasables = new ArrayList<Closeable>();
 
     public RuntimeJobExecution(final JobInstance jobInstance, final long executionId) {
         this.jobInstance = jobInstance;
@@ -173,5 +177,13 @@ public class RuntimeJobExecution {
 
     public void setPartitionInstance(final Integer partitionInstance) {
         this.partitionInstance = partitionInstance;
+    }
+
+    public Collection<Closeable> getReleasables() {
+        return releasables;
+    }
+
+    public synchronized void addReleasable(final Closeable releasable) {
+        releasables.add(releasable);
     }
 }

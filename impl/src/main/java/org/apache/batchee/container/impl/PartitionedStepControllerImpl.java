@@ -133,8 +133,7 @@ public class PartitionedStepControllerImpl extends BaseStepControllerImpl {
             InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, propertyList);
 
             try {
-                partitionMapperProxy = ProxyFactory.createPartitionMapperProxy(
-                    partitionMapper.getRef(), injectionRef, stepContext);
+                partitionMapperProxy = ProxyFactory.createPartitionMapperProxy(partitionMapper.getRef(), injectionRef, stepContext, jobExecutionImpl);
             } catch (final ArtifactValidationException e) {
                 throw new BatchContainerServiceException(
                     "Cannot create the PartitionMapper ["
@@ -395,21 +394,18 @@ public class PartitionedStepControllerImpl extends BaseStepControllerImpl {
 
     @Override
     protected void setupStepArtifacts() {
-
-        InjectionReferences injectionRef = null;
-        injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, null);
-        this.stepListeners = jobExecutionImpl.getListenerFactory().getStepListeners(step, injectionRef, stepContext);
+        InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, null);
+        this.stepListeners = jobExecutionImpl.getListenerFactory().getStepListeners(step, injectionRef, stepContext, jobExecutionImpl);
 
         Analyzer analyzer = step.getPartition().getAnalyzer();
 
         if (analyzer != null) {
-            final List<Property> propList = analyzer.getProperties() == null ? null : analyzer.getProperties()
-                .getPropertyList();
+            final List<Property> propList = analyzer.getProperties() == null ? null : analyzer.getProperties().getPropertyList();
 
             injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, propList);
 
             try {
-                analyzerProxy = ProxyFactory.createPartitionAnalyzerProxy(analyzer.getRef(), injectionRef, stepContext);
+                analyzerProxy = ProxyFactory.createPartitionAnalyzerProxy(analyzer.getRef(), injectionRef, stepContext, jobExecutionImpl);
             } catch (final ArtifactValidationException e) {
                 throw new BatchContainerServiceException("Cannot create the analyzer [" + analyzer.getRef() + "]", e);
             }
@@ -419,13 +415,12 @@ public class PartitionedStepControllerImpl extends BaseStepControllerImpl {
 
         if (partitionReducer != null) {
 
-            final List<Property> propList = partitionReducer.getProperties() == null ? null : partitionReducer.getProperties()
-                .getPropertyList();
+            final List<Property> propList = partitionReducer.getProperties() == null ? null : partitionReducer.getProperties().getPropertyList();
 
             injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, propList);
 
             try {
-                this.partitionReducerProxy = ProxyFactory.createPartitionReducerProxy(partitionReducer.getRef(), injectionRef, stepContext);
+                this.partitionReducerProxy = ProxyFactory.createPartitionReducerProxy(partitionReducer.getRef(), injectionRef, stepContext, jobExecutionImpl);
             } catch (final ArtifactValidationException e) {
                 throw new BatchContainerServiceException("Cannot create the analyzer [" + partitionReducer.getRef() + "]",
                     e);

@@ -39,7 +39,7 @@ public class JSEBatchArtifactFactoryImpl implements IBatchArtifactFactory, XMLSt
 
     // Uses TCCL
     @Override
-    public Object load(String batchId) {
+    public Instance load(String batchId) {
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
         initArtifactMapFromClassLoader(tccl);
@@ -50,7 +50,7 @@ public class JSEBatchArtifactFactoryImpl implements IBatchArtifactFactory, XMLSt
             throw new IllegalArgumentException("Could not load any artifacts with batch id=" + batchId);
         }
 
-        return loadedArtifact;
+        return new Instance(loadedArtifact, null);
     }
 
     private void initArtifactMapFromClassLoader(final ClassLoader loader) {

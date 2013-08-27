@@ -3,6 +3,9 @@
 * Cleanup memory leaks (ThreadLocal)?
 * Review tag usage/security
 * Enhance default JDBC support (default ddl etc...)
+* Rework SPI packages?
+* Release @Dependent CDI beans
+* Doc
 * Add if (System.getSecurityManager() == null) { everywhere it is mandatory
 * Add ASL headers
 * Add NOTICE referring to IBM RI

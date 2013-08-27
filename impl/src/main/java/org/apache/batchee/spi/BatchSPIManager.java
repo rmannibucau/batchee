@@ -105,7 +105,6 @@ public final class BatchSPIManager {
      * being set, before it is hardened.
      *
      * @return the last-set DatabaseConfigurationBean
-     * @see getFinalDatabaseConfiguration()
      */
     public DatabaseConfigurationBean getDataBaseConfigurationBean() {
         return dataBaseConfigurationBean;

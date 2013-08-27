@@ -18,7 +18,6 @@ package org.apache.batchee.container.services.impl;
 
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
 import org.apache.batchee.spi.services.IBatchConfig;
 import org.apache.batchee.spi.services.IJobXMLLoaderService;
 
@@ -26,28 +25,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DelegatingJobXMLLoaderServiceImpl implements IJobXMLLoaderService {
-    private static final IJobXMLLoaderService preferredJobXmlLoader = ServicesManagerImpl.getInstance().getPreferredJobXMLLoaderService();
+public class DefaultJobXMLLoaderServiceImpl implements IJobXMLLoaderService {
     private static final String PREFIX = "META-INF/batch-jobs/";
 
     @Override
     public String loadJSL(final String id) {
-        String jobXML = null;
-
-        if (!preferredJobXmlLoader.getClass().equals(this.getClass())) {
-            jobXML = preferredJobXmlLoader.loadJSL(id);
-        }
-
-        if (jobXML != null) {
-            return jobXML;
-        }
-
-        jobXML = loadJobFromBatchJobs(id);
-
+        final String jobXML = loadJobFromBatchJobs(id);
         if (jobXML == null) {
             throw new BatchContainerServiceException("Could not load job xml with id: " + id);
         }
-
         return jobXML;
 
     }

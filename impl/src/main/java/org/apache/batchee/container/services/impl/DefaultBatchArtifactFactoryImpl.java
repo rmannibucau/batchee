@@ -19,7 +19,6 @@ package org.apache.batchee.container.services.impl;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.proxy.ProxyFactory;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
 import org.apache.batchee.container.util.DependencyInjectionUtility;
 import org.apache.batchee.spi.services.IBatchArtifactFactory;
 import org.apache.batchee.spi.services.IBatchConfig;
@@ -34,24 +33,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DelegatingBatchArtifactFactoryImpl implements IBatchArtifactFactory, XMLStreamConstants {
-    protected static IBatchArtifactFactory preferredArtifactFactory = ServicesManagerImpl.getInstance().getPreferredArtifactFactory();
-
+public class DefaultBatchArtifactFactoryImpl implements IBatchArtifactFactory, XMLStreamConstants {
     // TODO - surface constants
     private final static String BATCH_XML = "META-INF/batch.xml";
     private final static QName BATCH_ROOT_ELEM = new QName("http://xmlns.jcp.org/xml/ns/javaee", "batch-artifacts");
 
     // Uses TCCL
     @Override
-    public Object load(String batchId) {
-        //If preferred artifact factory is different from this one, use the preferred factory.
-        if (!preferredArtifactFactory.getClass().equals(this.getClass())) {
-            final Object artifact = preferredArtifactFactory.load(batchId);
-            if (artifact != null) {
-                return artifact;
-            }
-        }
-
+    public Instance load(final String batchId) {
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         final ArtifactMap artifactMap = initArtifactMapFromClassLoader(tccl);
         Object loadedArtifact = null;
@@ -76,27 +65,25 @@ public class DelegatingBatchArtifactFactoryImpl implements IBatchArtifactFactory
 
         DependencyInjectionUtility.injectReferences(loadedArtifact, ProxyFactory.getInjectionReferences());
 
-        return loadedArtifact;
+        return new Instance(loadedArtifact, null);
     }
 
-    private ArtifactMap initArtifactMapFromClassLoader(ClassLoader loader) {
+    private ArtifactMap initArtifactMapFromClassLoader(final ClassLoader loader) {
+        final InputStream is = getBatchXMLStreamFromClassLoader(loader);
         ArtifactMap artifactMap = new ArtifactMap();
-
-        InputStream is = getBatchXMLStreamFromClassLoader(loader);
         if (is == null) {
             return null;
         } else {
             artifactMap = populateArtifactMapFromStream(artifactMap, is);
         }
-
         return artifactMap;
     }
 
-    protected InputStream getBatchXMLStreamFromClassLoader(ClassLoader loader) {
+    protected InputStream getBatchXMLStreamFromClassLoader(final ClassLoader loader) {
         return loader.getResourceAsStream(BATCH_XML);
     }
 
-    protected ArtifactMap populateArtifactMapFromStream(ArtifactMap tempMap, InputStream is) {
+    protected ArtifactMap populateArtifactMapFromStream(final ArtifactMap tempMap, final InputStream is) {
         final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
         try {
             final XMLStreamReader xmlStreamReader = xmlInputFactory.createXMLStreamReader(is);

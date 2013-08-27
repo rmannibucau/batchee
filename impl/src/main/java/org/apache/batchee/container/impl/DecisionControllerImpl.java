@@ -72,7 +72,7 @@ public class DecisionControllerImpl implements IExecutionElementController {
         InjectionReferences injectionRef = new InjectionReferences(jobExecution.getJobContext(), null, propList);
 
         try {
-            deciderProxy = ProxyFactory.createDeciderProxy(deciderId, injectionRef);
+            deciderProxy = ProxyFactory.createDeciderProxy(deciderId, injectionRef, jobExecution);
         } catch (ArtifactValidationException e) {
             throw new BatchContainerServiceException("Cannot create the decider [" + deciderId + "]", e);
         }

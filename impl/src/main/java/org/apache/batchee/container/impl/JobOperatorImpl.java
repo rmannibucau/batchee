@@ -62,7 +62,7 @@ public class JobOperatorImpl implements JobOperator {
         final ServicesManager servicesManager = ServicesManagerImpl.getInstance();
         batchKernel = servicesManager.getBatchKernelService();
         persistenceService = servicesManager.getPersistenceManagerService();
-        jobXMLLoaderService = servicesManager.getDelegatingJobXMLLoaderService();
+        jobXMLLoaderService = servicesManager.getJobXMLLoaderService();
         _jobStatusManagerService = servicesManager.getJobStatusManagerService();
     }
 

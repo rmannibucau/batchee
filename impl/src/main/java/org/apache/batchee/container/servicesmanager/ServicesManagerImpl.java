@@ -237,76 +237,48 @@ public class ServicesManagerImpl implements BatchContainerConstants, ServicesMan
     /* (non-Javadoc)
 	 * @see com.ibm.jbatch.container.config.ServicesManager#getService(com.ibm.jbatch.container.config.ServicesManagerImpl.ServiceType)
 	 */
-    private IBatchServiceBase getService(final Name serviceType) throws BatchContainerServiceException {
+    private <T extends IBatchServiceBase> T getService(final Class<T> clazz, final Name serviceType) throws BatchContainerServiceException {
         initIfNecessary();
-        return new ServiceLoader(serviceType).getService();
+        return clazz.cast(new ServiceLoader(serviceType).getService());
     }
-
-	/*
-	 * 	public enum Name {
-		JAVA_EDITION_IS_SE_DUMMY_SERVICE, 
-		TRANSACTION_SERVICE, 
-		PERSISTENCE_MANAGEMENT_SERVICE, 
-		JOB_STATUS_MANAGEMENT_SERVICE, 
-		BATCH_THREADPOOL_SERVICE, 
-		BATCH_KERNEL_SERVICE, 
-		JOB_ID_MANAGEMENT_SERVICE, 
-		CALLBACK_SERVICE, 
-		JOBXML_LOADER_SERVICE,                // Preferred
-		DELEGATING_JOBXML_LOADER_SERVICE,      // Delegating wrapper
-		CONTAINER_ARTIFACT_FACTORY_SERVICE,   // Preferred
-		DELEGATING_ARTIFACT_FACTORY_SERVICE  // Delegating wrapper
-	 */
 
     @Override
     public ITransactionManagementService getTransactionManagementService() {
-        return (ITransactionManagementService) getService(Name.TRANSACTION_SERVICE);
+        return getService(ITransactionManagementService.class, Name.TRANSACTION_SERVICE);
     }
 
     @Override
     public IPersistenceManagerService getPersistenceManagerService() {
-        return (IPersistenceManagerService) getService(Name.PERSISTENCE_MANAGEMENT_SERVICE);
+        return getService(IPersistenceManagerService.class, Name.PERSISTENCE_MANAGEMENT_SERVICE);
     }
 
     @Override
     public IJobStatusManagerService getJobStatusManagerService() {
-        return (IJobStatusManagerService) getService(Name.JOB_STATUS_MANAGEMENT_SERVICE);
+        return getService(IJobStatusManagerService.class, Name.JOB_STATUS_MANAGEMENT_SERVICE);
     }
 
     @Override
     public IBatchThreadPoolService getThreadPoolService() {
-        return (IBatchThreadPoolService) getService(Name.BATCH_THREADPOOL_SERVICE);
+        return getService(IBatchThreadPoolService.class, Name.BATCH_THREADPOOL_SERVICE);
     }
 
     @Override
     public IBatchKernelService getBatchKernelService() {
-        return (IBatchKernelService) getService(Name.BATCH_KERNEL_SERVICE);
+        return getService(IBatchKernelService.class, Name.BATCH_KERNEL_SERVICE);
     }
 
     @Override
-    public IJobXMLLoaderService getPreferredJobXMLLoaderService() {
-        return (IJobXMLLoaderService) getService(Name.JOBXML_LOADER_SERVICE);
+    public IJobXMLLoaderService getJobXMLLoaderService() {
+        return getService(IJobXMLLoaderService.class, Name.JOBXML_LOADER_SERVICE);
     }
 
     @Override
-    public IJobXMLLoaderService getDelegatingJobXMLLoaderService() {
-        return (IJobXMLLoaderService) getService(Name.DELEGATING_JOBXML_LOADER_SERVICE);
-    }
-
-    @Override
-    public IBatchArtifactFactory getPreferredArtifactFactory() {
-        return (IBatchArtifactFactory) getService(Name.CONTAINER_ARTIFACT_FACTORY_SERVICE);
-    }
-
-    @Override
-    public IBatchArtifactFactory getDelegatingArtifactFactory() {
-        return (IBatchArtifactFactory) getService(Name.DELEGATING_ARTIFACT_FACTORY_SERVICE);
+    public IBatchArtifactFactory getArtifactFactory() {
+        return getService(IBatchArtifactFactory.class, Name.CONTAINER_ARTIFACT_FACTORY_SERVICE);
     }
 
 
     private class ServiceLoader {
-
-
         private volatile IBatchServiceBase service = null;
         private Name serviceType = null;
 

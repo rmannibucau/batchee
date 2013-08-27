@@ -46,7 +46,7 @@ public class BatchletStepControllerImpl extends SingleThreadedStepControllerImpl
         final InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, propList);
 
         try {
-            batchletProxy = ProxyFactory.createBatchletProxy(batchletId, injectionRef, stepContext);
+            batchletProxy = ProxyFactory.createBatchletProxy(batchletId, injectionRef, stepContext, jobExecutionImpl);
         } catch (ArtifactValidationException e) {
             throw new BatchContainerServiceException("Cannot create the batchlet [" + batchletId + "]", e);
         }

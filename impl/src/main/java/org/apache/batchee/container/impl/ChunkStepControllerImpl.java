@@ -80,28 +80,14 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
     private ServicesManager servicesManager = ServicesManagerImpl.getInstance();
     private IPersistenceManagerService _persistenceManagerService = null;
     private SkipHandler skipHandler = null;
-    CheckpointDataKey readerChkptDK, writerChkptDK = null;
-    CheckpointData readerChkptData = null;
-    CheckpointData writerChkptData = null;
-    List<ChunkListenerProxy> chunkListeners = null;
-    List<SkipProcessListenerProxy> skipProcessListeners = null;
-    List<SkipReadListenerProxy> skipReadListeners = null;
-    List<SkipWriteListenerProxy> skipWriteListeners = null;
-    List<RetryProcessListenerProxy> retryProcessListeners = null;
-    List<RetryReadListenerProxy> retryReadListeners = null;
-    List<RetryWriteListenerProxy> retryWriteListeners = null;
-    List<ItemReadListenerProxy> itemReadListeners = null;
-    List<ItemProcessListenerProxy> itemProcessListeners = null;
-    List<ItemWriteListenerProxy> itemWriteListeners = null;
+    private CheckpointDataKey readerChkptDK, writerChkptDK = null;
+    private List<ChunkListenerProxy> chunkListeners = null;
+    private List<ItemReadListenerProxy> itemReadListeners = null;
+    private List<ItemProcessListenerProxy> itemProcessListeners = null;
+    private List<ItemWriteListenerProxy> itemWriteListeners = null;
     private RetryHandler retryHandler;
 
-    // metrics
-    long readCount = 0;
-    long writeCount = 0;
-    long readSkipCount = 0;
-    long processSkipCount = 0;
-    long writeSkipCount = 0;
-    boolean rollbackRetry = false;
+    private boolean rollbackRetry = false;
 
     public ChunkStepControllerImpl(RuntimeJobExecution jobExecutionImpl, Step step, StepContextImpl stepContext, long rootJobExecutionId, BlockingQueue<PartitionDataWrapper> analyzerStatusQueue) {
         super(jobExecutionImpl, step, stepContext, rootJobExecutionId, analyzerStatusQueue);
@@ -144,12 +130,8 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
             this.finished = finished;
         }
 
-        public boolean isRetry() {
-            return retry;
-        }
-
         public void setRetry(boolean retry) {
-            this.retry = retry;
+            // no-op
         }
 
         public boolean isRollback() {
@@ -164,7 +146,6 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
         private boolean filtered = false;
         private boolean finished = false;
         private boolean checkPointed = false;
-        private boolean retry = false;
         private boolean rollback = false;
 
     }
@@ -182,8 +163,8 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
      */
     private List<Object> readAndProcess(int chunkSize, ItemStatus theStatus) {
         List<Object> chunkToWrite = new ArrayList<Object>();
-        Object itemRead = null;
-        Object itemProcessed = null;
+        Object itemRead;
+        Object itemProcessed;
         int readProcessedCount = 0;
 
         while (true) {
@@ -223,7 +204,7 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
             }
 
             // write buffer size reached
-            if ((readProcessedCount == chunkSize) && (checkpointProxy.getCheckpointType() != "custom")) {
+            if ((readProcessedCount == chunkSize) && !("custom".equals(checkpointProxy.getCheckpointType()))) {
                 break;
             }
 
@@ -499,7 +480,6 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
     private void invokeChunk() {
         int itemCount = ChunkHelper.getItemCount(chunk);
         int timeInterval = ChunkHelper.getTimeLimit(chunk);
-        List<Object> chunkToWrite = new ArrayList<Object>();
         boolean checkPointed = true;
         boolean rollback = false;
         Throwable caughtThrowable = null;
@@ -538,7 +518,7 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
                     rollback = false;
                 }
 
-                chunkToWrite = readAndProcess(itemCount, status);
+                final List<Object> chunkToWrite = readAndProcess(itemCount, status);
 
                 if (status.isRollback()) {
                     itemCount = 1;
@@ -664,13 +644,12 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
     private void initializeChunkArtifacts() {
         final int itemCount = ChunkHelper.getItemCount(chunk);
         final int timeInterval = ChunkHelper.getTimeLimit(chunk);
-        final String checkpointPolicy = ChunkHelper.getCheckpointPolicy(chunk);
 
         final ItemReader itemReader = chunk.getReader();
         final List<Property> itemReaderProps = itemReader.getProperties() == null ? null : itemReader.getProperties().getPropertyList();
         try {
             final InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, itemReaderProps);
-            readerProxy = ProxyFactory.createItemReaderProxy(itemReader.getRef(), injectionRef, stepContext);
+            readerProxy = ProxyFactory.createItemReaderProxy(itemReader.getRef(), injectionRef, stepContext, jobExecutionImpl);
         } catch (final ArtifactValidationException e) {
             throw new BatchContainerServiceException("Cannot create the ItemReader [" + itemReader.getRef() + "]", e);
         }
@@ -680,7 +659,7 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
             final List<Property> itemProcessorProps = itemProcessor.getProperties() == null ? null : itemProcessor.getProperties().getPropertyList();
             try {
                 final InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, itemProcessorProps);
-                processorProxy = ProxyFactory.createItemProcessorProxy(itemProcessor.getRef(), injectionRef, stepContext);
+                processorProxy = ProxyFactory.createItemProcessorProxy(itemProcessor.getRef(), injectionRef, stepContext, jobExecutionImpl);
             } catch (final ArtifactValidationException e) {
                 throw new BatchContainerServiceException("Cannot create the ItemProcessor [" + itemProcessor.getRef() + "]", e);
             }
@@ -690,37 +669,37 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
         final List<Property> itemWriterProps = itemWriter.getProperties() == null ? null : itemWriter.getProperties().getPropertyList();
         try {
             final InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, itemWriterProps);
-            writerProxy = ProxyFactory.createItemWriterProxy(itemWriter.getRef(), injectionRef, stepContext);
+            writerProxy = ProxyFactory.createItemWriterProxy(itemWriter.getRef(), injectionRef, stepContext, jobExecutionImpl);
         } catch (final ArtifactValidationException e) {
             throw new BatchContainerServiceException("Cannot create the ItemWriter [" + itemWriter.getRef() + "]", e);
         }
 
         try {
-            List<Property> propList = null;
+            final List<Property> propList;
             if (chunk.getCheckpointAlgorithm() != null) {
                 propList = (chunk.getCheckpointAlgorithm().getProperties() == null) ? null : chunk.getCheckpointAlgorithm().getProperties().getPropertyList();
+            } else {
+                propList = null;
             }
 
             final InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, propList);
-
-            checkpointProxy = CheckpointAlgorithmFactory.getCheckpointAlgorithmProxy(step, injectionRef, stepContext);
-        } catch (ArtifactValidationException e) {
-            throw new BatchContainerServiceException("Cannot create the CheckpointAlgorithm for policy [" + chunk.getCheckpointPolicy()
-                + "]", e);
+            checkpointProxy = CheckpointAlgorithmFactory.getCheckpointAlgorithmProxy(step, injectionRef, stepContext, jobExecutionImpl);
+        } catch (final ArtifactValidationException e) {
+            throw new BatchContainerServiceException("Cannot create the CheckpointAlgorithm for policy [" + chunk.getCheckpointPolicy() + "]", e);
         }
 
-        InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, null);
+        final InjectionReferences injectionRef = new InjectionReferences(jobExecutionImpl.getJobContext(), stepContext, null);
 
-        this.chunkListeners = jobExecutionImpl.getListenerFactory().getChunkListeners(step, injectionRef, stepContext);
-        this.skipProcessListeners = jobExecutionImpl.getListenerFactory().getSkipProcessListeners(step, injectionRef, stepContext);
-        this.skipReadListeners = jobExecutionImpl.getListenerFactory().getSkipReadListeners(step, injectionRef, stepContext);
-        this.skipWriteListeners = jobExecutionImpl.getListenerFactory().getSkipWriteListeners(step, injectionRef, stepContext);
-        this.retryProcessListeners = jobExecutionImpl.getListenerFactory().getRetryProcessListeners(step, injectionRef, stepContext);
-        this.retryReadListeners = jobExecutionImpl.getListenerFactory().getRetryReadListeners(step, injectionRef, stepContext);
-        this.retryWriteListeners = jobExecutionImpl.getListenerFactory().getRetryWriteListeners(step, injectionRef, stepContext);
-        this.itemReadListeners = jobExecutionImpl.getListenerFactory().getItemReadListeners(step, injectionRef, stepContext);
-        this.itemProcessListeners = jobExecutionImpl.getListenerFactory().getItemProcessListeners(step, injectionRef, stepContext);
-        this.itemWriteListeners = jobExecutionImpl.getListenerFactory().getItemWriteListeners(step, injectionRef, stepContext);
+        this.chunkListeners = jobExecutionImpl.getListenerFactory().getChunkListeners(step, injectionRef, stepContext, jobExecutionImpl);
+        this.itemReadListeners = jobExecutionImpl.getListenerFactory().getItemReadListeners(step, injectionRef, stepContext, jobExecutionImpl);
+        this.itemProcessListeners = jobExecutionImpl.getListenerFactory().getItemProcessListeners(step, injectionRef, stepContext, jobExecutionImpl);
+        this.itemWriteListeners = jobExecutionImpl.getListenerFactory().getItemWriteListeners(step, injectionRef, stepContext, jobExecutionImpl);
+        final List<SkipProcessListenerProxy> skipProcessListeners = jobExecutionImpl.getListenerFactory().getSkipProcessListeners(step, injectionRef, stepContext, jobExecutionImpl);
+        final List<SkipReadListenerProxy> skipReadListeners = jobExecutionImpl.getListenerFactory().getSkipReadListeners(step, injectionRef, stepContext, jobExecutionImpl);
+        final List<SkipWriteListenerProxy> skipWriteListeners = jobExecutionImpl.getListenerFactory().getSkipWriteListeners(step, injectionRef, stepContext, jobExecutionImpl);
+        final List<RetryProcessListenerProxy> retryProcessListeners = jobExecutionImpl.getListenerFactory().getRetryProcessListeners(step, injectionRef, stepContext, jobExecutionImpl);
+        final List<RetryReadListenerProxy> retryReadListeners = jobExecutionImpl.getListenerFactory().getRetryReadListeners(step, injectionRef, stepContext, jobExecutionImpl);
+        final List<RetryWriteListenerProxy> retryWriteListeners = jobExecutionImpl.getListenerFactory().getRetryWriteListeners(step, injectionRef, stepContext, jobExecutionImpl);
 
         if ("item".equals(checkpointProxy.getCheckpointType())) {
             chkptAlg = new ItemCheckpointAlgorithm();
@@ -753,7 +732,7 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
             if (readerChkptData != null) {
                 final byte[] readertoken = readerChkptData.getRestartToken();
                 final ByteArrayInputStream readerChkptBA = new ByteArrayInputStream(readertoken);
-                TCCLObjectInputStream readerOIS = null;
+                TCCLObjectInputStream readerOIS;
                 try {
                     readerOIS = new TCCLObjectInputStream(readerChkptBA);
                     readerProxy.open((Serializable) readerOIS.readObject());
@@ -880,7 +859,7 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
             if (readerData != null) {
                 byte[] readertoken = readerData.getRestartToken();
                 ByteArrayInputStream readerChkptBA = new ByteArrayInputStream(readertoken);
-                TCCLObjectInputStream readerOIS = null;
+                TCCLObjectInputStream readerOIS;
                 try {
                     readerOIS = new TCCLObjectInputStream(readerChkptBA);
                     readerProxy.open((Serializable) readerOIS.readObject());
@@ -909,7 +888,7 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
             if (writerData != null) {
                 byte[] writertoken = writerData.getRestartToken();
                 ByteArrayInputStream writerChkptBA = new ByteArrayInputStream(writertoken);
-                TCCLObjectInputStream writerOIS = null;
+                TCCLObjectInputStream writerOIS;
                 try {
                     writerOIS = new TCCLObjectInputStream(writerChkptBA);
                     writerProxy.open((Serializable) writerOIS.readObject());

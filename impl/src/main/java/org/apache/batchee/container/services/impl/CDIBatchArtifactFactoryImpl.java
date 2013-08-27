@@ -16,28 +16,46 @@
  */
 package org.apache.batchee.container.services.impl;
 
+import org.apache.batchee.container.cdi.BatchCDIInjectionExtension;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.spi.services.IBatchArtifactFactory;
 import org.apache.batchee.spi.services.IBatchConfig;
 
+import javax.enterprise.context.Dependent;
+import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Set;
 
-public class CDIBatchArtifactFactoryImpl implements IBatchArtifactFactory {
+public class CDIBatchArtifactFactoryImpl extends DefaultBatchArtifactFactoryImpl implements IBatchArtifactFactory {
     @Override
-    public Object load(final String batchId) {
-        Object artifactInstance = null;
-        try { // TODO: use BeanManagerProvider of DeltaSpike instead of this lookup
-            final InitialContext initialContext = new InitialContext();
-            final BeanManager bm = (BeanManager) initialContext.lookup("java:comp/BeanManager");
-            final Bean bean = bm.getBeans(batchId).iterator().next();
-            Class clazz = bean.getBeanClass();
-            artifactInstance = bm.getReference(bean, clazz, bm.createCreationalContext(bean));
+    public Instance load(final String batchId) {
+        try {
+            final BeanManager bm = getBeanManager();
+            final Set<Bean<?>> beans = bm.getBeans(batchId);
+            final Bean<?> bean = bm.resolve(beans);
+            if (bean == null) { // fallback to try to instantiate it from TCCL as per the spec
+                return super.load(batchId);
+            }
+            final Class<?> clazz = bean.getBeanClass();
+            final CreationalContext creationalContext = bm.createCreationalContext(bean);
+            final Object artifactInstance = bm.getReference(bean, clazz, creationalContext);
+            if (Dependent.class.equals(bean.getScope())) { // need to be released
+                return new Instance(artifactInstance, new Closeable() {
+                    @Override
+                    public void close() throws IOException {
+                        creationalContext.release();
+                    }
+                });
+            }
+            return new Instance(artifactInstance, null);
         } catch (final Exception e) {
             // no-op
         }
-        return artifactInstance;
+        return null;
     }
 
     @Override
@@ -48,5 +66,9 @@ public class CDIBatchArtifactFactoryImpl implements IBatchArtifactFactory {
     @Override
     public void shutdown() throws BatchContainerServiceException {
         // no-op
+    }
+
+    protected BeanManager getBeanManager() throws NamingException {
+        return BatchCDIInjectionExtension.getInstance().getBeanManager();
     }
 }

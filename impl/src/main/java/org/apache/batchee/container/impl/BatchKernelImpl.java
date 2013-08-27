@@ -46,6 +46,8 @@ import javax.batch.operations.JobRestartException;
 import javax.batch.operations.JobStartException;
 import javax.batch.operations.NoSuchJobExecutionException;
 import javax.batch.runtime.JobInstance;
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -143,6 +145,14 @@ public class BatchKernelImpl implements IBatchKernelService {
         // Remove from executionId, instanceId map,set after job is done
         this.executionId2jobControllerMap.remove(jobExecution.getExecutionId());
         this.instanceIdExecutingSet.remove(jobExecution.getInstanceId());
+
+        for (final Closeable closeable : jobExecution.getReleasables()) { // release CDI beans for instance
+            try {
+                closeable.close();
+            } catch (final IOException e) {
+                // no-op
+            }
+        }
 
         // AJM: ah - purge jobExecution from map here and flush to DB?
         // edit: no long want a 2 tier for the jobexecution...do want it for step execution

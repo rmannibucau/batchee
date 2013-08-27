@@ -16,13 +16,135 @@
  */
 package org.apache.batchee.container.cdi;
 
+import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.AfterBeanDiscovery;
+import javax.enterprise.inject.spi.AfterDeploymentValidation;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
+import javax.enterprise.inject.spi.BeforeShutdown;
 import javax.enterprise.inject.spi.Extension;
+import javax.enterprise.inject.spi.InjectionTarget;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+// excepted beforeBeanDiscovery() all is forked from DeltaSpike
 public class BatchCDIInjectionExtension implements Extension {
+    private static BatchCDIInjectionExtension bmpSingleton = null;
+    private volatile Map<ClassLoader, BeanManagerInfo> bmInfos = new ConcurrentHashMap<ClassLoader, BeanManagerInfo>();
+
+    public static BatchCDIInjectionExtension getInstance() {
+        return bmpSingleton;
+    }
+
     void beforeBeanDiscovery(final @Observes BeforeBeanDiscovery bbd, BeanManager bm) {
         bbd.addAnnotatedType(bm.createAnnotatedType(BatchProducerBean.class));
+    }
+
+    public void setBeanManager(final @Observes AfterBeanDiscovery afterBeanDiscovery, final BeanManager beanManager) {
+        captureBeanManager(beanManager);
+    }
+
+    private void captureBeanManager(final BeanManager beanManager) {
+        // bean manager holder
+        if (bmpSingleton == null) {
+            bmpSingleton = this;
+        }
+        final BeanManagerInfo bmi = getBeanManagerInfo(loader());
+        bmi.loadTimeBm = beanManager;
+    }
+
+    private static ClassLoader loader() {
+        return Thread.currentThread().getContextClassLoader();
+    }
+
+    public BeanManager getBeanManager() {
+        final BeanManagerInfo bmi = getBeanManagerInfo(loader());
+
+        BeanManager result = bmi.finalBm;
+        if (result == null && bmi.cdi == null) {
+            synchronized (this) {
+                result = resolveBeanManagerViaJndi();
+                if (result == null) {
+                    result = bmi.loadTimeBm;
+                }
+                if (result == null) {
+                    bmi.cdi = false;
+                    return null;
+                }
+                bmi.cdi = true;
+                bmi.finalBm = result;
+            }
+        }
+
+        return result;
+    }
+
+    public void cleanupFinalBeanManagers(final @Observes AfterDeploymentValidation adv) {
+        for (final BeanManagerInfo bmi : bmpSingleton.bmInfos.values()) {
+            bmi.finalBm = null;
+        }
+    }
+
+    public void cleanupStoredBeanManagerOnShutdown(final @Observes BeforeShutdown beforeShutdown) {
+        bmpSingleton.bmInfos.remove(loader());
+    }
+
+    private static BeanManager resolveBeanManagerViaJndi() {
+        try {
+            return (BeanManager) new InitialContext().lookup("java:comp/BeanManager");
+        } catch (final NamingException e) {
+            return null;
+        }
+    }
+
+    private BeanManagerInfo getBeanManagerInfo(final ClassLoader cl) {
+        BeanManagerInfo bmi = bmpSingleton.bmInfos.get(cl);
+        if (bmi == null) {
+            synchronized (this) {
+                bmi = bmpSingleton.bmInfos.get(cl);
+                if (bmi == null) {
+                    bmi = new BeanManagerInfo();
+                    bmpSingleton.bmInfos.put(cl, bmi);
+                }
+            }
+        }
+        return bmi;
+    }
+
+    private static class BeanManagerInfo {
+        private BeanManager loadTimeBm = null;
+        private BeanManager finalBm = null;
+        private Boolean cdi = null;
+    }
+
+    public static class Releasable<T> {
+        private final CreationalContext<T> context;
+        private final InjectionTarget<T> injectionTarget;
+        private final T instance;
+
+        private Releasable(final CreationalContext<T> context, final InjectionTarget<T> injectionTarget, final T instance) {
+            this.context = context;
+            this.injectionTarget = injectionTarget;
+            this.instance = instance;
+        }
+
+        public void release() {
+            try {
+                injectionTarget.preDestroy(instance);
+                injectionTarget.dispose(instance);
+                context.release();
+            } catch (final Exception e) {
+                // no-op
+            } catch (final NoClassDefFoundError e) {
+                // no-op
+            }
+        }
+
+        public T getInstance() {
+            return instance;
+        }
     }
 }

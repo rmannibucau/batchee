@@ -33,13 +33,9 @@ public interface ServicesManager {
 
     public IBatchKernelService getBatchKernelService();
 
-    public IJobXMLLoaderService getDelegatingJobXMLLoaderService();
-
-    public IJobXMLLoaderService getPreferredJobXMLLoaderService();
+    public IJobXMLLoaderService getJobXMLLoaderService();
 
     public IBatchThreadPoolService getThreadPoolService();
 
-    public IBatchArtifactFactory getDelegatingArtifactFactory();
-
-    public IBatchArtifactFactory getPreferredArtifactFactory();
+    public IBatchArtifactFactory getArtifactFactory();
 }

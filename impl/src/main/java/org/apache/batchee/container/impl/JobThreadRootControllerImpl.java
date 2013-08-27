@@ -227,7 +227,7 @@ public abstract class JobThreadRootControllerImpl implements IThreadRootControll
     private void setupListeners() {
         final JSLJob jobModel = jobExecution.getJobNavigator().getRootModelElement();
         final InjectionReferences injectionRef = new InjectionReferences(jobContext, null, null);
-        listenerFactory = new ListenerFactory(jobModel, injectionRef);
+        listenerFactory = new ListenerFactory(jobModel, injectionRef, jobExecution);
         jobExecution.setListenerFactory(listenerFactory);
     }
 

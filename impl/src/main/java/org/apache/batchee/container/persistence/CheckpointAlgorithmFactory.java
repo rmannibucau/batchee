@@ -18,6 +18,7 @@ package org.apache.batchee.container.persistence;
 
 
 import org.apache.batchee.container.impl.StepContextImpl;
+import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.proxy.CheckpointAlgorithmProxy;
 import org.apache.batchee.container.proxy.InjectionReferences;
 import org.apache.batchee.container.proxy.ProxyFactory;
@@ -25,26 +26,21 @@ import org.apache.batchee.container.validation.ArtifactValidationException;
 import org.apache.batchee.jaxb.Chunk;
 import org.apache.batchee.jaxb.Step;
 
-public class CheckpointAlgorithmFactory {
-
-    public static CheckpointAlgorithmProxy getCheckpointAlgorithmProxy(Step step, InjectionReferences injectionReferences, StepContextImpl stepContext) throws ArtifactValidationException {
-        Chunk chunk = step.getChunk();
-        CheckpointAlgorithmProxy proxy = null;
-        String checkpointType = chunk.getCheckpointPolicy();
-
-
-        if (checkpointType.equals("item")) {
-
+public final class CheckpointAlgorithmFactory {
+    public static CheckpointAlgorithmProxy getCheckpointAlgorithmProxy(final Step step, final InjectionReferences injectionReferences, final StepContextImpl stepContext, final RuntimeJobExecution jobExecution) throws ArtifactValidationException {
+        final Chunk chunk = step.getChunk();
+        final String checkpointType = chunk.getCheckpointPolicy();
+        final CheckpointAlgorithmProxy proxy;
+        if ("custom".equalsIgnoreCase(checkpointType)) {
+            proxy = ProxyFactory.createCheckpointAlgorithmProxy(chunk.getCheckpointAlgorithm().getRef(), injectionReferences, stepContext, jobExecution);
+        } else /* "item" */ {
             proxy = new CheckpointAlgorithmProxy(new ItemCheckpointAlgorithm());
-
-        } else if (checkpointType.equalsIgnoreCase("custom")) {
-
-            proxy = ProxyFactory.createCheckpointAlgorithmProxy(chunk
-                .getCheckpointAlgorithm().getRef(), injectionReferences, stepContext);
-
         }
         return proxy;
 
     }
 
+    private CheckpointAlgorithmFactory() {
+        // no-op
+    }
 }

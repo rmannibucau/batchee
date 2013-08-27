@@ -58,11 +58,31 @@
 package org.apache.batchee.spi.services;
 
 
+import java.io.Closeable;
+
 public interface IBatchArtifactFactory extends IBatchServiceBase {
 
     /**
      * @param batchId The value of a @ref attribute in a JSL element, e.g. 'batchlet'
      * @return An object instance of the artifact.
      */
-    public Object load(String batchId);
+    public Instance load(final String batchId);
+
+    public static class Instance {
+        private final Object value;
+        private final Closeable releasable;
+
+        public Instance(final Object value, final Closeable releasable) {
+            this.value = value;
+            this.releasable = releasable;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public Closeable getReleasable() {
+            return releasable;
+        }
+    }
 }

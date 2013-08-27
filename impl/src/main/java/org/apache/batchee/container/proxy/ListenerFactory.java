@@ -17,6 +17,7 @@
 package org.apache.batchee.container.proxy;
 
 import org.apache.batchee.container.impl.StepContextImpl;
+import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.jaxb.JSLJob;
 import org.apache.batchee.jaxb.Listener;
 import org.apache.batchee.jaxb.Listeners;
@@ -51,18 +52,14 @@ public class ListenerFactory {
      * Build job-level ListenerInfo(s) up-front, but build step-level ones
      * lazily.
      */
-    public ListenerFactory(JSLJob jobModel, InjectionReferences injectionRefs) {
-        initJobLevelListeners(jobModel, injectionRefs);
-    }
-
-    private void initJobLevelListeners(JSLJob jobModel, InjectionReferences injectionRefs) {
+    public ListenerFactory(final JSLJob jobModel, final InjectionReferences injectionRefs, final RuntimeJobExecution execution) {
         jobLevelListenerInfo = new ArrayList<ListenerInfo>();
 
         Listeners jobLevelListeners = jobModel.getListeners();
 
         if (jobLevelListeners != null) {
             for (Listener listener : jobLevelListeners.getListenerList()) {
-                ListenerInfo info = buildListenerInfo(listener, injectionRefs);
+                ListenerInfo info = buildListenerInfo(listener, injectionRefs, execution);
                 jobLevelListenerInfo.add(info);
             }
         }
@@ -73,7 +70,7 @@ public class ListenerFactory {
      * 
      * @JobListener, even if that is the only type of listener annotation found.
      */
-    private synchronized List<ListenerInfo> getStepListenerInfo(Step step, InjectionReferences injectionRefs) {
+    private synchronized List<ListenerInfo> getStepListenerInfo(final Step step, final InjectionReferences injectionRefs, final RuntimeJobExecution execution) {
         if (!stepLevelListenerInfo.containsKey(step.getId())) {
             List<ListenerInfo> stepListenerInfoList = new ArrayList<ListenerInfo>();
             stepLevelListenerInfo.put(step.getId(), stepListenerInfoList);
@@ -81,7 +78,7 @@ public class ListenerFactory {
             Listeners stepLevelListeners = step.getListeners();
             if (stepLevelListeners != null) {
                 for (Listener listener : stepLevelListeners.getListenerList()) {
-                    ListenerInfo info = buildListenerInfo(listener, injectionRefs);
+                    ListenerInfo info = buildListenerInfo(listener, injectionRefs, execution);
                     stepListenerInfoList.add(info);
                 }
             }
@@ -92,42 +89,35 @@ public class ListenerFactory {
         }
     }
 
-    private ListenerInfo buildListenerInfo(Listener listener, InjectionReferences injectionRefs) {
-
-        String id = listener.getRef();
-
-        List<Property> propList = (listener.getProperties() == null) ? null : listener.getProperties().getPropertyList();
+    private ListenerInfo buildListenerInfo(final Listener listener, final InjectionReferences injectionRefs, final RuntimeJobExecution execution) {
+        final String id = listener.getRef();
+        final List<Property> propList = (listener.getProperties() == null) ? null : listener.getProperties().getPropertyList();
 
         injectionRefs.setProps(propList);
-        Object listenerArtifact = ProxyFactory.loadArtifact(id, injectionRefs);
+        final Object listenerArtifact = ProxyFactory.loadArtifact(id, injectionRefs, execution);
         if (listenerArtifact == null) {
             throw new IllegalArgumentException("Load of artifact id: " + id + " returned <null>.");
         }
-        ListenerInfo info = new ListenerInfo(listenerArtifact, propList);
-        return info;
+        return new ListenerInfo(listenerArtifact);
 
     }
 
     public List<JobListenerProxy> getJobListeners() {
-        List<JobListenerProxy> retVal = new ArrayList<JobListenerProxy>();
-        for (ListenerInfo li : jobLevelListenerInfo) {
+        final List<JobListenerProxy> retVal = new ArrayList<JobListenerProxy>();
+        for (final ListenerInfo li : jobLevelListenerInfo) {
             if (li.isJobListener()) {
-                JobListenerProxy proxy = new JobListenerProxy((JobListener) li.getArtifact());
-                retVal.add(proxy);
+                retVal.add(new JobListenerProxy((JobListener) li.getArtifact()));
             }
         }
         return retVal;
     }
 
-    public List<ChunkListenerProxy> getChunkListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<ChunkListenerProxy> retVal = new ArrayList<ChunkListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<ChunkListenerProxy> getChunkListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<ChunkListenerProxy> retVal = new ArrayList<ChunkListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isChunkListener()) {
-                ChunkListenerProxy proxy = new ChunkListenerProxy((ChunkListener) li.getArtifact());
+                final ChunkListenerProxy proxy = new ChunkListenerProxy((ChunkListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -136,13 +126,10 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<ItemProcessListenerProxy> getItemProcessListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<ItemProcessListenerProxy> retVal = new ArrayList<ItemProcessListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<ItemProcessListenerProxy> getItemProcessListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<ItemProcessListenerProxy> retVal = new ArrayList<ItemProcessListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isItemProcessListener()) {
                 ItemProcessListenerProxy proxy = new ItemProcessListenerProxy((ItemProcessListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
@@ -153,15 +140,12 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<ItemReadListenerProxy> getItemReadListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<ItemReadListenerProxy> retVal = new ArrayList<ItemReadListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<ItemReadListenerProxy> getItemReadListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<ItemReadListenerProxy> retVal = new ArrayList<ItemReadListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isItemReadListener()) {
-                ItemReadListenerProxy proxy = new ItemReadListenerProxy((ItemReadListener) li.getArtifact());
+                final ItemReadListenerProxy proxy = new ItemReadListenerProxy((ItemReadListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -170,14 +154,12 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<ItemWriteListenerProxy> getItemWriteListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<ItemWriteListenerProxy> retVal = new ArrayList<ItemWriteListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<ItemWriteListenerProxy> getItemWriteListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<ItemWriteListenerProxy> retVal = new ArrayList<ItemWriteListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isItemWriteListener()) {
-                ItemWriteListenerProxy proxy = new ItemWriteListenerProxy((ItemWriteListener) li.getArtifact());
+                final ItemWriteListenerProxy proxy = new ItemWriteListenerProxy((ItemWriteListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -186,14 +168,12 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<RetryProcessListenerProxy> getRetryProcessListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<RetryProcessListenerProxy> retVal = new ArrayList<RetryProcessListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<RetryProcessListenerProxy> getRetryProcessListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<RetryProcessListenerProxy> retVal = new ArrayList<RetryProcessListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isRetryProcessListener()) {
-                RetryProcessListenerProxy proxy = new RetryProcessListenerProxy((RetryProcessListener) li.getArtifact());
+                final RetryProcessListenerProxy proxy = new RetryProcessListenerProxy((RetryProcessListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -202,14 +182,12 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<RetryReadListenerProxy> getRetryReadListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<RetryReadListenerProxy> retVal = new ArrayList<RetryReadListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<RetryReadListenerProxy> getRetryReadListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<RetryReadListenerProxy> retVal = new ArrayList<RetryReadListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isRetryReadListener()) {
-                RetryReadListenerProxy proxy = new RetryReadListenerProxy((RetryReadListener) li.getArtifact());
+                final RetryReadListenerProxy proxy = new RetryReadListenerProxy((RetryReadListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -218,14 +196,12 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<RetryWriteListenerProxy> getRetryWriteListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<RetryWriteListenerProxy> retVal = new ArrayList<RetryWriteListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<RetryWriteListenerProxy> getRetryWriteListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<RetryWriteListenerProxy> retVal = new ArrayList<RetryWriteListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isRetryWriteListener()) {
-                RetryWriteListenerProxy proxy = new RetryWriteListenerProxy((RetryWriteListener) li.getArtifact());
+                final RetryWriteListenerProxy proxy = new RetryWriteListenerProxy((RetryWriteListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -234,14 +210,12 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<SkipProcessListenerProxy> getSkipProcessListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<SkipProcessListenerProxy> retVal = new ArrayList<SkipProcessListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<SkipProcessListenerProxy> getSkipProcessListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<SkipProcessListenerProxy> retVal = new ArrayList<SkipProcessListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isSkipProcessListener()) {
-                SkipProcessListenerProxy proxy = new SkipProcessListenerProxy((SkipProcessListener) li.getArtifact());
+                final SkipProcessListenerProxy proxy = new SkipProcessListenerProxy((SkipProcessListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -250,14 +224,12 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<SkipReadListenerProxy> getSkipReadListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<SkipReadListenerProxy> retVal = new ArrayList<SkipReadListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<SkipReadListenerProxy> getSkipReadListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<SkipReadListenerProxy> retVal = new ArrayList<SkipReadListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isSkipReadListener()) {
-                SkipReadListenerProxy proxy = new SkipReadListenerProxy((SkipReadListener) li.getArtifact());
+                final SkipReadListenerProxy proxy = new SkipReadListenerProxy((SkipReadListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -266,14 +238,12 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<SkipWriteListenerProxy> getSkipWriteListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<SkipWriteListenerProxy> retVal = new ArrayList<SkipWriteListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<SkipWriteListenerProxy> getSkipWriteListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<SkipWriteListenerProxy> retVal = new ArrayList<SkipWriteListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isSkipWriteListener()) {
-                SkipWriteListenerProxy proxy = new SkipWriteListenerProxy((SkipWriteListener) li.getArtifact());
+                final SkipWriteListenerProxy proxy = new SkipWriteListenerProxy((SkipWriteListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -282,14 +252,12 @@ public class ListenerFactory {
         return retVal;
     }
 
-    public List<StepListenerProxy> getStepListeners(Step step, InjectionReferences injectionRefs, StepContextImpl stepContext) {
-        List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs);
-
-        List<StepListenerProxy> retVal = new ArrayList<StepListenerProxy>();
-
-        for (ListenerInfo li : stepListenerInfo) {
+    public List<StepListenerProxy> getStepListeners(final Step step, final InjectionReferences injectionRefs, final StepContextImpl stepContext, final RuntimeJobExecution execution) {
+        final List<ListenerInfo> stepListenerInfo = getStepListenerInfo(step, injectionRefs, execution);
+        final List<StepListenerProxy> retVal = new ArrayList<StepListenerProxy>();
+        for (final ListenerInfo li : stepListenerInfo) {
             if (li.isStepListener()) {
-                StepListenerProxy proxy = new StepListenerProxy((StepListener) li.getArtifact());
+                final StepListenerProxy proxy = new StepListenerProxy((StepListener) li.getArtifact());
                 proxy.setStepContext(stepContext);
                 retVal.add(proxy);
             }
@@ -299,22 +267,19 @@ public class ListenerFactory {
     }
 
     private class ListenerInfo {
-        Object listenerArtifact = null;
-        Class listenerArtifactClass = null;
-        List<Property> propList = null;
+        private Object listenerArtifact = null;
+        private Class listenerArtifactClass = null;
+
+        private ListenerInfo(final Object listenerArtifact) {
+            this.listenerArtifact = listenerArtifact;
+            this.listenerArtifactClass = listenerArtifact.getClass();
+        }
 
         Object getArtifact() {
             return listenerArtifact;
         }
 
-        private ListenerInfo(Object listenerArtifact, List<Property> propList) {
-            this.listenerArtifact = listenerArtifact;
-            this.listenerArtifactClass = listenerArtifact.getClass();
-            this.propList = propList;
-        }
-
         boolean isJobListener() {
-
             return JobListener.class.isAssignableFrom(listenerArtifactClass);
         }
 
@@ -360,14 +325,6 @@ public class ListenerFactory {
 
         boolean isSkipWriteListener() {
             return SkipWriteListener.class.isAssignableFrom(listenerArtifactClass);
-        }
-
-        List<Property> getPropList() {
-            return propList;
-        }
-
-        void setPropList(List<Property> propList) {
-            this.propList = propList;
         }
     }
 

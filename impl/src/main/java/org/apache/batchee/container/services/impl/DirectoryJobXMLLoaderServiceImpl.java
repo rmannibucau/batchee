@@ -25,43 +25,26 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.logging.Logger;
 
 
 public class DirectoryJobXMLLoaderServiceImpl implements IJobXMLLoaderService {
-
-
-    private final static Logger logger = Logger.getLogger(DelegatingBatchArtifactFactoryImpl.class.getName());
-    private final static String CLASSNAME = DirectoryJobXMLLoaderServiceImpl.class.getName();
-
     public static final String JOB_XML_DIR_PROP = "com.ibm.jbatch.jsl.directory";
     public static final String JOB_XML_PATH = System.getProperty(JOB_XML_DIR_PROP);
 
 
     @Override
     public String loadJSL(String id) {
-
-
-        String jobXML = loadJobFromDirectory(JOB_XML_PATH, id);
-
-        return jobXML;
-
+        return loadJobFromDirectory(JOB_XML_PATH, id);
     }
 
 
     private static String loadJobFromDirectory(String dir, String id) {
-
         File jobXMLFile = new File(JOB_XML_PATH, id + ".xml");
-
-        String xmlString = readJobXML(jobXMLFile);
-
-        return xmlString;
-
+        return readJobXML(jobXMLFile);
     }
 
 
     private static String readJobXML(File fileWithPath) {
-
         StringBuffer xmlBuffer = (fileWithPath == null ? null : new StringBuffer());
         try {
             if (!(fileWithPath == null)) {
@@ -87,14 +70,14 @@ public class DirectoryJobXMLLoaderServiceImpl implements IJobXMLLoaderService {
 
     @Override
     public void init(IBatchConfig batchConfig) throws BatchContainerServiceException {
-        // TODO Auto-generated method stub
+        // no-op
 
     }
 
 
     @Override
     public void shutdown() throws BatchContainerServiceException {
-        // TODO Auto-generated method stub
+        // no-op
 
     }
 
