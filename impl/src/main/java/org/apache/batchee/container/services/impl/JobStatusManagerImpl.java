@@ -1,0 +1,140 @@
+/*
+ * Copyright 2012 International Business Machines Corp.
+ * 
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership. Licensed under the Apache License, 
+ * Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+package org.apache.batchee.container.services.impl;
+
+import org.apache.batchee.container.exception.BatchContainerServiceException;
+import org.apache.batchee.container.services.IJobStatusManagerService;
+import org.apache.batchee.container.services.IPersistenceManagerService;
+import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
+import org.apache.batchee.container.status.JobStatus;
+import org.apache.batchee.container.status.StepStatus;
+import org.apache.batchee.spi.services.IBatchConfig;
+
+import javax.batch.runtime.BatchStatus;
+
+public class JobStatusManagerImpl implements IJobStatusManagerService {
+    private IPersistenceManagerService _persistenceManager;
+
+    @Override
+    public void shutdown() throws BatchContainerServiceException {
+        // no-op
+    }
+
+    @Override
+    public JobStatus createJobStatus(long jobInstanceId) throws BatchContainerServiceException {
+        return _persistenceManager.createJobStatus(jobInstanceId);
+    }
+
+    @Override
+    public JobStatus getJobStatus(final long jobInstanceId) throws BatchContainerServiceException {
+        return _persistenceManager.getJobStatus(jobInstanceId);
+    }
+
+    @Override
+    public void updateJobStatus(final JobStatus jobStatus) {
+        persistJobStatus(jobStatus.getJobInstanceId(), jobStatus);
+    }
+
+    @Override
+    public JobStatus getJobStatusFromExecutionId(final long executionId) throws BatchContainerServiceException {
+        return _persistenceManager.getJobStatusFromExecution(executionId);
+    }
+
+    @Override
+    public void updateJobBatchStatus(final long jobInstanceId, final BatchStatus batchStatus) throws BatchContainerServiceException {
+        final JobStatus js = getJobStatus(jobInstanceId);
+        if (js == null) {
+            throw new IllegalStateException("Couldn't find entry to update for id = " + jobInstanceId);
+        }
+        js.setBatchStatus(batchStatus);
+        persistJobStatus(jobInstanceId, js);
+    }
+
+    @Override
+    public void updateJobExecutionStatus(final long jobInstanceId, final BatchStatus batchStatus, final String exitStatus) throws BatchContainerServiceException {
+        final JobStatus js = getJobStatus(jobInstanceId);
+        if (js == null) {
+            throw new IllegalStateException("Couldn't find entry to update for id = " + jobInstanceId);
+        }
+        js.setBatchStatus(batchStatus);
+        js.setExitStatus(exitStatus);
+        persistJobStatus(jobInstanceId, js);
+    }
+
+    @Override
+    public void updateJobCurrentStep(final long jobInstanceId, final String currentStepName) throws BatchContainerServiceException {
+        final JobStatus js = getJobStatus(jobInstanceId);
+        if (js == null) {
+            throw new IllegalStateException("Couldn't find entry to update for id = " + jobInstanceId);
+        }
+        js.setCurrentStepId(currentStepName);
+        persistJobStatus(jobInstanceId, js);
+    }
+
+
+    @Override
+    public void updateJobStatusWithNewExecution(final long jobInstanceId, final long newExecutionId) throws BatchContainerServiceException {
+        final JobStatus js = getJobStatus(jobInstanceId);
+        if (js == null) {
+            throw new IllegalStateException("Couldn't find entry to update for id = " + jobInstanceId);
+        }
+        js.setRestartOn(null);
+        js.setLatestExecutionId(newExecutionId);
+        js.setBatchStatus(BatchStatus.STARTING);
+        persistJobStatus(jobInstanceId, js);
+    }
+
+    private void persistJobStatus(long jobInstanceId, JobStatus newJobStatus) throws BatchContainerServiceException {
+        _persistenceManager.updateJobStatus(jobInstanceId, newJobStatus);
+    }
+
+    @Override
+    public StepStatus createStepStatus(final long stepExecutionId) throws BatchContainerServiceException {
+        return _persistenceManager.createStepStatus(stepExecutionId);
+    }
+
+    @Override
+    /*
+     * @return - StepStatus or null if one is unknown
+     */
+    public StepStatus getStepStatus(final long jobInstanceId, final String stepId) throws BatchContainerServiceException {
+        return _persistenceManager.getStepStatus(jobInstanceId, stepId);
+    }
+
+    @Override
+    public void updateStepStatus(final long stepExecutionId, final StepStatus newStepStatus) {
+        _persistenceManager.updateStepStatus(stepExecutionId, newStepStatus);
+    }
+
+    @Override
+    public void init(final IBatchConfig batchConfig) throws BatchContainerServiceException {
+        _persistenceManager = ServicesManagerImpl.getInstance().getPersistenceManagerService();
+    }
+
+    /*
+     * Inefficient, since we've already updated the status to stopped.. would be better to have a single update.
+     */
+    @Override
+    public void updateJobStatusFromJSLStop(final long jobInstanceId, final String restartOn) throws BatchContainerServiceException {
+        final JobStatus js = getJobStatus(jobInstanceId);
+        if (js == null) {
+            throw new IllegalStateException("Couldn't find entry to update for id = " + jobInstanceId);
+        }
+        js.setRestartOn(restartOn);
+        persistJobStatus(jobInstanceId, js);
+    }
+}

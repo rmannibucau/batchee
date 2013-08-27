@@ -1,0 +1,15 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<suite name="JSR352 TCK" verbose="2">
+  <listeners>
+    <listener class-name="org.apache.batchee.test.tck.lifecycle.ContainerLifecycle"/>
+  </listeners>
+
+  <test name="JSR352 TCK">
+    <packages>
+      <package name="com.ibm.jbatch.tck.tests.ee"/>
+      <!-- EE -->
+      <package name="com.ibm.jbatch.tck.tests.jslxml"/>
+      <!-- JSE -->
+    </packages>
+  </test>
+</suite>

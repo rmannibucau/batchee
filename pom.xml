@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-parent</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>BatchEE</name>
+
+  <modules>
+    <module>impl</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- APIs -->
+      <dependency>
+        <groupId>javax.batch</groupId>
+        <artifactId>javax.batch-api</artifactId>
+        <version>1.0</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-atinject_1.0_spec</artifactId>
+        <version>1.0</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jcdi_1.1_spec</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-interceptor_1.1_spec</artifactId>
+        <version>1.0</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.geronimo.components</groupId>
+        <artifactId>geronimo-transaction</artifactId>
+        <version>3.1.1</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <!-- Testing libraries -->
+      <dependency>
+        <groupId>org.testng</groupId>
+        <artifactId>testng</artifactId>
+        <version>6.8.5</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.derby</groupId>
+        <artifactId>derby</artifactId>
+        <version>10.10.1.1</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>src/main/xsd</directory>
+      </resource>
+    </resources>
+  </build>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>apache-snapshot-repository</id>
+      <url>https://repository.apache.org/snapshots/</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>sonatype-public-repository</id>
+      <url>https://oss.sonatype.org/content/groups/public</url>
+    </pluginRepository>
+  </pluginRepositories>
+</project>

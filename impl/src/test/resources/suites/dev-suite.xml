@@ -1,0 +1,19 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<!--
+ This file is intended to be used by developpers to debug on a single/few TCK(s)
+-->
+<suite name="JSR352-TCK-dev" verbose="2">
+  <listeners>
+    <listener class-name="org.apache.batchee.test.tck.lifecycle.ContainerLifecycle"/>
+  </listeners>
+
+  <test name="dev">
+    <classes>
+      <class name="com.ibm.jbatch.tck.tests.jslxml.JobOperatorTests">
+        <methods>
+
+        </methods>
+      </class>
+    </classes>
+  </test>
+</suite>
