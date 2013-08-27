@@ -17,7 +17,6 @@
  */
 package org.apache.batchee.container.servicesmanager;
 
-import org.apache.batchee.container.callback.IJobEndCallbackService;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.exception.PersistenceException;
 import org.apache.batchee.container.impl.BatchConfigImpl;
@@ -282,11 +281,6 @@ public class ServicesManagerImpl implements BatchContainerConstants, ServicesMan
     @Override
     public IBatchKernelService getBatchKernelService() {
         return (IBatchKernelService) getService(Name.BATCH_KERNEL_SERVICE);
-    }
-
-    @Override
-    public IJobEndCallbackService getJobCallbackService() {
-        return (IJobEndCallbackService) getService(Name.CALLBACK_SERVICE);
     }
 
     @Override

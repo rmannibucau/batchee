@@ -17,7 +17,6 @@
 package org.apache.batchee.container.impl;
 
 import org.apache.batchee.container.IThreadRootController;
-import org.apache.batchee.container.callback.IJobEndCallbackService;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.jobinstance.JobExecutionHelper;
 import org.apache.batchee.container.jobinstance.RuntimeFlowInSplitExecution;
@@ -35,7 +34,6 @@ import org.apache.batchee.container.util.BatchWorkUnit;
 import org.apache.batchee.container.util.FlowInSplitBuilderConfig;
 import org.apache.batchee.container.util.PartitionsBuilderConfig;
 import org.apache.batchee.jaxb.JSLJob;
-import org.apache.batchee.spi.BatchJobUtil;
 import org.apache.batchee.spi.BatchSPIManager;
 import org.apache.batchee.spi.BatchSecurityHelper;
 import org.apache.batchee.spi.services.IBatchConfig;
@@ -65,26 +63,18 @@ public class BatchKernelImpl implements IBatchKernelService {
 
     private IBatchThreadPoolService executorService = null;
 
-    private IJobEndCallbackService callbackService = null;
-
     private IPersistenceManagerService persistenceService = null;
-
-    private BatchSecurityHelper batchSecurity = null;
-
-    private BatchJobUtil batchJobUtil = null;
 
     public BatchKernelImpl() {
         executorService = servicesManager.getThreadPoolService();
-        callbackService = servicesManager.getJobCallbackService();
         persistenceService = servicesManager.getPersistenceManagerService();
 
         // registering our implementation of the util class used to purge by apptag
-        batchJobUtil = new RuntimeBatchJobUtil();
-        BatchSPIManager.getInstance().registerBatchJobUtil(batchJobUtil);
+        BatchSPIManager.getInstance().registerBatchJobUtil(new RuntimeBatchJobUtil());
     }
 
     public BatchSecurityHelper getBatchSecurityHelper() {
-        batchSecurity = BatchSPIManager.getInstance().getBatchSecurityHelper();
+        BatchSecurityHelper batchSecurity = BatchSPIManager.getInstance().getBatchSecurityHelper();
         if (batchSecurity == null) {
             batchSecurity = new NoOpBatchSecurityHelper();
         }
@@ -150,8 +140,6 @@ public class BatchKernelImpl implements IBatchKernelService {
 
     @Override
     public void jobExecutionDone(final RuntimeJobExecution jobExecution) {
-        callbackService.done(jobExecution.getExecutionId());
-
         // Remove from executionId, instanceId map,set after job is done
         this.executionId2jobControllerMap.remove(jobExecution.getExecutionId());
         this.instanceIdExecutingSet.remove(jobExecution.getInstanceId());

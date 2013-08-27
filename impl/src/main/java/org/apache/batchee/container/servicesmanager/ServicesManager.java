@@ -16,7 +16,6 @@
  */
 package org.apache.batchee.container.servicesmanager;
 
-import org.apache.batchee.container.callback.IJobEndCallbackService;
 import org.apache.batchee.container.services.IBatchKernelService;
 import org.apache.batchee.container.services.IJobStatusManagerService;
 import org.apache.batchee.container.services.IPersistenceManagerService;
@@ -31,8 +30,6 @@ public interface ServicesManager {
     public IJobStatusManagerService getJobStatusManagerService();
 
     public ITransactionManagementService getTransactionManagementService();
-
-    public IJobEndCallbackService getJobCallbackService();
 
     public IBatchKernelService getBatchKernelService();
 
