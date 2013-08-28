@@ -27,7 +27,7 @@ import org.apache.batchee.spi.services.TransactionManagerAdapter;
 import javax.batch.runtime.context.StepContext;
 import java.util.Properties;
 
-public class BatchTransactionServiceImpl implements TransactionManagementService {
+public class DefaultBatchTransactionService implements TransactionManagementService {
     private static final int DEFAULT_TRAN_TIMEOUT = 180; // seconds
 
     private IBatchConfig batchConfig = null;

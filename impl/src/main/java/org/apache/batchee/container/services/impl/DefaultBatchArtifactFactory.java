@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DefaultBatchArtifactFactoryImpl implements BatchArtifactFactory, XMLStreamConstants {
+public class DefaultBatchArtifactFactory implements BatchArtifactFactory, XMLStreamConstants {
     // TODO - surface constants
     private final static String BATCH_XML = "META-INF/batch.xml";
     private final static QName BATCH_ROOT_ELEM = new QName("http://xmlns.jcp.org/xml/ns/javaee", "batch-artifacts");

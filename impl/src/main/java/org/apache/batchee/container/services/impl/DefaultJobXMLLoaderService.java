@@ -25,7 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DefaultJobXMLLoaderServiceImpl implements JobXMLLoaderService {
+public class DefaultJobXMLLoaderService implements JobXMLLoaderService {
     private static final String PREFIX = "META-INF/batch-jobs/";
 
     @Override

@@ -9,10 +9,8 @@
 
   <test name="dev">
     <classes>
-      <class name="com.ibm.jbatch.tck.tests.jslxml.ExecutionTests">
-        <methods>
-          <include name="testInvokeJobUsingTCCL" />
-        </methods>
+      <class name="com.ibm.jbatch.tck.tests.ee.TransactionTests">
+
       </class>
     </classes>
   </test>

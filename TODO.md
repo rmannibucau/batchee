@@ -5,6 +5,7 @@
 * Enhance default JDBC support (default ddl etc...)
 * Rework SPI packages?
 * Release @Dependent CDI beans
+* See admin config
 * Doc
 * Add if (System.getSecurityManager() == null) { everywhere it is mandatory
 * Add ASL headers

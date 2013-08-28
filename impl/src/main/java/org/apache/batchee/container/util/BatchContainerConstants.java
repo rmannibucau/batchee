@@ -19,9 +19,7 @@ package org.apache.batchee.container.util;
 public interface BatchContainerConstants {
 
     public static final String BATCH_ADMIN_CONFIG_FILE = "batch-config.properties";
-    public static final String BATCH_INTEGRATOR_CONFIG_FILE = "batch-services.properties";
 
-    public static final String J2SE_MODE = "J2SE_MODE";
     public static final String JNDI_NAME = "JNDI_NAME";
 
     public static final String JDBC_DRIVER = "JDBC_DRIVER";

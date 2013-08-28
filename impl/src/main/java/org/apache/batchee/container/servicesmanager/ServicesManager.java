@@ -20,10 +20,16 @@ package org.apache.batchee.container.servicesmanager;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.exception.PersistenceException;
 import org.apache.batchee.container.impl.BatchConfigImpl;
+import org.apache.batchee.container.impl.BatchKernelImpl;
 import org.apache.batchee.container.services.BatchKernelService;
 import org.apache.batchee.container.services.JobStatusManagerService;
 import org.apache.batchee.container.services.PersistenceManagerService;
-import org.apache.batchee.container.servicesmanager.ServiceTypes.Name;
+import org.apache.batchee.container.services.impl.DefaultBatchTransactionService;
+import org.apache.batchee.container.services.impl.DefaultBatchArtifactFactory;
+import org.apache.batchee.container.services.impl.DefaultJobXMLLoaderService;
+import org.apache.batchee.container.services.impl.GrowableThreadPoolServiceImpl;
+import org.apache.batchee.container.services.impl.JDBCPersistenceManagerImpl;
+import org.apache.batchee.container.services.impl.JobStatusManagerImpl;
 import org.apache.batchee.container.util.BatchContainerConstants;
 import org.apache.batchee.spi.BatchSPIManager;
 import org.apache.batchee.spi.DatabaseConfigurationBean;
@@ -47,6 +53,20 @@ import java.util.logging.Logger;
 public class ServicesManager implements BatchContainerConstants {
     private final static Logger logger = Logger.getLogger(ServicesManager.class.getName());
 
+    public static final String BATCH_INTEGRATOR_CONFIG_FILE = "batch-services.properties";
+
+    // Use class names instead of Class objects to not drag in any dependencies and to easily interact with properties
+    private static final Map<String, String> serviceImplClassNames = new ConcurrentHashMap<String, String>();
+    static {
+        serviceImplClassNames.put(TransactionManagementService.class.getName(), DefaultBatchTransactionService.class.getName());
+        serviceImplClassNames.put(PersistenceManagerService.class.getName(), JDBCPersistenceManagerImpl.class.getName());
+        serviceImplClassNames.put(JobStatusManagerService.class.getName(), JobStatusManagerImpl.class.getName());
+        serviceImplClassNames.put(BatchThreadPoolService.class.getName(), GrowableThreadPoolServiceImpl.class.getName());
+        serviceImplClassNames.put(BatchKernelService.class.getName(), BatchKernelImpl.class.getName());
+        serviceImplClassNames.put(JobXMLLoaderService.class.getName(), DefaultJobXMLLoaderService.class.getName());
+        serviceImplClassNames.put(BatchArtifactFactory.class.getName(), DefaultBatchArtifactFactory.class.getName());
+    }
+
     private ServicesManager() {
         // no-op
     }
@@ -66,39 +86,35 @@ public class ServicesManager implements BatchContainerConstants {
     private BatchConfigImpl batchRuntimeConfig;
     private Properties batchContainerProps = null;
 
-
-    private Map<Name, String> serviceImplClassNames = ServiceTypes.getServiceImplClassNames();
-    private Map<String, Name> propertyNameTable = ServiceTypes.getServicePropertyNames();
-
     // Registry of all current services
-    private final ConcurrentHashMap<Name, BatchService> serviceRegistry = new ConcurrentHashMap<Name, BatchService>();
+    private final ConcurrentHashMap<String, BatchService> serviceRegistry = new ConcurrentHashMap<String, BatchService>();
 
     public static TransactionManagementService getTransactionManagementService() {
-        return getService(TransactionManagementService.class, Name.TRANSACTION_SERVICE);
+        return getService(TransactionManagementService.class);
     }
 
     public static BatchArtifactFactory getArtifactFactory() {
-        return getService(BatchArtifactFactory.class, Name.CONTAINER_ARTIFACT_FACTORY_SERVICE);
+        return getService(BatchArtifactFactory.class);
     }
 
     public static PersistenceManagerService getPersistenceManagerService() {
-        return getService(PersistenceManagerService.class, Name.PERSISTENCE_MANAGEMENT_SERVICE);
+        return getService(PersistenceManagerService.class);
     }
 
     public static JobStatusManagerService getJobStatusManagerService() {
-        return getService(JobStatusManagerService.class, Name.JOB_STATUS_MANAGEMENT_SERVICE);
+        return getService(JobStatusManagerService.class);
     }
 
     public static BatchThreadPoolService getThreadPoolService() {
-        return getService(BatchThreadPoolService.class, Name.BATCH_THREADPOOL_SERVICE);
+        return getService(BatchThreadPoolService.class);
     }
 
     public static BatchKernelService getBatchKernelService() {
-        return getService(BatchKernelService.class, Name.BATCH_KERNEL_SERVICE);
+        return getService(BatchKernelService.class);
     }
 
     public static JobXMLLoaderService getJobXMLLoaderService() {
-        return getService(JobXMLLoaderService.class, Name.JOBXML_LOADER_SERVICE);
+        return getService(JobXMLLoaderService.class);
     }
 
     /**
@@ -125,10 +141,8 @@ public class ServicesManager implements BatchContainerConstants {
     }
 
     private void initFromPropertiesFiles() {
-
         final Properties serviceIntegratorProps = new Properties();
-        final InputStream batchServicesListInputStream = getClass().getResourceAsStream("/META-INF/services/" + BATCH_INTEGRATOR_CONFIG_FILE);
-
+        final InputStream batchServicesListInputStream = getClass().getResourceAsStream("/" + BATCH_INTEGRATOR_CONFIG_FILE);
         if (batchServicesListInputStream != null) {
             try {
                 logger.config("Batch Integrator Config File exists! loading it..");
@@ -149,7 +163,7 @@ public class ServicesManager implements BatchContainerConstants {
             Set<String> removeThese = new HashSet<String>();
             for (final Object key : serviceIntegratorProps.keySet()) {
                 String keyStr = (String) key;
-                if (!propertyNameTable.containsKey(keyStr)) {
+                if (!serviceImplClassNames.containsKey(keyStr)) {
                     logger.warning("Found property named: " + keyStr
                         + " with value: " + serviceIntegratorProps.get(keyStr)
                         + " in " + BATCH_INTEGRATOR_CONFIG_FILE + " , but did not find a corresponding service type "
@@ -181,10 +195,10 @@ public class ServicesManager implements BatchContainerConstants {
 
         // See if any DO map to service impls, which would be a mistake
         {
-            Set<String> removeTheseToo = new HashSet<String>();
+            final Set<String> removeTheseToo = new HashSet<String>();
             for (final Object key : adminProps.keySet()) {
-                String keyStr = (String) key;
-                if (propertyNameTable.containsKey(keyStr)) {
+                final String keyStr = (String) key;
+                if (serviceImplClassNames.containsKey(keyStr)) {
                     logger.warning("Found property named: " + keyStr + " with value: " + adminProps.get(keyStr) + " in "
                         + BATCH_ADMIN_CONFIG_FILE + " , but this is a batch runtime service configuration.\n"
                         + "Ignoring this property then, since this should have been set in batch-services.properties instead.");
@@ -209,16 +223,11 @@ public class ServicesManager implements BatchContainerConstants {
     }
 
     private void initServiceImplOverrides() {
-
-        // For each property we care about (i.e that defines one of our service impls)
-        for (String propKey : propertyNameTable.keySet()) {
-            // If the property is defined
-            String value = batchContainerProps.getProperty(propKey);
+        for (final String propKey : serviceImplClassNames.keySet()) {
+            final String value = batchContainerProps.getProperty(propKey);
             if (value != null) {
-                // Get the corresponding serviceType enum and store the value of
-                // the key/value property pair in the table where we store the service impl classnames.
-                Name serviceType = propertyNameTable.get(propKey);
-                String defaultServiceImplClassName = serviceImplClassNames.get(serviceType); // For logging.
+                final String serviceType = serviceImplClassNames.get(propKey);
+                final String defaultServiceImplClassName = serviceImplClassNames.get(serviceType); // For logging.
                 serviceImplClassNames.put(serviceType, value.trim());
                 logger.config("Overriding serviceType: " + serviceType + ", replacing default impl classname: " +
                     defaultServiceImplClassName + " with override impl class name: " + value.trim());
@@ -250,10 +259,8 @@ public class ServicesManager implements BatchContainerConstants {
 
 
     private void initOtherConfig() {
-        String seMode = serviceImplClassNames.get(Name.JAVA_EDITION_IS_SE_DUMMY_SERVICE);
-        if (seMode.equalsIgnoreCase("true")) {
-            batchRuntimeConfig.setJ2seMode(true);
-        }
+        final String mode = serviceImplClassNames.get("mode");
+        batchRuntimeConfig.setJ2seMode("jse".equalsIgnoreCase(mode) || "standalone".equalsIgnoreCase(mode));
     }
 
     // Look up registry and return requested service if exist
@@ -261,28 +268,28 @@ public class ServicesManager implements BatchContainerConstants {
     /* (non-Javadoc)
 	 * @see com.ibm.jbatch.container.config.ServicesManager#getService(com.ibm.jbatch.container.config.ServicesManagerImpl.ServiceType)
 	 */
-    private static <T extends BatchService> T getService(final Class<T> clazz, final Name serviceType) throws BatchContainerServiceException {
+    private static <T extends BatchService> T getService(final Class<T> clazz) throws BatchContainerServiceException {
         ServicesManagerImplHolder.INSTANCE.initIfNecessary();
-        return clazz.cast(new ServiceLoader(serviceType).getService(ServicesManagerImplHolder.INSTANCE));
+        return clazz.cast(new ServiceLoader(clazz).getService(ServicesManagerImplHolder.INSTANCE));
     }
 
     private static class ServiceLoader {
         private volatile BatchService service = null;
-        private Name serviceType = null;
+        private Class<?> serviceType = null;
 
-        private ServiceLoader(Name name) {
+        private ServiceLoader(final Class<?> name) {
             this.serviceType = name;
         }
 
         private BatchService getService(final ServicesManager singleton) {
-            service = singleton.serviceRegistry.get(serviceType);
+            service = singleton.serviceRegistry.get(serviceType.getName());
             if (service == null) {
                 // Probably don't want to be loading two on two different threads so lock the whole table.
                 synchronized (singleton.serviceRegistry) {
                     if (service == null) {
-                        service = _loadServiceHelper(serviceType);
+                        service = loadServiceHelper(serviceType);
                         service.init(singleton.batchRuntimeConfig);
-                        singleton.serviceRegistry.putIfAbsent(serviceType, service);
+                        singleton.serviceRegistry.putIfAbsent(serviceType.getName(), service);
                     }
                 }
             }
@@ -294,14 +301,19 @@ public class ServicesManager implements BatchContainerConstants {
          * to load, default to the defaultClass. If the default fails to load, then
          * blow out of here with a RuntimeException.
          */
-        private static BatchService _loadServiceHelper(Name serviceType) {
+        private static BatchService loadServiceHelper(final Class<?> serviceType) {
             BatchService service = null;
             Throwable e;
 
-            final String className = ServicesManagerImplHolder.INSTANCE.serviceImplClassNames.get(serviceType);
+            String className = serviceImplClassNames.get(serviceType.getName());
             try {
                 if (className != null) {
-                    service = _loadService(className);
+                    service = load(className);
+                } else {
+                    className = serviceImplClassNames.get(serviceType.getSimpleName());
+                    if (className != null) {
+                        service = load(className);
+                    }
                 }
             } catch (final PersistenceException pe) {
                 // Don't rewrap to make it a bit clearer
@@ -320,17 +332,15 @@ public class ServicesManager implements BatchContainerConstants {
             return service;
         }
 
-        private static BatchService _loadService(final String className) throws Exception {
+        private static BatchService load(final String className) throws Exception {
             final Class<?> cls = Class.forName(className);
             if (cls != null) {
                 if (cls.getConstructor() != null) {
                     return BatchService.class.cast(cls.newInstance());
-                } else {
-                    throw new Exception("Service class " + className + " should  have a default constructor defined");
                 }
-            } else {
-                throw new Exception("Exception loading Service class " + className + " make sure it exists");
+                throw new Exception("Service class " + className + " should  have a default constructor defined");
             }
+            throw new Exception("Exception loading Service class " + className + " make sure it exists");
         }
     }
 }

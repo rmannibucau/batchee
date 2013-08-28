@@ -30,7 +30,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 
-public class CDIBatchArtifactFactoryImpl extends DefaultBatchArtifactFactoryImpl implements BatchArtifactFactory {
+public class CDIBatchArtifactFactory extends DefaultBatchArtifactFactory implements BatchArtifactFactory {
     @Override
     public Instance load(final String batchId) {
         try {
