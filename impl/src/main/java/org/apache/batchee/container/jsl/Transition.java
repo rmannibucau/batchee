@@ -17,22 +17,42 @@
 package org.apache.batchee.container.jsl;
 
 
-public interface Transition {
+public class Transition {
+    private TransitionElement transitionElement;
+    private ExecutionElement executionElement;
 
-    public ExecutionElement getNextExecutionElement();
+    private boolean finishedTransitioning = false;
+    private boolean noTransitionElementMatchedAfterException = false;
 
-    public void setNextExecutionElement(ExecutionElement executionElement);
+    public TransitionElement getTransitionElement() {
+        return transitionElement;
+    }
 
-    public TransitionElement getTransitionElement();
+    public ExecutionElement getNextExecutionElement() {
+        return executionElement;
+    }
 
-    public void setTransitionElement(TransitionElement transitionElement);
+    public void setTransitionElement(final TransitionElement transitionElement) {
+        this.transitionElement = transitionElement;
+    }
 
-    void setFinishedTransitioning();
+    public void setNextExecutionElement(final ExecutionElement executionElement) {
+        this.executionElement = executionElement;
+    }
 
-    boolean isFinishedTransitioning();
+    public boolean isFinishedTransitioning() {
+        return finishedTransitioning;
+    }
 
-    void setNoTransitionElementMatchAfterException();
+    public void setFinishedTransitioning() {
+        this.finishedTransitioning = true;
+    }
 
-    boolean noTransitionElementMatchedAfterException();
+    public void setNoTransitionElementMatchAfterException() {
+        this.noTransitionElementMatchedAfterException = true;
+    }
 
+    public boolean noTransitionElementMatchedAfterException() {
+        return noTransitionElementMatchedAfterException;
+    }
 }

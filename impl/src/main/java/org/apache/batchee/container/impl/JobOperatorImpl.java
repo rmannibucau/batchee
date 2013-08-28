@@ -16,15 +16,14 @@
  */
 package org.apache.batchee.container.impl;
 
-import org.apache.batchee.container.services.IBatchKernelService;
-import org.apache.batchee.container.services.IJobExecution;
-import org.apache.batchee.container.services.IJobStatusManagerService;
-import org.apache.batchee.container.services.IPersistenceManagerService;
+import org.apache.batchee.container.services.BatchKernelService;
+import org.apache.batchee.container.services.InternalJobExecution;
+import org.apache.batchee.container.services.JobStatusManagerService;
+import org.apache.batchee.container.services.PersistenceManagerService;
 import org.apache.batchee.container.servicesmanager.ServicesManager;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.spi.BatchSecurityHelper;
-import org.apache.batchee.spi.services.IJobXMLLoaderService;
+import org.apache.batchee.spi.services.JobXMLLoaderService;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
 import javax.batch.operations.JobExecutionIsRunningException;
@@ -53,18 +52,10 @@ import java.util.Set;
 
 
 public class JobOperatorImpl implements JobOperator {
-    private IBatchKernelService batchKernel = null;
-    private IPersistenceManagerService persistenceService = null;
-    private IJobXMLLoaderService jobXMLLoaderService = null;
-    private IJobStatusManagerService _jobStatusManagerService = null;
-
-    public JobOperatorImpl() {
-        final ServicesManager servicesManager = ServicesManagerImpl.getInstance();
-        batchKernel = servicesManager.getBatchKernelService();
-        persistenceService = servicesManager.getPersistenceManagerService();
-        jobXMLLoaderService = servicesManager.getJobXMLLoaderService();
-        _jobStatusManagerService = servicesManager.getJobStatusManagerService();
-    }
+    private final BatchKernelService batchKernel = ServicesManager.getBatchKernelService();
+    private final PersistenceManagerService persistenceService = ServicesManager.getPersistenceManagerService();
+    private final JobXMLLoaderService jobXMLLoaderService = ServicesManager.getJobXMLLoaderService();
+    private final JobStatusManagerService _jobStatusManagerService = ServicesManager.getJobStatusManagerService();
 
     @Override
     public long start(final String jobXMLName, final Properties jobParameters) throws JobStartException, JobSecurityException {
@@ -94,7 +85,7 @@ public class JobOperatorImpl implements JobOperator {
         }
 
         final String jobXML = jobXMLLoaderService.loadJSL(jobXMLName);
-        final IJobExecution execution = batchKernel.startJob(jobXML, jobParameters);
+        final InternalJobExecution execution = batchKernel.startJob(jobXML, jobParameters);
         return execution.getExecutionId();
     }
 
@@ -105,7 +96,7 @@ public class JobOperatorImpl implements JobOperator {
             throw new JobSecurityException("The current user is not authorized to perform this operation");
         }
 
-        final IJobExecution jobEx = persistenceService.jobOperatorGetJobExecution(executionId);
+        final InternalJobExecution jobEx = persistenceService.jobOperatorGetJobExecution(executionId);
 
         // if it is not in STARTED or STARTING state, mark it as ABANDONED
         if (jobEx.getBatchStatus().equals(BatchStatus.STARTED) || jobEx.getBatchStatus().equals(BatchStatus.STARTING)) {
@@ -122,7 +113,7 @@ public class JobOperatorImpl implements JobOperator {
     }
 
     @Override
-    public IJobExecution getJobExecution(final long executionId)
+    public InternalJobExecution getJobExecution(final long executionId)
         throws NoSuchJobExecutionException, JobSecurityException {
         if (!isAuthorized(persistenceService.getJobInstanceIdByExecutionId(executionId))) {
             throw new JobSecurityException("The current user is not authorized to perform this operation");
@@ -139,11 +130,11 @@ public class JobOperatorImpl implements JobOperator {
 
         // Mediate between one
         final List<JobExecution> executions = new ArrayList<JobExecution>();
-        List<IJobExecution> executionImpls = persistenceService.jobOperatorGetJobExecutions(instance.getInstanceId());
+        List<InternalJobExecution> executionImpls = persistenceService.jobOperatorGetJobExecutions(instance.getInstanceId());
         if (executionImpls.size() == 0) {
             throw new NoSuchJobInstanceException("Job: " + instance.getJobName() + " does not exist");
         }
-        for (IJobExecution e : executionImpls) {
+        for (InternalJobExecution e : executionImpls) {
             executions.add(e);
         }
         return executions;
@@ -259,7 +250,7 @@ public class JobOperatorImpl implements JobOperator {
             try {
                 if (isAuthorized(persistenceService.getJobInstanceIdByExecutionId(id))) {
                     if (batchKernel.isExecutionRunning(id)) {
-                        final IJobExecution jobEx = batchKernel.getJobExecution(id);
+                        final InternalJobExecution jobEx = batchKernel.getJobExecution(id);
                         jobExecutions.add(jobEx.getExecutionId());
                     }
                 }
@@ -274,7 +265,7 @@ public class JobOperatorImpl implements JobOperator {
     public List<StepExecution> getStepExecutions(long executionId)
         throws NoSuchJobExecutionException, JobSecurityException {
 
-        final IJobExecution jobEx = batchKernel.getJobExecution(executionId);
+        final InternalJobExecution jobEx = batchKernel.getJobExecution(executionId);
         if (jobEx == null) {
             throw new NoSuchJobExecutionException("Job Execution: " + executionId + " not found");
         }

@@ -40,9 +40,8 @@ import org.apache.batchee.container.proxy.RetryWriteListenerProxy;
 import org.apache.batchee.container.proxy.SkipProcessListenerProxy;
 import org.apache.batchee.container.proxy.SkipReadListenerProxy;
 import org.apache.batchee.container.proxy.SkipWriteListenerProxy;
-import org.apache.batchee.container.services.IPersistenceManagerService;
+import org.apache.batchee.container.services.PersistenceManagerService;
 import org.apache.batchee.container.servicesmanager.ServicesManager;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
 import org.apache.batchee.container.util.PartitionDataWrapper;
 import org.apache.batchee.container.util.TCCLObjectInputStream;
 import org.apache.batchee.container.validation.ArtifactValidationException;
@@ -70,6 +69,8 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
     private final static String sourceClass = ChunkStepControllerImpl.class.getName();
     private final static Logger logger = Logger.getLogger(sourceClass);
 
+    private final PersistenceManagerService persistenceManagerService = ServicesManager.getPersistenceManagerService();
+
     private Chunk chunk = null;
     private ItemReaderProxy readerProxy = null;
     private ItemProcessorProxy processorProxy = null;
@@ -77,8 +78,6 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
     private CheckpointAlgorithmProxy checkpointProxy = null;
     private CheckpointAlgorithm chkptAlg = null;
     private CheckpointManager checkpointManager;
-    private ServicesManager servicesManager = ServicesManagerImpl.getInstance();
-    private IPersistenceManagerService _persistenceManagerService = null;
     private SkipHandler skipHandler = null;
     private CheckpointDataKey readerChkptDK, writerChkptDK = null;
     private List<ChunkListenerProxy> chunkListeners = null;
@@ -89,7 +88,8 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
 
     private boolean rollbackRetry = false;
 
-    public ChunkStepControllerImpl(RuntimeJobExecution jobExecutionImpl, Step step, StepContextImpl stepContext, long rootJobExecutionId, BlockingQueue<PartitionDataWrapper> analyzerStatusQueue) {
+    public ChunkStepControllerImpl(final RuntimeJobExecution jobExecutionImpl, final Step step, final StepContextImpl stepContext,
+                                   final long rootJobExecutionId, final BlockingQueue<PartitionDataWrapper> analyzerStatusQueue) {
         super(jobExecutionImpl, step, stepContext, rootJobExecutionId, analyzerStatusQueue);
     }
 
@@ -130,7 +130,7 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
             this.finished = finished;
         }
 
-        public void setRetry(boolean retry) {
+        public void setRetry(boolean ignored) {
             // no-op
         }
 
@@ -472,11 +472,6 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
         }
     }
 
-    /**
-     * Main Read-Process-Write loop
-     *
-     * @throws Exception
-     */
     private void invokeChunk() {
         int itemCount = ChunkHelper.getItemCount(chunk);
         int timeInterval = ChunkHelper.getTimeLimit(chunk);
@@ -625,14 +620,13 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
         invokeChunk();
     }
 
-    private CheckpointAlgorithm getCheckpointAlgorithm(int itemCount, int timeInterval) {
-        CheckpointAlgorithm alg = null;
-
-        if (checkpointProxy.getCheckpointType() == "item") {
+    private CheckpointAlgorithm getCheckpointAlgorithm(final int itemCount, final int timeInterval) {
+        final CheckpointAlgorithm alg;
+        if ("item".equals(checkpointProxy.getCheckpointType())) {
             alg = new ItemCheckpointAlgorithm();
             ((ItemCheckpointAlgorithm) alg).setThresholds(itemCount, timeInterval);
         } else { // custom chkpt alg
-            alg = (CheckpointAlgorithm) checkpointProxy;
+            alg = checkpointProxy;
         }
 
         return alg;
@@ -723,9 +717,8 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
     }
 
     private void openReaderAndWriter() {
-        _persistenceManagerService = servicesManager.getPersistenceManagerService();
         readerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), "READER");
-        CheckpointData readerChkptData = _persistenceManagerService.getCheckpointData(readerChkptDK);
+        CheckpointData readerChkptData = persistenceManagerService.getCheckpointData(readerChkptDK);
         try {
 
             // check for data in backing store
@@ -751,7 +744,7 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
         }
 
         writerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), "WRITER");
-        CheckpointData writerChkptData = _persistenceManagerService.getCheckpointData(writerChkptDK);
+        CheckpointData writerChkptData = persistenceManagerService.getCheckpointData(writerChkptDK);
         try {
             // check for data in backing store
             if (writerChkptData != null) {
@@ -850,10 +843,9 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
     }
 
     private void positionReaderAtCheckpoint() {
-        _persistenceManagerService = servicesManager.getPersistenceManagerService();
         readerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), "READER");
 
-        CheckpointData readerData = _persistenceManagerService.getCheckpointData(readerChkptDK);
+        CheckpointData readerData = persistenceManagerService.getCheckpointData(readerChkptDK);
         try {
             // check for data in backing store
             if (readerData != null) {
@@ -879,10 +871,9 @@ public class ChunkStepControllerImpl extends SingleThreadedStepControllerImpl {
     }
 
     private void positionWriterAtCheckpoint() {
-        _persistenceManagerService = servicesManager.getPersistenceManagerService();
         writerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), "WRITER");
 
-        CheckpointData writerData = _persistenceManagerService.getCheckpointData(writerChkptDK);
+        CheckpointData writerData = persistenceManagerService.getCheckpointData(writerChkptDK);
         try {
             // check for data in backing store
             if (writerData != null) {

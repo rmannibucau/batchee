@@ -18,9 +18,9 @@ package org.apache.batchee.container.proxy;
 
 import org.apache.batchee.container.impl.StepContextImpl;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
+import org.apache.batchee.container.servicesmanager.ServicesManager;
 import org.apache.batchee.container.validation.ArtifactValidationException;
-import org.apache.batchee.spi.services.IBatchArtifactFactory;
+import org.apache.batchee.spi.services.BatchArtifactFactory;
 
 import javax.batch.api.Batchlet;
 import javax.batch.api.Decider;
@@ -37,14 +37,13 @@ import javax.batch.api.partition.PartitionReducer;
  * Introduce a level of indirection so proxies are not instantiated directly by newing them up.
  */
 public class ProxyFactory {
-    private static IBatchArtifactFactory batchArtifactFactory = ServicesManagerImpl.getInstance().getArtifactFactory();
-
-    private static ThreadLocal<InjectionReferences> injectionContext = new ThreadLocal<InjectionReferences>();
+    private static final BatchArtifactFactory ARTIFACT_FACTORY = ServicesManager.getArtifactFactory();
+    private static final ThreadLocal<InjectionReferences> INJECTION_CONTEXT = new ThreadLocal<InjectionReferences>();
 
     protected static Object loadArtifact(final String id, final InjectionReferences injectionReferences, final RuntimeJobExecution execution) {
-        injectionContext.set(injectionReferences);
+        INJECTION_CONTEXT.set(injectionReferences);
         try {
-            final IBatchArtifactFactory.Instance instance = batchArtifactFactory.load(id);
+            final BatchArtifactFactory.Instance instance = ARTIFACT_FACTORY.load(id);
             if (instance == null) {
                 return null;
             }
@@ -59,7 +58,7 @@ public class ProxyFactory {
     }
 
     public static InjectionReferences getInjectionReferences() {
-        return injectionContext.get();
+        return INJECTION_CONTEXT.get();
     }
 
     /*

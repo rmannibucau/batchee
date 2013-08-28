@@ -17,13 +17,13 @@
 package org.apache.batchee.container.services.impl;
 
 import org.apache.batchee.container.exception.BatchContainerServiceException;
+import org.apache.batchee.spi.services.BatchThreadPoolService;
 import org.apache.batchee.spi.services.IBatchConfig;
-import org.apache.batchee.spi.services.IBatchThreadPoolService;
 import org.apache.batchee.spi.services.ParallelTaskResult;
 
 import java.util.concurrent.ExecutorService;
 
-public abstract class AbstractThreadPoolServiceImpl implements IBatchThreadPoolService {
+public abstract class AbstractThreadPoolServiceImpl implements BatchThreadPoolService {
     protected ExecutorService executorService;
 
     public abstract void init(final IBatchConfig pgcConfig) throws BatchContainerServiceException;

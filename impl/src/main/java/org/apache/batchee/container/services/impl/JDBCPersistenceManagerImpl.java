@@ -28,8 +28,8 @@ import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.jobinstance.StepExecutionImpl;
 import org.apache.batchee.container.persistence.CheckpointData;
 import org.apache.batchee.container.persistence.CheckpointDataKey;
-import org.apache.batchee.container.services.IJobExecution;
-import org.apache.batchee.container.services.IPersistenceManagerService;
+import org.apache.batchee.container.services.InternalJobExecution;
+import org.apache.batchee.container.services.PersistenceManagerService;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.container.status.StepStatus;
 import org.apache.batchee.container.util.TCCLObjectInputStream;
@@ -68,7 +68,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, JDBCPersistenceManagerSQLConstants {
+public class JDBCPersistenceManagerImpl implements PersistenceManagerService, JDBCPersistenceManagerSQLConstants {
     private IBatchConfig batchConfig = null;
 
     protected DataSource dataSource = null;
@@ -751,33 +751,6 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     @Override
-    public long jobOperatorQueryJobExecutionJobInstanceId(final long executionID) throws NoSuchJobExecutionException {
-
-        Connection conn = null;
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        long jobinstanceID = 0;
-
-        try {
-            conn = getConnection();
-            statement = conn.prepareStatement("select jobinstanceid from executioninstancedata where jobexecid = ?");
-            statement.setLong(1, executionID);
-            rs = statement.executeQuery();
-            if (rs.next()) {
-                jobinstanceID = rs.getLong("jobinstanceid");
-            } else {
-                throw new NoSuchJobExecutionException("Did not find job instance associated with executionID =" + executionID);
-            }
-        } catch (final SQLException e) {
-            throw new PersistenceException(e);
-        } finally {
-            cleanupConnection(conn, rs, statement);
-        }
-
-        return jobinstanceID;
-    }
-
-    @Override
     public Properties getParameters(final long executionId) throws NoSuchJobExecutionException {
         Connection conn = null;
         PreparedStatement statement = null;
@@ -1205,7 +1178,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
 
 
     @Override
-    public IJobExecution jobOperatorGetJobExecution(long jobExecutionId) {
+    public InternalJobExecution jobOperatorGetJobExecution(long jobExecutionId) {
         Connection conn = null;
         PreparedStatement statement = null;
         ResultSet rs = null;
@@ -1273,7 +1246,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     @Override
-    public List<IJobExecution> jobOperatorGetJobExecutions(long jobInstanceId) {
+    public List<InternalJobExecution> jobOperatorGetJobExecutions(long jobInstanceId) {
         Connection conn = null;
         PreparedStatement statement = null;
         ResultSet rs = null;
@@ -1286,7 +1259,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
         String batchStatus = null;
         String exitStatus = null;
         String jobName = null;
-        List<IJobExecution> data = new ArrayList<IJobExecution>();
+        List<InternalJobExecution> data = new ArrayList<InternalJobExecution>();
         JobOperatorJobExecution jobEx = null;
         ObjectInputStream objectIn = null;
 
@@ -1549,7 +1522,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#createJobInstance(java.lang.String, java.lang.String, java.lang.String, java.util.Properties)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#createJobInstance(java.lang.String, java.lang.String, java.lang.String, java.util.Properties)
      */
     @Override
     public JobInstance createJobInstance(final String name, final String apptag, final String jobXml) {
@@ -1579,7 +1552,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#createJobExecution(com.ibm.jbatch.container.jsl.JobNavigator, javax.batch.runtime.JobInstance, java.util.Properties, org.apache.batchee.container.impl.JobContextImpl)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#createJobExecution(com.ibm.jbatch.container.jsl.JobNavigator, javax.batch.runtime.JobInstance, java.util.Properties, org.apache.batchee.container.impl.JobContextImpl)
      */
     @Override
     public RuntimeJobExecution createJobExecution(final JobInstance jobInstance, final Properties jobParameters, final BatchStatus batchStatus) {
@@ -1632,7 +1605,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#createStepExecution(long, org.apache.batchee.container.impl.StepContextImpl)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#createStepExecution(long, org.apache.batchee.container.impl.StepContextImpl)
      */
     @Override
     public StepExecutionImpl createStepExecution(final long rootJobExecId, final StepContextImpl stepContext) {
@@ -1729,7 +1702,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#updateStepExecution(long, org.apache.batchee.container.impl.StepContextImpl)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#updateStepExecution(long, org.apache.batchee.container.impl.StepContextImpl)
      */
     @Override
     public void updateStepExecution(final long rootJobExecId, final StepContextImpl stepContext) {
@@ -1839,7 +1812,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#getJobStatus(long)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#getJobStatus(long)
      */
     @Override
     public JobStatus getJobStatus(final long instanceId) {
@@ -1870,7 +1843,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#updateJobStatus(long, org.apache.batchee.container.status.JobStatus)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#updateJobStatus(long, org.apache.batchee.container.status.JobStatus)
      */
     @Override
     public void updateJobStatus(final long instanceId, final JobStatus jobStatus) {
@@ -1892,7 +1865,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#createStepStatus(long)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#createStepStatus(long)
      */
     @Override
     public StepStatus createStepStatus(final long stepExecId) {
@@ -1916,7 +1889,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#getStepStatus(long, java.lang.String)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#getStepStatus(long, java.lang.String)
      */
     @Override
     public StepStatus getStepStatus(final long instanceId, final String stepName) {
@@ -1950,7 +1923,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#updateStepStatus(long, org.apache.batchee.container.status.StepStatus)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#updateStepStatus(long, org.apache.batchee.container.status.StepStatus)
      */
     @Override
     public void updateStepStatus(final long stepExecutionId, final StepStatus stepStatus) {
@@ -1972,7 +1945,7 @@ public class JDBCPersistenceManagerImpl implements IPersistenceManagerService, J
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.IPersistenceManagerService#getTagName(long)
+     * @see org.apache.batchee.container.services.PersistenceManagerService#getTagName(long)
      */
     @Override
     public String getTagName(final long jobExecutionId) {

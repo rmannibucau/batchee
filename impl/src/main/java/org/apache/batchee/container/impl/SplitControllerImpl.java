@@ -16,12 +16,12 @@
  */
 package org.apache.batchee.container.impl;
 
-import org.apache.batchee.container.IExecutionElementController;
+import org.apache.batchee.container.ExecutionElementController;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.jobinstance.RuntimeFlowInSplitExecution;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
-import org.apache.batchee.container.services.IBatchKernelService;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
+import org.apache.batchee.container.services.BatchKernelService;
+import org.apache.batchee.container.servicesmanager.ServicesManager;
 import org.apache.batchee.container.status.ExecutionStatus;
 import org.apache.batchee.container.status.ExtendedBatchStatus;
 import org.apache.batchee.container.status.SplitExecutionStatus;
@@ -43,14 +43,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
-public class SplitControllerImpl implements IExecutionElementController {
+public class SplitControllerImpl implements ExecutionElementController {
     private final static Logger logger = Logger.getLogger(SplitControllerImpl.class.getName());
 
     private final RuntimeJobExecution jobExecution;
 
     private volatile List<BatchFlowInSplitWorkUnit> parallelBatchWorkUnits;
 
-    private final IBatchKernelService batchKernel;
+    private final BatchKernelService batchKernel;
     private final JobContextImpl jobContext;
     private final BlockingQueue<BatchFlowInSplitWorkUnit> completedWorkQueue = new LinkedBlockingQueue<BatchFlowInSplitWorkUnit>();
     private final long rootJobExecutionId;
@@ -65,7 +65,7 @@ public class SplitControllerImpl implements IExecutionElementController {
         this.rootJobExecutionId = rootJobExecutionId;
         this.split = split;
 
-        batchKernel = ServicesManagerImpl.getInstance().getBatchKernelService();
+        batchKernel = ServicesManager.getBatchKernelService();
     }
 
     @Override

@@ -24,7 +24,7 @@ import org.apache.batchee.container.persistence.CheckpointData;
 import org.apache.batchee.container.persistence.CheckpointDataKey;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.container.status.StepStatus;
-import org.apache.batchee.spi.services.IBatchServiceBase;
+import org.apache.batchee.spi.services.BatchService;
 
 import javax.batch.operations.NoSuchJobExecutionException;
 import javax.batch.runtime.BatchStatus;
@@ -36,59 +36,53 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-public interface IPersistenceManagerService extends IBatchServiceBase {
+public interface PersistenceManagerService extends BatchService {
 
-    public enum TimestampType {CREATE, END, LAST_UPDATED, STARTED}
-
-    ;
+    public enum TimestampType { CREATE, END, LAST_UPDATED, STARTED }
 
     /**
      * JOB OPERATOR ONLY METHODS
      */
 
-    public int jobOperatorGetJobInstanceCount(String jobName);
+    int jobOperatorGetJobInstanceCount(String jobName);
 
-    public int jobOperatorGetJobInstanceCount(String jobName, String appTag);
+    int jobOperatorGetJobInstanceCount(String jobName, String appTag);
 
-    public Map<Long, String> jobOperatorGetExternalJobInstanceData();
+    Map<Long, String> jobOperatorGetExternalJobInstanceData();
 
-    public List<Long> jobOperatorGetJobInstanceIds(String jobName, int start, int count);
+    List<Long> jobOperatorGetJobInstanceIds(String jobName, int start, int count);
 
-    public List<Long> jobOperatorGetJobInstanceIds(String jobName, String appTag, int start, int count);
+    List<Long> jobOperatorGetJobInstanceIds(String jobName, String appTag, int start, int count);
 
-    public Timestamp jobOperatorQueryJobExecutionTimestamp(long key, TimestampType timetype);
+    Timestamp jobOperatorQueryJobExecutionTimestamp(long key, TimestampType timetype);
 
-    public String jobOperatorQueryJobExecutionBatchStatus(long key);
+    String jobOperatorQueryJobExecutionBatchStatus(long key);
 
-    public String jobOperatorQueryJobExecutionExitStatus(long key);
+    String jobOperatorQueryJobExecutionExitStatus(long key);
 
-    public long jobOperatorQueryJobExecutionJobInstanceId(long executionID) throws NoSuchJobExecutionException;
+    List<StepExecution> getStepExecutionsForJobExecution(long execid);
 
-    public List<StepExecution> getStepExecutionsForJobExecution(long execid);
+    void updateBatchStatusOnly(long executionId, BatchStatus batchStatus, Timestamp timestamp);
 
-    public Map<String, StepExecution> getMostRecentStepExecutionsForJobInstance(long instanceId);
+    void markJobStarted(long key, Timestamp startTS);
 
-    public void updateBatchStatusOnly(long executionId, BatchStatus batchStatus, Timestamp timestamp);
+    void updateWithFinalExecutionStatusesAndTimestamps(long key, BatchStatus batchStatus, String exitStatus, Timestamp updatets);
 
-    public void markJobStarted(long key, Timestamp startTS);
+    InternalJobExecution jobOperatorGetJobExecution(long jobExecutionId);
 
-    public void updateWithFinalExecutionStatusesAndTimestamps(long key, BatchStatus batchStatus, String exitStatus, Timestamp updatets);
+    Properties getParameters(long executionId) throws NoSuchJobExecutionException;
 
-    public IJobExecution jobOperatorGetJobExecution(long jobExecutionId);
+    List<InternalJobExecution> jobOperatorGetJobExecutions(long jobInstanceId);
 
-    public Properties getParameters(long executionId) throws NoSuchJobExecutionException;
+    Set<Long> jobOperatorGetRunningExecutions(String jobName);
 
-    public List<IJobExecution> jobOperatorGetJobExecutions(long jobInstanceId);
+    String getJobCurrentTag(long jobInstanceId);
 
-    public Set<Long> jobOperatorGetRunningExecutions(String jobName);
+    void purge(String apptag);
 
-    public String getJobCurrentTag(long jobInstanceId);
+    JobStatus getJobStatusFromExecution(long executionId);
 
-    public void purge(String apptag);
-
-    public JobStatus getJobStatusFromExecution(long executionId);
-
-    public long getJobInstanceIdByExecutionId(long executionId) throws NoSuchJobExecutionException;
+    long getJobInstanceIdByExecutionId(long executionId) throws NoSuchJobExecutionException;
 
     // JOBINSTANCEDATA
 
@@ -98,10 +92,9 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param name          the job id from job.xml
      * @param apptag        the application tag that owns this job
      * @param jobXml        the resolved job xml
-     * @param jobParameters parameters used for this job
      * @return the job instance
      */
-    public JobInstance createJobInstance(String name, String apptag, String jobXml);
+    JobInstance createJobInstance(String name, String apptag, String jobXml);
 
     // EXECUTIONINSTANCEDATA
 
@@ -124,7 +117,7 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param stepContext the step context for this step execution
      * @return the StepExecution
      */
-    public StepExecutionImpl createStepExecution(long jobExecId, StepContextImpl stepContext);
+    StepExecutionImpl createStepExecution(long jobExecId, StepContextImpl stepContext);
 
     /**
      * Update a StepExecution
@@ -132,7 +125,7 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param jobExecId   the parent JobExecution id
      * @param stepContext the step context for this step execution
      */
-    public void updateStepExecution(long jobExecId, StepContextImpl stepContext);
+    void updateStepExecution(long jobExecId, StepContextImpl stepContext);
 
 
     // JOB_STATUS
@@ -143,7 +136,7 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param jobInstanceId the parent job instance id
      * @return the JobStatus
      */
-    public JobStatus createJobStatus(long jobInstanceId);
+    JobStatus createJobStatus(long jobInstanceId);
 
     /**
      * Get a JobStatus
@@ -151,7 +144,7 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param instanceId the parent job instance id
      * @return the JobStatus
      */
-    public JobStatus getJobStatus(long instanceId);
+    JobStatus getJobStatus(long instanceId);
 
     /**
      * Update a JobStatus
@@ -159,7 +152,7 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param instanceId the parent job instance id
      * @param jobStatus  the job status to be updated
      */
-    public void updateJobStatus(long instanceId, JobStatus jobStatus);
+    void updateJobStatus(long instanceId, JobStatus jobStatus);
 
     // STEP_STATUS
 
@@ -169,7 +162,7 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param stepExecId the parent step execution id
      * @return the StepStatus
      */
-    public StepStatus createStepStatus(long stepExecId);
+    StepStatus createStepStatus(long stepExecId);
 
     /**
      * Get a StepStatus
@@ -181,7 +174,7 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param stepName   the step name
      * @return the StepStatus
      */
-    public StepStatus getStepStatus(long instanceId, String stepName);
+    StepStatus getStepStatus(long instanceId, String stepName);
 
     /**
      * Update a StepStatus
@@ -189,7 +182,7 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param stepExecutionId the parent step execution id
      * @param stepStatus      the step status to be updated
      */
-    public void updateStepStatus(long stepExecutionId, StepStatus stepStatus);
+    void updateStepStatus(long stepExecutionId, StepStatus stepStatus);
 
 
     /**
@@ -198,10 +191,9 @@ public interface IPersistenceManagerService extends IBatchServiceBase {
      * @param jobExecutionId the job execution id
      * @return the application name
      */
-    public String getTagName(long jobExecutionId);
+    String getTagName(long jobExecutionId);
 
-
-    public void updateCheckpointData(CheckpointDataKey key, CheckpointData value);
+    void updateCheckpointData(CheckpointDataKey key, CheckpointData value);
 
     CheckpointData getCheckpointData(CheckpointDataKey key);
 

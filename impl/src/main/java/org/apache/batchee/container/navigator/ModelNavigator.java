@@ -31,12 +31,6 @@ public interface ModelNavigator<T> {
     public ExecutionElement getFirstExecutionElement(String restartOn) throws IllegalTransitionException;
 
     /**
-     * @return
-     * @throws IllegalTransitionException
-     */
-    public ExecutionElement getFirstExecutionElement() throws IllegalTransitionException;
-
-    /**
      * Enforces "can't revisit already visited steps rule".
      */
     public Transition getNextTransition(ExecutionElement currentExecutionElem, ExecutionStatus currentExecutionStatus)

@@ -23,7 +23,7 @@ import org.apache.batchee.container.util.BatchWorkUnit;
 import org.apache.batchee.container.util.FlowInSplitBuilderConfig;
 import org.apache.batchee.container.util.PartitionsBuilderConfig;
 import org.apache.batchee.spi.BatchSecurityHelper;
-import org.apache.batchee.spi.services.IBatchServiceBase;
+import org.apache.batchee.spi.services.BatchService;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
 import javax.batch.operations.JobExecutionNotMostRecentException;
@@ -35,17 +35,13 @@ import javax.batch.runtime.JobInstance;
 import java.util.List;
 import java.util.Properties;
 
-public interface IBatchKernelService extends IBatchServiceBase {
+public interface BatchKernelService extends BatchService {
 
-    IJobExecution getJobExecution(long executionId) throws NoSuchJobExecutionException;
+    InternalJobExecution getJobExecution(long executionId) throws NoSuchJobExecutionException;
 
-    IJobExecution restartJob(long executionID) throws JobRestartException, JobExecutionAlreadyCompleteException, JobExecutionNotMostRecentException, NoSuchJobExecutionException;
+    InternalJobExecution restartJob(long executionID, Properties overrideJobParameters) throws JobRestartException, JobExecutionAlreadyCompleteException, JobExecutionNotMostRecentException, NoSuchJobExecutionException;
 
-    IJobExecution restartJob(long executionID, Properties overrideJobParameters) throws JobRestartException, JobExecutionAlreadyCompleteException, JobExecutionNotMostRecentException, NoSuchJobExecutionException;
-
-    IJobExecution startJob(String jobXML) throws JobStartException;
-
-    IJobExecution startJob(String jobXML, Properties jobParameters) throws JobStartException;
+    InternalJobExecution startJob(String jobXML, Properties jobParameters) throws JobStartException;
 
     void stopJob(long executionID) throws NoSuchJobExecutionException, JobExecutionNotRunningException;
 

@@ -17,17 +17,17 @@
 package org.apache.batchee.container.services.impl;
 
 import org.apache.batchee.container.exception.BatchContainerServiceException;
-import org.apache.batchee.container.services.IJobStatusManagerService;
-import org.apache.batchee.container.services.IPersistenceManagerService;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
+import org.apache.batchee.container.services.JobStatusManagerService;
+import org.apache.batchee.container.services.PersistenceManagerService;
+import org.apache.batchee.container.servicesmanager.ServicesManager;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.container.status.StepStatus;
 import org.apache.batchee.spi.services.IBatchConfig;
 
 import javax.batch.runtime.BatchStatus;
 
-public class JobStatusManagerImpl implements IJobStatusManagerService {
-    private IPersistenceManagerService _persistenceManager;
+public class JobStatusManagerImpl implements JobStatusManagerService {
+    private PersistenceManagerService persistenceManager;
 
     @Override
     public void shutdown() throws BatchContainerServiceException {
@@ -36,12 +36,12 @@ public class JobStatusManagerImpl implements IJobStatusManagerService {
 
     @Override
     public JobStatus createJobStatus(long jobInstanceId) throws BatchContainerServiceException {
-        return _persistenceManager.createJobStatus(jobInstanceId);
+        return persistenceManager.createJobStatus(jobInstanceId);
     }
 
     @Override
     public JobStatus getJobStatus(final long jobInstanceId) throws BatchContainerServiceException {
-        return _persistenceManager.getJobStatus(jobInstanceId);
+        return persistenceManager.getJobStatus(jobInstanceId);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class JobStatusManagerImpl implements IJobStatusManagerService {
 
     @Override
     public JobStatus getJobStatusFromExecutionId(final long executionId) throws BatchContainerServiceException {
-        return _persistenceManager.getJobStatusFromExecution(executionId);
+        return persistenceManager.getJobStatusFromExecution(executionId);
     }
 
     @Override
@@ -99,12 +99,12 @@ public class JobStatusManagerImpl implements IJobStatusManagerService {
     }
 
     private void persistJobStatus(long jobInstanceId, JobStatus newJobStatus) throws BatchContainerServiceException {
-        _persistenceManager.updateJobStatus(jobInstanceId, newJobStatus);
+        persistenceManager.updateJobStatus(jobInstanceId, newJobStatus);
     }
 
     @Override
     public StepStatus createStepStatus(final long stepExecutionId) throws BatchContainerServiceException {
-        return _persistenceManager.createStepStatus(stepExecutionId);
+        return persistenceManager.createStepStatus(stepExecutionId);
     }
 
     @Override
@@ -112,17 +112,17 @@ public class JobStatusManagerImpl implements IJobStatusManagerService {
      * @return - StepStatus or null if one is unknown
      */
     public StepStatus getStepStatus(final long jobInstanceId, final String stepId) throws BatchContainerServiceException {
-        return _persistenceManager.getStepStatus(jobInstanceId, stepId);
+        return persistenceManager.getStepStatus(jobInstanceId, stepId);
     }
 
     @Override
     public void updateStepStatus(final long stepExecutionId, final StepStatus newStepStatus) {
-        _persistenceManager.updateStepStatus(stepExecutionId, newStepStatus);
+        persistenceManager.updateStepStatus(stepExecutionId, newStepStatus);
     }
 
     @Override
     public void init(final IBatchConfig batchConfig) throws BatchContainerServiceException {
-        _persistenceManager = ServicesManagerImpl.getInstance().getPersistenceManagerService();
+        persistenceManager = ServicesManager.getPersistenceManagerService();
     }
 
     /*

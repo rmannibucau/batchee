@@ -20,7 +20,6 @@ import javax.batch.api.partition.PartitionPlan;
 import java.util.Properties;
 
 public class BatchPartitionPlan implements PartitionPlan {
-
     private int partitionCount;
     private int threadCount;
     private Properties[] partitionProperties;

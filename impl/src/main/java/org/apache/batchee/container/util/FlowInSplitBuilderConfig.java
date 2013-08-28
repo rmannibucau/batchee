@@ -39,17 +39,8 @@ public class FlowInSplitBuilderConfig {
         return jobModel;
     }
 
-    public void setJobModel(JSLJob jobModel) {
-        this.jobModel = jobModel;
-    }
-
     public BlockingQueue<BatchFlowInSplitWorkUnit> getCompletedQueue() {
         return completedQueue;
-    }
-
-    public void setCompletedQueue(
-        BlockingQueue<BatchFlowInSplitWorkUnit> completedQueue) {
-        this.completedQueue = completedQueue;
     }
 
     public long getRootJobExecutionId() {
@@ -59,6 +50,4 @@ public class FlowInSplitBuilderConfig {
     public void setRootJobExecutionId(long rootJobExecutionId) {
         this.rootJobExecutionId = rootJobExecutionId;
     }
-
-
 }

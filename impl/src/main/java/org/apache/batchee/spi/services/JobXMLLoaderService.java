@@ -16,11 +16,12 @@
 */
 package org.apache.batchee.spi.services;
 
+public interface JobXMLLoaderService extends BatchService {
 
-public interface IBatchServiceBase {
 
-    public void init(IBatchConfig batchConfig);
-
-    public void shutdown();
+    /*
+     * Load an XML document as a String given the JSL id.
+     */
+    String loadJSL(String id);
 
 }

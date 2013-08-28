@@ -14,21 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.batchee.container.jsl.impl;
+package org.apache.batchee.container;
 
+import java.util.List;
 
-import org.apache.batchee.container.jsl.ModelResolver;
-import org.apache.batchee.jaxb.Split;
-
-public class SplitModelResolverImpl implements ModelResolver<Split> {
-
-    @Override
-    public Split resolveModel(String jobXML) {
-        return null;
-    }
-
-    @Override
-    public Split resolveModel(Split t) {
-        return null;
-    }
+public interface Controller {
+    void stop();
+    List<Long> getLastRunStepExecutions();
 }

@@ -18,24 +18,19 @@ package org.apache.batchee.container.util;
 
 import org.apache.batchee.container.impl.PartitionThreadRootControllerImpl;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
-import org.apache.batchee.container.services.IBatchKernelService;
+import org.apache.batchee.container.services.BatchKernelService;
 
 import java.util.concurrent.BlockingQueue;
 
 public class BatchPartitionWorkUnit extends BatchParallelWorkUnit {
+    protected final BlockingQueue<BatchPartitionWorkUnit> completedThreadQueue;
 
-    public BatchPartitionWorkUnit(IBatchKernelService batchKernelService,
+    public BatchPartitionWorkUnit(BatchKernelService batchKernelService,
                                   RuntimeJobExecution jobExecution,
                                   PartitionsBuilderConfig config) {
         super(batchKernelService, jobExecution, true);
         this.completedThreadQueue = config.getCompletedQueue();
         this.controller = new PartitionThreadRootControllerImpl(jobExecution, config);
-    }
-
-    protected BlockingQueue<BatchPartitionWorkUnit> completedThreadQueue;
-
-    public BlockingQueue<BatchPartitionWorkUnit> getCompletedThreadQueue() {
-        return completedThreadQueue;
     }
 
     @Override

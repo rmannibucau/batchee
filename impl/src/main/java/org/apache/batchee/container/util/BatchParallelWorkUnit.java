@@ -17,7 +17,7 @@
 package org.apache.batchee.container.util;
 
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
-import org.apache.batchee.container.services.IBatchKernelService;
+import org.apache.batchee.container.services.BatchKernelService;
 
 /*
  * I took out the 'work type' constant since I don't see that we want to use
@@ -26,9 +26,7 @@ import org.apache.batchee.container.services.IBatchKernelService;
  * perspective, as it returns a 'success' boolean.
  */
 public abstract class BatchParallelWorkUnit extends BatchWorkUnit {
-
-    public BatchParallelWorkUnit(IBatchKernelService batchKernel, RuntimeJobExecution jobExecutionImpl, boolean notifyCallbackWhenDone) {
+    public BatchParallelWorkUnit(final BatchKernelService batchKernel, final RuntimeJobExecution jobExecutionImpl, final boolean notifyCallbackWhenDone) {
         super(batchKernel, jobExecutionImpl, notifyCallbackWhenDone);
     }
-
 }

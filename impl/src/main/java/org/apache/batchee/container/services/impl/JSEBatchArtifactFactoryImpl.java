@@ -18,7 +18,7 @@ package org.apache.batchee.container.services.impl;
 
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
-import org.apache.batchee.spi.services.IBatchArtifactFactory;
+import org.apache.batchee.spi.services.BatchArtifactFactory;
 import org.apache.batchee.spi.services.IBatchConfig;
 
 import javax.xml.namespace.QName;
@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class JSEBatchArtifactFactoryImpl implements IBatchArtifactFactory, XMLStreamConstants {
+public class JSEBatchArtifactFactoryImpl implements BatchArtifactFactory, XMLStreamConstants {
     private final static String BATCH_XML = "META-INF/batch.xml";
     private final static QName BATCH_ROOT_ELEM = new QName("http://xmlns.jcp.org/xml/ns/javaee", "batch-artifacts");
 

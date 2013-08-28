@@ -20,7 +20,7 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.proxy.ProxyFactory;
 import org.apache.batchee.container.util.DependencyInjectionUtility;
-import org.apache.batchee.spi.services.IBatchArtifactFactory;
+import org.apache.batchee.spi.services.BatchArtifactFactory;
 import org.apache.batchee.spi.services.IBatchConfig;
 
 import javax.xml.namespace.QName;
@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DefaultBatchArtifactFactoryImpl implements IBatchArtifactFactory, XMLStreamConstants {
+public class DefaultBatchArtifactFactoryImpl implements BatchArtifactFactory, XMLStreamConstants {
     // TODO - surface constants
     private final static String BATCH_XML = "META-INF/batch.xml";
     private final static QName BATCH_ROOT_ELEM = new QName("http://xmlns.jcp.org/xml/ns/javaee", "batch-artifacts");

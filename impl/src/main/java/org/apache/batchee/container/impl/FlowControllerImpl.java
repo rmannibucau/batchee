@@ -16,26 +16,19 @@
  */
 package org.apache.batchee.container.impl;
 
-import org.apache.batchee.container.IController;
-import org.apache.batchee.container.IExecutionElementController;
+import org.apache.batchee.container.Controller;
+import org.apache.batchee.container.ExecutionElementController;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.navigator.ModelNavigator;
 import org.apache.batchee.container.navigator.NavigatorFactory;
-import org.apache.batchee.container.services.IPersistenceManagerService;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
 import org.apache.batchee.container.status.ExecutionStatus;
 import org.apache.batchee.container.status.ExtendedBatchStatus;
 import org.apache.batchee.jaxb.Flow;
 
 import javax.batch.runtime.BatchStatus;
 import java.util.List;
-import java.util.logging.Logger;
 
-public class FlowControllerImpl implements IExecutionElementController {
-
-    private final static String CLASSNAME = FlowControllerImpl.class.getName();
-    private final static Logger logger = Logger.getLogger(CLASSNAME);
-
+public class FlowControllerImpl implements ExecutionElementController {
     private final RuntimeJobExecution jobExecution;
     private final JobContextImpl jobContext;
 
@@ -46,16 +39,7 @@ public class FlowControllerImpl implements IExecutionElementController {
 
     private ExecutionTransitioner transitioner;
 
-    //
-    // The currently executing controller, this will only be set to the
-    // local variable reference when we are ready to accept stop events for
-    // this execution.
-    private volatile IController currentStoppableElementController = null;
-
-    private static IPersistenceManagerService _persistenceManagementService = ServicesManagerImpl.getInstance().getPersistenceManagerService();
-
-
-    public FlowControllerImpl(RuntimeJobExecution jobExecution, Flow flow, long rootJobExecutionId) {
+    public FlowControllerImpl(final RuntimeJobExecution jobExecution, final Flow flow, final long rootJobExecutionId) {
         this.jobExecution = jobExecution;
         this.jobContext = jobExecution.getJobContext();
         this.flowNavigator = NavigatorFactory.createFlowNavigator(flow);
@@ -68,9 +52,8 @@ public class FlowControllerImpl implements IExecutionElementController {
         if (!jobContext.getBatchStatus().equals(BatchStatus.STOPPING)) {
             transitioner = new ExecutionTransitioner(jobExecution, rootJobExecutionId, flowNavigator);
             return transitioner.doExecutionLoop();
-        } else {
-            return new ExecutionStatus(ExtendedBatchStatus.JOB_OPERATOR_STOPPING);
         }
+        return new ExecutionStatus(ExtendedBatchStatus.JOB_OPERATOR_STOPPING);
     }
 
 
@@ -78,7 +61,7 @@ public class FlowControllerImpl implements IExecutionElementController {
     public void stop() {
         // Since this is not a top-level controller, don't try to filter based on existing status.. just pass
         // along the stop().
-        IController stoppableElementController = transitioner.getCurrentStoppableElementController();
+        final Controller stoppableElementController = transitioner.getCurrentStoppableElementController();
         if (stoppableElementController != null) {
             stoppableElementController.stop();
         }

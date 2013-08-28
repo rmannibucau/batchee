@@ -19,12 +19,12 @@ package org.apache.batchee.container.services.impl;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.spi.BatchSPIManager;
 import org.apache.batchee.spi.services.IBatchConfig;
-import org.apache.batchee.spi.services.IBatchThreadPoolService;
+import org.apache.batchee.spi.services.BatchThreadPoolService;
 import org.apache.batchee.spi.services.ParallelTaskResult;
 
 import java.util.concurrent.ExecutorService;
 
-public class SPIDelegatingThreadPoolServiceImpl implements IBatchThreadPoolService {
+public class SPIDelegatingThreadPoolServiceImpl implements BatchThreadPoolService {
     @Override
     public void init(final IBatchConfig batchConfig) {
         // we want to call getExecutorServiceProvider() each time

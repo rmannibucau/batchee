@@ -17,16 +17,16 @@
 package org.apache.batchee.container.jobinstance;
 
 import org.apache.batchee.container.impl.JobContextImpl;
-import org.apache.batchee.container.jsl.ModelResolverFactory;
+import org.apache.batchee.container.jsl.JobModelResolver;
 import org.apache.batchee.container.modelresolver.PropertyResolver;
 import org.apache.batchee.container.modelresolver.PropertyResolverFactory;
 import org.apache.batchee.container.navigator.ModelNavigator;
 import org.apache.batchee.container.navigator.NavigatorFactory;
-import org.apache.batchee.container.services.IBatchKernelService;
-import org.apache.batchee.container.services.IJobExecution;
-import org.apache.batchee.container.services.IJobStatusManagerService;
-import org.apache.batchee.container.services.IPersistenceManagerService;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
+import org.apache.batchee.container.services.BatchKernelService;
+import org.apache.batchee.container.services.InternalJobExecution;
+import org.apache.batchee.container.services.JobStatusManagerService;
+import org.apache.batchee.container.services.PersistenceManagerService;
+import org.apache.batchee.container.servicesmanager.ServicesManager;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.jaxb.JSLJob;
 import org.apache.batchee.jaxb.JSLProperties;
@@ -41,13 +41,12 @@ import javax.batch.runtime.JobInstance;
 import java.util.Properties;
 
 public class JobExecutionHelper {
-    private static IJobStatusManagerService _jobStatusManagerService = ServicesManagerImpl.getInstance().getJobStatusManagerService();
-    private static IPersistenceManagerService _persistenceManagementService = ServicesManagerImpl.getInstance().getPersistenceManagerService();
-    private static IBatchKernelService _batchKernelService = ServicesManagerImpl.getInstance().getBatchKernelService();
-
+    private static final JobStatusManagerService JOB_STATUS_MANAGER_SERVICE = ServicesManager.getJobStatusManagerService();
+    private static final PersistenceManagerService PERSISTENCE_MANAGER_SERVICE = ServicesManager.getPersistenceManagerService();
+    private static final BatchKernelService BATCH_KERNEL_SERVICE = ServicesManager.getBatchKernelService();
 
     private static ModelNavigator<JSLJob> getResolvedJobNavigator(final String jobXml, final Properties jobParameters, final boolean parallelExecution) {
-        final JSLJob jobModel = ModelResolverFactory.createJobResolver().resolveModel(jobXml);
+        final JSLJob jobModel = new JobModelResolver().resolveModel(jobXml);
         final PropertyResolver<JSLJob> propResolver = PropertyResolverFactory.createJobPropertyResolver(parallelExecution);
         propResolver.substituteProperties(jobModel, jobParameters);
         return NavigatorFactory.createJobNavigator(jobModel);
@@ -70,18 +69,18 @@ public class JobExecutionHelper {
     }
 
     private static JobInstance getNewJobInstance(final String name, final String jobXml) {
-        String apptag = _batchKernelService.getBatchSecurityHelper().getCurrentTag();
-        return _persistenceManagementService.createJobInstance(name, apptag, jobXml);
+        String apptag = BATCH_KERNEL_SERVICE.getBatchSecurityHelper().getCurrentTag();
+        return PERSISTENCE_MANAGER_SERVICE.createJobInstance(name, apptag, jobXml);
     }
 
     private static JobInstance getNewSubJobInstance(final String name) {
-        String apptag = _batchKernelService.getBatchSecurityHelper().getCurrentTag();
-        return _persistenceManagementService.createSubJobInstance(name, apptag);
+        String apptag = BATCH_KERNEL_SERVICE.getBatchSecurityHelper().getCurrentTag();
+        return PERSISTENCE_MANAGER_SERVICE.createSubJobInstance(name, apptag);
     }
 
     private static JobStatus createNewJobStatus(final JobInstance jobInstance) {
         final long instanceId = jobInstance.getInstanceId();
-        final JobStatus jobStatus = _jobStatusManagerService.createJobStatus(instanceId);
+        final JobStatus jobStatus = JOB_STATUS_MANAGER_SERVICE.createJobStatus(instanceId);
         jobStatus.setJobInstance(jobInstance);
         return jobStatus;
     }
@@ -94,16 +93,16 @@ public class JobExecutionHelper {
     }
 
     public static RuntimeJobExecution startJob(final String jobXML, final Properties jobParameters) throws JobStartException {
-        final JSLJob jobModel = ModelResolverFactory.createJobResolver().resolveModel(jobXML);
+        final JSLJob jobModel = new JobModelResolver().resolveModel(jobXML);
         final ModelNavigator<JSLJob> jobNavigator = getResolvedJobNavigator(jobModel, jobParameters, false);
         final JobContextImpl jobContext = getJobContext(jobNavigator);
         final JobInstance jobInstance = getNewJobInstance(jobNavigator.getRootModelElement().getId(), jobXML);
-        final RuntimeJobExecution executionHelper = _persistenceManagementService.createJobExecution(jobInstance, jobParameters, jobContext.getBatchStatus());
+        final RuntimeJobExecution executionHelper = PERSISTENCE_MANAGER_SERVICE.createJobExecution(jobInstance, jobParameters, jobContext.getBatchStatus());
 
         executionHelper.prepareForExecution(jobContext);
 
         final JobStatus jobStatus = createNewJobStatus(jobInstance);
-        _jobStatusManagerService.updateJobStatus(jobStatus);
+        JOB_STATUS_MANAGER_SERVICE.updateJobStatus(jobStatus);
 
         return executionHelper;
     }
@@ -112,12 +111,12 @@ public class JobExecutionHelper {
         final ModelNavigator<JSLJob> jobNavigator = getResolvedJobNavigator(jobModel, null, true);
         final JobContextImpl jobContext = getJobContext(jobNavigator);
         final JobInstance jobInstance = getNewSubJobInstance(jobNavigator.getRootModelElement().getId());
-        final RuntimeFlowInSplitExecution executionHelper = _persistenceManagementService.createFlowInSplitExecution(jobInstance, jobContext.getBatchStatus());
+        final RuntimeFlowInSplitExecution executionHelper = PERSISTENCE_MANAGER_SERVICE.createFlowInSplitExecution(jobInstance, jobContext.getBatchStatus());
 
         executionHelper.prepareForExecution(jobContext);
 
         final JobStatus jobStatus = createNewJobStatus(jobInstance);
-        _jobStatusManagerService.updateJobStatus(jobStatus);
+        JOB_STATUS_MANAGER_SERVICE.updateJobStatus(jobStatus);
 
         return executionHelper;
     }
@@ -128,12 +127,12 @@ public class JobExecutionHelper {
 
         final JobInstance jobInstance = getNewSubJobInstance(jobNavigator.getRootModelElement().getId());
 
-        final RuntimeJobExecution executionHelper = _persistenceManagementService.createJobExecution(jobInstance, jobParameters, jobContext.getBatchStatus());
+        final RuntimeJobExecution executionHelper = PERSISTENCE_MANAGER_SERVICE.createJobExecution(jobInstance, jobParameters, jobContext.getBatchStatus());
 
         executionHelper.prepareForExecution(jobContext);
 
         final JobStatus jobStatus = createNewJobStatus(jobInstance);
-        _jobStatusManagerService.updateJobStatus(jobStatus);
+        JOB_STATUS_MANAGER_SERVICE.updateJobStatus(jobStatus);
 
         return executionHelper;
     }
@@ -151,7 +150,7 @@ public class JobExecutionHelper {
     }
 
     private static void validateJobExecutionIsMostRecent(final long jobInstanceId, final long executionId) throws JobExecutionNotMostRecentException {
-        final long mostRecentExecutionId = _persistenceManagementService.getMostRecentExecutionId(jobInstanceId);
+        final long mostRecentExecutionId = PERSISTENCE_MANAGER_SERVICE.getMostRecentExecutionId(jobInstanceId);
         if (mostRecentExecutionId != executionId) {
             throw new JobExecutionNotMostRecentException("ExecutionId: " + executionId + " is not the most recent execution.");
         }
@@ -175,8 +174,8 @@ public class JobExecutionHelper {
     private static RuntimeJobExecution restartExecution(final long executionId, final JSLJob gennedJobModel, final Properties restartJobParameters, final boolean parallelExecution, final boolean flowInSplit) throws JobRestartException,
         JobExecutionAlreadyCompleteException, JobExecutionNotMostRecentException, NoSuchJobExecutionException {
 
-        final long jobInstanceId = _persistenceManagementService.getJobInstanceIdByExecutionId(executionId);
-        final JobStatus jobStatus = _jobStatusManagerService.getJobStatus(jobInstanceId);
+        final long jobInstanceId = PERSISTENCE_MANAGER_SERVICE.getJobInstanceIdByExecutionId(executionId);
+        final JobStatus jobStatus = JOB_STATUS_MANAGER_SERVICE.getJobStatus(jobInstanceId);
 
         validateJobExecutionIsMostRecent(jobInstanceId, executionId);
 
@@ -198,22 +197,22 @@ public class JobExecutionHelper {
 
         final RuntimeJobExecution executionHelper;
         if (flowInSplit) {
-            executionHelper = _persistenceManagementService.createFlowInSplitExecution(jobInstance, jobContext.getBatchStatus());
+            executionHelper = PERSISTENCE_MANAGER_SERVICE.createFlowInSplitExecution(jobInstance, jobContext.getBatchStatus());
         } else {
-            executionHelper = _persistenceManagementService.createJobExecution(jobInstance, restartJobParameters, jobContext.getBatchStatus());
+            executionHelper = PERSISTENCE_MANAGER_SERVICE.createJobExecution(jobInstance, restartJobParameters, jobContext.getBatchStatus());
         }
         executionHelper.prepareForExecution(jobContext, jobStatus.getRestartOn());
-        _jobStatusManagerService.updateJobStatusWithNewExecution(jobInstance.getInstanceId(), executionHelper.getExecutionId());
+        JOB_STATUS_MANAGER_SERVICE.updateJobStatusWithNewExecution(jobInstance.getInstanceId(), executionHelper.getExecutionId());
 
         return executionHelper;
     }
 
-    public static IJobExecution getPersistedJobOperatorJobExecution(final long jobExecutionId) throws NoSuchJobExecutionException {
-        return _persistenceManagementService.jobOperatorGetJobExecution(jobExecutionId);
+    public static InternalJobExecution getPersistedJobOperatorJobExecution(final long jobExecutionId) throws NoSuchJobExecutionException {
+        return PERSISTENCE_MANAGER_SERVICE.jobOperatorGetJobExecution(jobExecutionId);
     }
 
 
     public static JobInstance getJobInstance(final long executionId) {
-        return _jobStatusManagerService.getJobStatusFromExecutionId(executionId).getJobInstance();
+        return JOB_STATUS_MANAGER_SERVICE.getJobStatusFromExecutionId(executionId).getJobInstance();
     }
 }

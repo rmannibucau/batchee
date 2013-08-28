@@ -16,31 +16,36 @@
  */
 package org.apache.batchee.container.util;
 
-import org.apache.batchee.container.exception.BatchContainerRuntimeException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
+import java.lang.reflect.Proxy;
 
 public class TCCLObjectInputStream extends ObjectInputStream {
+    private final ClassLoader tccl;
 
-
-    public TCCLObjectInputStream(InputStream in) throws IOException {
+    public TCCLObjectInputStream(final InputStream in) throws IOException {
         super(in);
+        tccl = Thread.currentThread().getContextClassLoader();
     }
 
     @Override
-    public Class<?> resolveClass(ObjectStreamClass desc) {
-        ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-
-        try {
-            return tccl.loadClass(desc.getName());
-        } catch (ClassNotFoundException e) {
-            throw new BatchContainerRuntimeException(e);
-        }
-
+    protected Class<?> resolveClass(final ObjectStreamClass desc) throws ClassNotFoundException {
+        return Class.forName(desc.getName(), false, tccl);
     }
 
+    @Override
+    protected Class resolveProxyClass(final String[] interfaces) throws IOException, ClassNotFoundException {
+        final Class[] cinterfaces = new Class[interfaces.length];
+        for (int i = 0; i < interfaces.length; i++) {
+            cinterfaces[i] = Class.forName(interfaces[i], false, tccl);
+        }
 
+        try {
+            return Proxy.getProxyClass(tccl, cinterfaces);
+        } catch (IllegalArgumentException e) {
+            throw new ClassNotFoundException(null, e);
+        }
+    }
 }

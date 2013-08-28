@@ -16,18 +16,17 @@
  */
 package org.apache.batchee.container.impl;
 
-import org.apache.batchee.container.IThreadRootController;
+import org.apache.batchee.container.ThreadRootController;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.jobinstance.JobExecutionHelper;
 import org.apache.batchee.container.jobinstance.RuntimeFlowInSplitExecution;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
-import org.apache.batchee.container.services.IBatchKernelService;
-import org.apache.batchee.container.services.IJobExecution;
-import org.apache.batchee.container.services.IPersistenceManagerService;
+import org.apache.batchee.container.services.BatchKernelService;
+import org.apache.batchee.container.services.InternalJobExecution;
+import org.apache.batchee.container.services.PersistenceManagerService;
 import org.apache.batchee.container.services.impl.NoOpBatchSecurityHelper;
 import org.apache.batchee.container.services.impl.RuntimeBatchJobUtil;
 import org.apache.batchee.container.servicesmanager.ServicesManager;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
 import org.apache.batchee.container.util.BatchFlowInSplitWorkUnit;
 import org.apache.batchee.container.util.BatchPartitionWorkUnit;
 import org.apache.batchee.container.util.BatchWorkUnit;
@@ -36,8 +35,8 @@ import org.apache.batchee.container.util.PartitionsBuilderConfig;
 import org.apache.batchee.jaxb.JSLJob;
 import org.apache.batchee.spi.BatchSPIManager;
 import org.apache.batchee.spi.BatchSecurityHelper;
+import org.apache.batchee.spi.services.BatchThreadPoolService;
 import org.apache.batchee.spi.services.IBatchConfig;
-import org.apache.batchee.spi.services.IBatchThreadPoolService;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
 import javax.batch.operations.JobExecutionNotMostRecentException;
@@ -56,20 +55,16 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class BatchKernelImpl implements IBatchKernelService {
-    public static final Properties EMPTY_PROPS = new Properties();
-    private Map<Long, IThreadRootController> executionId2jobControllerMap = new ConcurrentHashMap<Long, IThreadRootController>();
-    private Set<Long> instanceIdExecutingSet = new HashSet<Long>();
+public class BatchKernelImpl implements BatchKernelService {
+    private final Map<Long, ThreadRootController> executionId2jobControllerMap = new ConcurrentHashMap<Long, ThreadRootController>();
+    private final Set<Long> instanceIdExecutingSet = new HashSet<Long>();
 
-    ServicesManager servicesManager = ServicesManagerImpl.getInstance();
-
-    private IBatchThreadPoolService executorService = null;
-
-    private IPersistenceManagerService persistenceService = null;
+    private final BatchThreadPoolService executorService;
+    private final PersistenceManagerService persistenceService;
 
     public BatchKernelImpl() {
-        executorService = servicesManager.getThreadPoolService();
-        persistenceService = servicesManager.getPersistenceManagerService();
+        executorService = ServicesManager.getThreadPoolService();
+        persistenceService = ServicesManager.getPersistenceManagerService();
 
         // registering our implementation of the util class used to purge by apptag
         BatchSPIManager.getInstance().registerBatchJobUtil(new RuntimeBatchJobUtil());
@@ -95,12 +90,7 @@ public class BatchKernelImpl implements IBatchKernelService {
     }
 
     @Override
-    public IJobExecution startJob(final String jobXML) throws JobStartException {
-        return startJob(jobXML, null);
-    }
-
-    @Override
-    public IJobExecution startJob(final String jobXML, final Properties jobParameters) throws JobStartException {
+    public InternalJobExecution startJob(final String jobXML, final Properties jobParameters) throws JobStartException {
         final RuntimeJobExecution jobExecution = JobExecutionHelper.startJob(jobXML, jobParameters);
 
         // TODO - register with status manager
@@ -116,7 +106,7 @@ public class BatchKernelImpl implements IBatchKernelService {
     @Override
     public void stopJob(final long executionId) throws NoSuchJobExecutionException, JobExecutionNotRunningException {
 
-        final IThreadRootController controller = this.executionId2jobControllerMap.get(executionId);
+        final ThreadRootController controller = this.executionId2jobControllerMap.get(executionId);
         if (controller == null) {
             throw new JobExecutionNotRunningException("JobExecution with execution id of " + executionId + "is not running.");
         }
@@ -124,12 +114,7 @@ public class BatchKernelImpl implements IBatchKernelService {
     }
 
     @Override
-    public IJobExecution restartJob(final long executionId) throws JobRestartException, JobExecutionAlreadyCompleteException, JobExecutionNotMostRecentException, NoSuchJobExecutionException {
-        return restartJob(executionId, EMPTY_PROPS);
-    }
-
-    @Override
-    public IJobExecution restartJob(final long executionId, final Properties jobOverrideProps) throws JobRestartException, JobExecutionAlreadyCompleteException, JobExecutionNotMostRecentException, NoSuchJobExecutionException {
+    public InternalJobExecution restartJob(final long executionId, final Properties jobOverrideProps) throws JobRestartException, JobExecutionAlreadyCompleteException, JobExecutionNotMostRecentException, NoSuchJobExecutionException {
         final RuntimeJobExecution jobExecution = JobExecutionHelper.restartJob(executionId, jobOverrideProps);
         final BatchWorkUnit batchWork = new BatchWorkUnit(this, jobExecution);
 
@@ -160,7 +145,7 @@ public class BatchKernelImpl implements IBatchKernelService {
 
     }
 
-    public IJobExecution getJobExecution(final long executionId) throws NoSuchJobExecutionException {
+    public InternalJobExecution getJobExecution(final long executionId) throws NoSuchJobExecutionException {
         return JobExecutionHelper.getPersistedJobOperatorJobExecution(executionId);
     }
 
@@ -276,10 +261,10 @@ public class BatchKernelImpl implements IBatchKernelService {
             throw new IllegalStateException("Found " + instanceIds.size() + " entries for instance id = " + jobModel.getId() + ", which should not have happened.  Blowing up.");
         }
 
-        final List<IJobExecution> partitionExecs = persistenceService.jobOperatorGetJobExecutions(instanceIds.get(0));
+        final List<InternalJobExecution> partitionExecs = persistenceService.jobOperatorGetJobExecutions(instanceIds.get(0));
 
         Long execId = Long.MIN_VALUE;
-        for (final IJobExecution partitionExec : partitionExecs) {
+        for (final InternalJobExecution partitionExec : partitionExecs) {
             if (partitionExec.getExecutionId() > execId) {
                 execId = partitionExec.getExecutionId();
             }
@@ -306,7 +291,7 @@ public class BatchKernelImpl implements IBatchKernelService {
         return batchWork;
     }
 
-    private void registerCurrentInstanceAndExecution(final RuntimeJobExecution jobExecution, final IThreadRootController controller) {
+    private void registerCurrentInstanceAndExecution(final RuntimeJobExecution jobExecution, final ThreadRootController controller) {
         final long execId = jobExecution.getExecutionId();
         final long instanceId = jobExecution.getInstanceId();
         final String errorPrefix = "Tried to execute with Job executionId = " + execId + " and instanceId = " + instanceId + " ";

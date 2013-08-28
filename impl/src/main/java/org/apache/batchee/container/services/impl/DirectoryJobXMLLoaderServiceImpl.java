@@ -18,7 +18,7 @@ package org.apache.batchee.container.services.impl;
 
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.spi.services.IBatchConfig;
-import org.apache.batchee.spi.services.IJobXMLLoaderService;
+import org.apache.batchee.spi.services.JobXMLLoaderService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,7 +27,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 
-public class DirectoryJobXMLLoaderServiceImpl implements IJobXMLLoaderService {
+public class DirectoryJobXMLLoaderServiceImpl implements JobXMLLoaderService {
     public static final String JOB_XML_DIR_PROP = "com.ibm.jbatch.jsl.directory";
     public static final String JOB_XML_PATH = System.getProperty(JOB_XML_DIR_PROP);
 

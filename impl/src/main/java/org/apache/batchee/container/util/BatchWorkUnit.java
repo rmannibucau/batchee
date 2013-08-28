@@ -16,11 +16,11 @@
  */
 package org.apache.batchee.container.util;
 
-import org.apache.batchee.container.IThreadRootController;
+import org.apache.batchee.container.ThreadRootController;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.impl.JobControllerImpl;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
-import org.apache.batchee.container.services.IBatchKernelService;
+import org.apache.batchee.container.services.BatchKernelService;
 
 import javax.batch.runtime.BatchStatus;
 import java.io.PrintWriter;
@@ -34,24 +34,24 @@ import java.io.StringWriter;
  */
 public class BatchWorkUnit implements Runnable {
     protected RuntimeJobExecution jobExecutionImpl = null;
-    protected IBatchKernelService batchKernel = null;
-    protected IThreadRootController controller;
+    protected BatchKernelService batchKernel = null;
+    protected ThreadRootController controller;
 
     protected boolean notifyCallbackWhenDone;
 
-    public BatchWorkUnit(IBatchKernelService batchKernel, RuntimeJobExecution jobExecutionImpl) {
+    public BatchWorkUnit(final BatchKernelService batchKernel, final RuntimeJobExecution jobExecutionImpl) {
         this(batchKernel, jobExecutionImpl, true);
     }
 
-    public BatchWorkUnit(IBatchKernelService batchKernel, RuntimeJobExecution jobExecutionImpl,
-                         boolean notifyCallbackWhenDone) {
+    public BatchWorkUnit(final BatchKernelService batchKernel, final RuntimeJobExecution jobExecutionImpl,
+                         final boolean notifyCallbackWhenDone) {
         this.setBatchKernel(batchKernel);
         this.setJobExecutionImpl(jobExecutionImpl);
         this.setNotifyCallbackWhenDone(notifyCallbackWhenDone);
         this.controller = new JobControllerImpl(jobExecutionImpl);
     }
 
-    public IThreadRootController getController() {
+    public ThreadRootController getController() {
         return this.controller;
     }
 
@@ -87,11 +87,11 @@ public class BatchWorkUnit implements Runnable {
         return jobExecutionImpl.getJobContext().getExitStatus();
     }
 
-    public void setBatchKernel(IBatchKernelService batchKernel) {
+    public void setBatchKernel(BatchKernelService batchKernel) {
         this.batchKernel = batchKernel;
     }
 
-    public IBatchKernelService getBatchKernel() {
+    public BatchKernelService getBatchKernel() {
         return batchKernel;
     }
 

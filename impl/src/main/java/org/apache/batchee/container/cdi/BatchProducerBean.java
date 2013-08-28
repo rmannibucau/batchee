@@ -42,7 +42,6 @@ public class BatchProducerBean {
 
             return DependencyInjectionUtility.getPropertyValue(ProxyFactory.getInjectionReferences().getProps(), batchPropName);
         }
-
         return null;
 
     }

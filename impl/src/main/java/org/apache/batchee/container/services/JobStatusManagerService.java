@@ -19,58 +19,55 @@ package org.apache.batchee.container.services;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.container.status.StepStatus;
-import org.apache.batchee.spi.services.IBatchServiceBase;
+import org.apache.batchee.spi.services.BatchService;
 
 import javax.batch.runtime.BatchStatus;
 
-public interface IJobStatusManagerService extends IBatchServiceBase {
+public interface JobStatusManagerService extends BatchService {
 
     /**
      * This method creates an entry for a new job instance
      */
-    public JobStatus createJobStatus(long jobInstanceId) throws BatchContainerServiceException;
+    JobStatus createJobStatus(long jobInstanceId) throws BatchContainerServiceException;
 
-    public void updateJobStatus(JobStatus jobStatus);
+    void updateJobStatus(JobStatus jobStatus);
 
     /**
      * Returns the JobStatus for a given jobInstance id
      *
-     * @param jobId
+     * @param jobInstanceId
      * @return
      * @throws BatchContainerServiceException
      */
-    public abstract JobStatus getJobStatus(long jobInstanceId) throws BatchContainerServiceException;
+    JobStatus getJobStatus(long jobInstanceId) throws BatchContainerServiceException;
 
-    public abstract JobStatus getJobStatusFromExecutionId(long executionId) throws BatchContainerServiceException;
+    JobStatus getJobStatusFromExecutionId(long executionId) throws BatchContainerServiceException;
 
-    public void updateJobBatchStatus(long jobInstanceId, BatchStatus batchStatus) throws BatchContainerServiceException;
+    void updateJobBatchStatus(long jobInstanceId, BatchStatus batchStatus) throws BatchContainerServiceException;
 
-    public void updateJobExecutionStatus(long jobInstanceId, BatchStatus batchStatus, String exitStatus) throws BatchContainerServiceException;
+    void updateJobExecutionStatus(long jobInstanceId, BatchStatus batchStatus, String exitStatus) throws BatchContainerServiceException;
 
-    public void updateJobStatusFromJSLStop(long jobInstanceId, String restartOn) throws BatchContainerServiceException;
+    void updateJobStatusFromJSLStop(long jobInstanceId, String restartOn) throws BatchContainerServiceException;
 
     /*
      * A side effect of this method is that it nulls out the 'restartOn' value from the previous execution gets zeroed out.
      * 
      * Also sets BatchStatus to STARTING
      */
-    public void updateJobStatusWithNewExecution(long jobInstanceId, long newExecutionId) throws BatchContainerServiceException;
+    void updateJobStatusWithNewExecution(long jobInstanceId, long newExecutionId) throws BatchContainerServiceException;
 
 
-    public abstract void updateJobCurrentStep(long jobInstanceId, String currentStepName) throws BatchContainerServiceException;
+    void updateJobCurrentStep(long jobInstanceId, String currentStepName) throws BatchContainerServiceException;
 
     /**
      * Creates an entry for the step in the stepstatus table during jobsetup
      *
-     * @param stepId
+     * @param stepExecutionId
      * @throws BatchContainerServiceException
      */
-    public abstract StepStatus createStepStatus(long stepExecutionId) throws BatchContainerServiceException;
+    StepStatus createStepStatus(long stepExecutionId) throws BatchContainerServiceException;
 
-    public abstract void updateStepStatus(long stepExecutionId, StepStatus newStepStatus) throws BatchContainerServiceException;
+    void updateStepStatus(long stepExecutionId, StepStatus newStepStatus) throws BatchContainerServiceException;
 
-
-    public abstract StepStatus getStepStatus(long jobInstanceId, String stepId) throws BatchContainerServiceException;
-
-
+    StepStatus getStepStatus(long jobInstanceId, String stepId) throws BatchContainerServiceException;
 }

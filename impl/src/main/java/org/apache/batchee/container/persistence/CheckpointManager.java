@@ -20,15 +20,15 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.proxy.ItemReaderProxy;
 import org.apache.batchee.container.proxy.ItemWriterProxy;
-import org.apache.batchee.container.services.IPersistenceManagerService;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
+import org.apache.batchee.container.services.PersistenceManagerService;
+import org.apache.batchee.container.servicesmanager.ServicesManager;
 
 import javax.batch.api.chunk.CheckpointAlgorithm;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 
 public class CheckpointManager {
-    private final IPersistenceManagerService _persistenceManagerService;
+    private final PersistenceManagerService persistenceManagerService;
     private final ItemReaderProxy readerProxy;
     private final ItemWriterProxy writerProxy;
     private final CheckpointAlgorithm checkpointAlgorithm;
@@ -45,7 +45,7 @@ public class CheckpointManager {
         this.stepId = stepId;
         this.jobInstanceID = jobInstanceID;
 
-        _persistenceManagerService = ServicesManagerImpl.getInstance().getPersistenceManagerService();
+        this.persistenceManagerService = ServicesManager.getPersistenceManagerService();
     }
 
     public boolean applyCheckPointPolicy() {
@@ -69,7 +69,7 @@ public class CheckpointManager {
             readerChkptData.setRestartToken(readerChkptBA.toByteArray());
             readerChkptDK = new CheckpointDataKey(jobInstanceID, stepId, "READER");
 
-            _persistenceManagerService.updateCheckpointData(readerChkptDK, readerChkptData);
+            persistenceManagerService.updateCheckpointData(readerChkptDK, readerChkptData);
 
             writerOOS = new ObjectOutputStream(writerChkptBA);
             writerOOS.writeObject(writerProxy.checkpointInfo());
@@ -78,7 +78,7 @@ public class CheckpointManager {
             writerChkptData.setRestartToken(writerChkptBA.toByteArray());
             writerChkptDK = new CheckpointDataKey(jobInstanceID, stepId, "WRITER");
 
-            _persistenceManagerService.updateCheckpointData(writerChkptDK, writerChkptData);
+            persistenceManagerService.updateCheckpointData(writerChkptDK, writerChkptData);
 
         } catch (final Exception ex) {
             // is this what I should be throwing here?

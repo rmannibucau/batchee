@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.batchee.container.jsl.impl;
+package org.apache.batchee.container.jsl;
 
 import java.util.ArrayList;
 import java.util.List;

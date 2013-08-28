@@ -19,13 +19,13 @@ package org.apache.batchee.container.services.impl;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.spi.services.IBatchConfig;
-import org.apache.batchee.spi.services.IJobXMLLoaderService;
+import org.apache.batchee.spi.services.JobXMLLoaderService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DefaultJobXMLLoaderServiceImpl implements IJobXMLLoaderService {
+public class DefaultJobXMLLoaderServiceImpl implements JobXMLLoaderService {
     private static final String PREFIX = "META-INF/batch-jobs/";
 
     @Override

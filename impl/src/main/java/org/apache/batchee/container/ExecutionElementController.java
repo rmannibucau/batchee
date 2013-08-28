@@ -14,12 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.batchee.spi.services;
+package org.apache.batchee.container;
 
-import javax.batch.runtime.context.StepContext;
+import org.apache.batchee.container.status.ExecutionStatus;
 
-public interface ITransactionManagementService extends IBatchServiceBase {
-
-    public TransactionManagerAdapter getTransactionManager(StepContext stepContext);
-
+public interface ExecutionElementController extends Controller {
+    ExecutionStatus execute();
 }

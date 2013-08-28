@@ -17,10 +17,54 @@
 package org.apache.batchee.container.jsl;
 
 import org.apache.batchee.jaxb.JSLJob;
+import org.apache.batchee.jsl.util.JSLValidationEventHandler;
+import org.apache.batchee.jsl.util.Xsds;
 
-public interface JobModelResolver {
+import javax.batch.operations.BatchRuntimeException;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+import java.io.StringReader;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
-    public JSLJob resolveJobModel(String jobXML);
+public class JobModelResolver {
+    private static JAXBContext JOB_CONTEXT;
+    static {
+        try {
+            JOB_CONTEXT = JAXBContext.newInstance(JSLJob.class.getPackage().getName());
+        } catch (final JAXBException e) {
+            throw new BatchRuntimeException(e);
+        }
+    }
 
+    private JSLJob unmarshalJobXML(final String jobXML) {
+        final JSLJob result;
+        final JSLValidationEventHandler handler = new JSLValidationEventHandler();
+        try {
+            final Unmarshaller u = JOB_CONTEXT.createUnmarshaller();
+            u.setSchema(Xsds.jobXML());
+            u.setEventHandler(handler);
+            result = u.unmarshal(new StreamSource(new StringReader(jobXML)), JSLJob.class).getValue();
+        } catch (final JAXBException e) {
+            throw new IllegalArgumentException("Exception unmarshalling jobXML", e);
+        }
+        if (handler.eventOccurred()) {
+            throw new IllegalArgumentException("xJCL invalid per schema");
+        }
+        return result;
+    }
 
+    public JSLJob resolveModel(final String jobXML) {
+        if (System.getSecurityManager() == null) {
+            return unmarshalJobXML(jobXML);
+        }
+        return AccessController.doPrivileged(
+            new PrivilegedAction<JSLJob>() {
+                public JSLJob run() {
+                    return unmarshalJobXML(jobXML);
+                }
+            });
+    }
 }

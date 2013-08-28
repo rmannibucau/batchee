@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.container.impl;
 
-import org.apache.batchee.container.IController;
+import org.apache.batchee.container.Controller;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.proxy.InjectionReferences;
@@ -41,7 +41,7 @@ import java.util.concurrent.BlockingQueue;
  * When a non-partitioned step is run this controller will be used as well (and there will be no
  * separate main thread with controller).
  */
-public abstract class SingleThreadedStepControllerImpl extends BaseStepControllerImpl implements IController {
+public abstract class SingleThreadedStepControllerImpl extends BaseStepControllerImpl implements Controller {
     // Collector only used from partition threads, not main thread
     protected PartitionCollectorProxy collectorProxy = null;
 

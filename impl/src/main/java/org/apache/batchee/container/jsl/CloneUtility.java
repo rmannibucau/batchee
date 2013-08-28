@@ -19,108 +19,56 @@ package org.apache.batchee.container.jsl;
 import org.apache.batchee.jaxb.Batchlet;
 import org.apache.batchee.jaxb.CheckpointAlgorithm;
 import org.apache.batchee.jaxb.Chunk;
-import org.apache.batchee.jaxb.End;
 import org.apache.batchee.jaxb.ExceptionClassFilter;
-import org.apache.batchee.jaxb.Fail;
 import org.apache.batchee.jaxb.ItemProcessor;
 import org.apache.batchee.jaxb.ItemReader;
 import org.apache.batchee.jaxb.ItemWriter;
 import org.apache.batchee.jaxb.JSLProperties;
 import org.apache.batchee.jaxb.Listener;
 import org.apache.batchee.jaxb.Listeners;
-import org.apache.batchee.jaxb.Next;
 import org.apache.batchee.jaxb.ObjectFactory;
 import org.apache.batchee.jaxb.Property;
-import org.apache.batchee.jaxb.Stop;
 
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
 
 public class CloneUtility {
+    private static final ObjectFactory JSL_FACTORY = new ObjectFactory();
 
-    private static ObjectFactory jslFactory = new ObjectFactory();
-
-    public static Batchlet cloneBatchlet(Batchlet batchlet) {
-        Batchlet newBatchlet = jslFactory.createBatchlet();
-
+    public static Batchlet cloneBatchlet(final Batchlet batchlet) {
+        final Batchlet newBatchlet = JSL_FACTORY.createBatchlet();
         newBatchlet.setRef(batchlet.getRef());
         newBatchlet.setProperties(cloneJSLProperties(batchlet.getProperties()));
-
         return newBatchlet;
     }
 
-    public static JSLProperties cloneJSLProperties(JSLProperties jslProps) {
+    public static JSLProperties cloneJSLProperties(final JSLProperties jslProps) {
         if (jslProps == null) {
             return null;
         }
 
-        JSLProperties newJSLProps = jslFactory.createJSLProperties();
-
+        final JSLProperties newJSLProps = JSL_FACTORY.createJSLProperties();
         newJSLProps.setPartition(jslProps.getPartition());
-        ;
 
-        for (Property jslProp : jslProps.getPropertyList()) {
-            Property newProperty = jslFactory.createProperty();
-
+        for (final Property jslProp : jslProps.getPropertyList()) {
+            final Property newProperty = JSL_FACTORY.createProperty();
             newProperty.setName(jslProp.getName());
             newProperty.setValue(jslProp.getValue());
-
             newJSLProps.getPropertyList().add(newProperty);
         }
 
         return newJSLProps;
     }
 
-    public static void cloneControlElements(List<TransitionElement> controlElements, List<TransitionElement> newControlElements) {
-
-        newControlElements.clear();
-
-        for (TransitionElement controlElement : controlElements) {
-            if (controlElement instanceof End) {
-                End endElement = (End) controlElement;
-                End newEnd = jslFactory.createEnd();
-                newEnd.setExitStatus(endElement.getExitStatus());
-                newEnd.setOn(endElement.getOn());
-
-                newControlElements.add(newEnd);
-            } else if (controlElement instanceof Fail) {
-                Fail failElement = (Fail) controlElement;
-                Fail newFail = jslFactory.createFail();
-                newFail.setExitStatus(failElement.getExitStatus());
-                newFail.setOn(failElement.getOn());
-
-                newControlElements.add(newFail);
-            } else if (controlElement instanceof Next) {
-                Next nextElement = (Next) controlElement;
-                Next newNext = jslFactory.createNext();
-                newNext.setOn(nextElement.getOn());
-                newNext.setTo(nextElement.getTo());
-
-                newControlElements.add(newNext);
-            } else if (controlElement instanceof Stop) {
-                Stop stopElement = (Stop) controlElement;
-                Stop newStop = jslFactory.createStop();
-                newStop.setExitStatus(stopElement.getExitStatus());
-                newStop.setOn(stopElement.getOn());
-                newStop.setRestart(stopElement.getRestart());
-
-                newControlElements.add(newStop);
-            }
-        }
-
-
-    }
-
-    public static Listeners cloneListeners(Listeners listeners) {
+    public static Listeners cloneListeners(final Listeners listeners) {
         if (listeners == null) {
             return null;
         }
 
-        Listeners newListeners = jslFactory.createListeners();
+        final Listeners newListeners = JSL_FACTORY.createListeners();
 
-        for (Listener listener : listeners.getListenerList()) {
-            Listener newListener = jslFactory.createListener();
+        for (final Listener listener : listeners.getListenerList()) {
+            final Listener newListener = JSL_FACTORY.createListener();
             newListeners.getListenerList().add(newListener);
             newListener.setRef(listener.getRef());
             newListener.setProperties(cloneJSLProperties(listener.getProperties()));
@@ -129,8 +77,8 @@ public class CloneUtility {
         return newListeners;
     }
 
-    public static Chunk cloneChunk(Chunk chunk) {
-        Chunk newChunk = jslFactory.createChunk();
+    public static Chunk cloneChunk(final Chunk chunk) {
+        final Chunk newChunk = JSL_FACTORY.createChunk();
 
         newChunk.setItemCount(chunk.getItemCount());
         newChunk.setRetryLimit(chunk.getRetryLimit());
@@ -149,12 +97,12 @@ public class CloneUtility {
         return newChunk;
     }
 
-    private static CheckpointAlgorithm cloneCheckpointAlorithm(CheckpointAlgorithm checkpointAlgorithm) {
+    private static CheckpointAlgorithm cloneCheckpointAlorithm(final CheckpointAlgorithm checkpointAlgorithm) {
         if (checkpointAlgorithm == null) {
             return null;
         }
 
-        CheckpointAlgorithm newCheckpointAlgorithm = jslFactory.createCheckpointAlgorithm();
+        final CheckpointAlgorithm newCheckpointAlgorithm = JSL_FACTORY.createCheckpointAlgorithm();
         newCheckpointAlgorithm.setRef(checkpointAlgorithm.getRef());
         newCheckpointAlgorithm.setProperties(cloneJSLProperties(checkpointAlgorithm.getProperties()));
 
@@ -162,51 +110,50 @@ public class CloneUtility {
 
     }
 
-    private static ItemProcessor cloneItemProcessor(ItemProcessor itemProcessor) {
+    private static ItemProcessor cloneItemProcessor(final ItemProcessor itemProcessor) {
         if (itemProcessor == null) {
             return null;
         }
 
-        ItemProcessor newItemProcessor = jslFactory.createItemProcessor();
+        final ItemProcessor newItemProcessor = JSL_FACTORY.createItemProcessor();
         newItemProcessor.setRef(itemProcessor.getRef());
         newItemProcessor.setProperties(cloneJSLProperties(itemProcessor.getProperties()));
 
         return newItemProcessor;
     }
 
-    private static ItemReader cloneItemReader(ItemReader itemReader) {
+    private static ItemReader cloneItemReader(final ItemReader itemReader) {
         if (itemReader == null) {
             return null;
         }
 
-        ItemReader newItemReader = jslFactory.createItemReader();
+        final ItemReader newItemReader = JSL_FACTORY.createItemReader();
         newItemReader.setRef(itemReader.getRef());
         newItemReader.setProperties(cloneJSLProperties(itemReader.getProperties()));
 
         return newItemReader;
     }
 
-    private static ItemWriter cloneItemWriter(ItemWriter itemWriter) {
-        ItemWriter newItemWriter = jslFactory.createItemWriter();
+    private static ItemWriter cloneItemWriter(final ItemWriter itemWriter) {
+        final ItemWriter newItemWriter = JSL_FACTORY.createItemWriter();
         newItemWriter.setRef(itemWriter.getRef());
         newItemWriter.setProperties(cloneJSLProperties(itemWriter.getProperties()));
 
         return newItemWriter;
     }
 
-    private static ExceptionClassFilter cloneExceptionClassFilter(ExceptionClassFilter exceptionClassFilter) {
+    private static ExceptionClassFilter cloneExceptionClassFilter(final ExceptionClassFilter exceptionClassFilter) {
 
         if (exceptionClassFilter == null) {
             return null;
         }
 
-        ExceptionClassFilter newExceptionClassFilter = jslFactory.createExceptionClassFilter();
+        final ExceptionClassFilter newExceptionClassFilter = JSL_FACTORY.createExceptionClassFilter();
 
-        for (ExceptionClassFilter.Include oldInclude : exceptionClassFilter.getIncludeList()) {
+        for (final ExceptionClassFilter.Include oldInclude : exceptionClassFilter.getIncludeList()) {
             newExceptionClassFilter.getIncludeList().add(cloneExceptionClassFilterInclude(oldInclude));
         }
-
-        for (ExceptionClassFilter.Exclude oldExclude : exceptionClassFilter.getExcludeList()) {
+        for (final ExceptionClassFilter.Exclude oldExclude : exceptionClassFilter.getExcludeList()) {
             newExceptionClassFilter.getExcludeList().add(cloneExceptionClassFilterExclude(oldExclude));
         }
 
@@ -214,50 +161,36 @@ public class CloneUtility {
 
     }
 
-    private static ExceptionClassFilter.Include cloneExceptionClassFilterInclude(ExceptionClassFilter.Include include) {
+    private static ExceptionClassFilter.Include cloneExceptionClassFilterInclude(final ExceptionClassFilter.Include include) {
         if (include == null) {
             return null;
         }
 
-        ExceptionClassFilter.Include newInclude = jslFactory.createExceptionClassFilterInclude();
-
+        final ExceptionClassFilter.Include newInclude = JSL_FACTORY.createExceptionClassFilterInclude();
         newInclude.setClazz(include.getClazz());
-
         return newInclude;
-
     }
 
-    private static ExceptionClassFilter.Exclude cloneExceptionClassFilterExclude(ExceptionClassFilter.Exclude exclude) {
-
+    private static ExceptionClassFilter.Exclude cloneExceptionClassFilterExclude(final ExceptionClassFilter.Exclude exclude) {
         if (exclude == null) {
             return null;
         }
 
-        ExceptionClassFilter.Exclude newExclude = jslFactory.createExceptionClassFilterExclude();
-
+        final ExceptionClassFilter.Exclude newExclude = JSL_FACTORY.createExceptionClassFilterExclude();
         newExclude.setClazz(exclude.getClazz());
-
         return newExclude;
-
     }
 
 
     /**
      * Creates a java.util.Properties map from a com.ibm.jbatch.jsl.model.Properties
      * object.
-     *
-     * @param xmlProperties
-     * @return
      */
-    public static Properties jslPropertiesToJavaProperties(
-        final JSLProperties xmlProperties) {
-
+    public static Properties jslPropertiesToJavaProperties(final JSLProperties xmlProperties) {
         final Properties props = new Properties();
-
         for (final Property prop : xmlProperties.getPropertyList()) {
             props.setProperty(prop.getName(), prop.getValue());
         }
-
         return props;
 
     }
@@ -265,29 +198,19 @@ public class CloneUtility {
     /**
      * Creates a new JSLProperties list from a java.util.Properties
      * object.
-     *
-     * @param javaProps
-     * @return
      */
     public static JSLProperties javaPropsTojslProperties(final Properties javaProps) {
-
-        JSLProperties newJSLProps = jslFactory.createJSLProperties();
-
-
-        Enumeration<?> keySet = javaProps.propertyNames();
-
+        final JSLProperties newJSLProps = JSL_FACTORY.createJSLProperties();
+        final Enumeration<?> keySet = javaProps.propertyNames();
         while (keySet.hasMoreElements()) {
-            String key = (String) keySet.nextElement();
-            String value = javaProps.getProperty(key);
+            final String key = (String) keySet.nextElement();
+            final String value = javaProps.getProperty(key);
 
-            Property newProperty = jslFactory.createProperty();
+            final Property newProperty = JSL_FACTORY.createProperty();
             newProperty.setName(key);
             newProperty.setValue(value);
             newJSLProps.getPropertyList().add(newProperty);
         }
-
         return newJSLProps;
-
     }
-
 }

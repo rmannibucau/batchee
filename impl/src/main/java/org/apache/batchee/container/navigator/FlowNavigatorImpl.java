@@ -29,10 +29,6 @@ public class FlowNavigatorImpl extends AbstractNavigatorImpl<Flow> implements Mo
         this.flow = flow;
     }
 
-    public String toString() {
-        return "FlowNavigatorImpl for flow id = " + flow.getId();
-    }
-
     @Override
     public ExecutionElement getFirstExecutionElement(String restartOn) throws IllegalTransitionException {
         return getFirstExecutionElement(flow.getExecutionElements(), restartOn);
@@ -47,5 +43,10 @@ public class FlowNavigatorImpl extends AbstractNavigatorImpl<Flow> implements Mo
     @Override
     public Flow getRootModelElement() {
         return flow;
+    }
+
+    @Override
+    public String toString() {
+        return "FlowNavigatorImpl for flow id = " + flow.getId();
     }
 }

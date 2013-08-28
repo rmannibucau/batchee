@@ -21,13 +21,13 @@ import org.apache.batchee.container.exception.TransactionManagementException;
 import org.apache.batchee.container.impl.DefaultNonTransactionalManager;
 import org.apache.batchee.container.impl.JTAUserTransactionAdapter;
 import org.apache.batchee.spi.services.IBatchConfig;
-import org.apache.batchee.spi.services.ITransactionManagementService;
+import org.apache.batchee.spi.services.TransactionManagementService;
 import org.apache.batchee.spi.services.TransactionManagerAdapter;
 
 import javax.batch.runtime.context.StepContext;
 import java.util.Properties;
 
-public class BatchTransactionServiceImpl implements ITransactionManagementService {
+public class BatchTransactionServiceImpl implements TransactionManagementService {
     private static final int DEFAULT_TRAN_TIMEOUT = 180; // seconds
 
     private IBatchConfig batchConfig = null;

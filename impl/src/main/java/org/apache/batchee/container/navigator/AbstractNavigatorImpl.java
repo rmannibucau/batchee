@@ -17,11 +17,10 @@
 package org.apache.batchee.container.navigator;
 
 import org.apache.batchee.container.jsl.ExecutionElement;
+import org.apache.batchee.container.jsl.GlobPatternMatcherImpl;
 import org.apache.batchee.container.jsl.IllegalTransitionException;
 import org.apache.batchee.container.jsl.Transition;
 import org.apache.batchee.container.jsl.TransitionElement;
-import org.apache.batchee.container.jsl.impl.GlobPatternMatcherImpl;
-import org.apache.batchee.container.jsl.impl.TransitionImpl;
 import org.apache.batchee.container.status.ExecutionStatus;
 import org.apache.batchee.container.status.ExtendedBatchStatus;
 import org.apache.batchee.jaxb.Decision;
@@ -75,7 +74,7 @@ public abstract class AbstractNavigatorImpl<T> implements ModelNavigator<T> {
      */
     public Transition getNextTransition(ExecutionElement currentElem, List<ExecutionElement> peerExecutionElements, ExecutionStatus currentStatus)
         throws IllegalTransitionException {
-        Transition returnTransition = new TransitionImpl();
+        Transition returnTransition = new Transition();
 
         ExecutionElement nextExecutionElement = null;
 
@@ -167,11 +166,6 @@ public abstract class AbstractNavigatorImpl<T> implements ModelNavigator<T> {
         validateElementType(nextExecutionElement);
 
         return nextExecutionElement;
-    }
-
-    @Override
-    public ExecutionElement getFirstExecutionElement() throws IllegalTransitionException {
-        return getFirstExecutionElement(null);
     }
 
     private void validateElementType(ExecutionElement elem) {

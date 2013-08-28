@@ -16,16 +16,16 @@
  */
 package org.apache.batchee.container.impl;
 
-import org.apache.batchee.container.IExecutionElementController;
+import org.apache.batchee.container.ExecutionElementController;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.jobinstance.StepExecutionImpl;
 import org.apache.batchee.container.persistence.PersistentDataWrapper;
-import org.apache.batchee.container.services.IBatchKernelService;
-import org.apache.batchee.container.services.IJobStatusManagerService;
-import org.apache.batchee.container.services.IPersistenceManagerService;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
+import org.apache.batchee.container.services.BatchKernelService;
+import org.apache.batchee.container.services.JobStatusManagerService;
+import org.apache.batchee.container.services.PersistenceManagerService;
+import org.apache.batchee.container.servicesmanager.ServicesManager;
 import org.apache.batchee.container.status.ExecutionStatus;
 import org.apache.batchee.container.status.ExtendedBatchStatus;
 import org.apache.batchee.container.status.StepStatus;
@@ -33,7 +33,6 @@ import org.apache.batchee.container.util.PartitionDataWrapper;
 import org.apache.batchee.jaxb.JSLProperties;
 import org.apache.batchee.jaxb.Property;
 import org.apache.batchee.jaxb.Step;
-import org.apache.batchee.spi.services.ITransactionManagementService;
 import org.apache.batchee.spi.services.TransactionManagerAdapter;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
@@ -55,7 +54,7 @@ import java.util.concurrent.BlockingQueue;
 /**
  * Change the name of this class to something else!! Or change BaseStepControllerImpl.
  */
-public abstract class BaseStepControllerImpl implements IExecutionElementController {
+public abstract class BaseStepControllerImpl implements ExecutionElementController {
     protected RuntimeJobExecution jobExecutionImpl;
     protected JobInstance jobInstance;
 
@@ -67,15 +66,15 @@ public abstract class BaseStepControllerImpl implements IExecutionElementControl
 
     protected long rootJobExecutionId;
 
-    protected static IBatchKernelService batchKernel = ServicesManagerImpl.getInstance().getBatchKernelService();
+    protected static final BatchKernelService BATCH_KERNEL = ServicesManager.getBatchKernelService();
 
     protected TransactionManagerAdapter transactionManager = null;
 
-    private static IPersistenceManagerService _persistenceManagementService = ServicesManagerImpl.getInstance().getPersistenceManagerService();
+    private static final PersistenceManagerService PERSISTENCE_MANAGER_SERVICE = ServicesManager.getPersistenceManagerService();
 
-    private static IJobStatusManagerService _jobStatusService = (IJobStatusManagerService) ServicesManagerImpl.getInstance().getJobStatusManagerService();
+    private static final JobStatusManagerService JOB_STATUS_MANAGER_SERVICE = ServicesManager.getJobStatusManagerService();
 
-    protected BaseStepControllerImpl(RuntimeJobExecution jobExecution, Step step, StepContextImpl stepContext, long rootJobExecutionId) {
+    protected BaseStepControllerImpl(final RuntimeJobExecution jobExecution, final Step step, final StepContextImpl stepContext, final long rootJobExecutionId) {
         this.jobExecutionImpl = jobExecution;
         this.jobInstance = jobExecution.getJobInstance();
         this.stepContext = stepContext;
@@ -86,7 +85,10 @@ public abstract class BaseStepControllerImpl implements IExecutionElementControl
         this.step = step;
     }
 
-    protected BaseStepControllerImpl(RuntimeJobExecution jobExecution, Step step, StepContextImpl stepContext, long rootJobExecutionId, BlockingQueue<PartitionDataWrapper> analyzerStatusQueue) {
+    protected BaseStepControllerImpl(final RuntimeJobExecution jobExecution,
+                                     final Step step, final StepContextImpl stepContext,
+                                     final long rootJobExecutionId,
+                                     final BlockingQueue<PartitionDataWrapper> analyzerStatusQueue) {
         this(jobExecution, step, stepContext, rootJobExecutionId);
         this.analyzerStatusQueue = analyzerStatusQueue;
     }
@@ -107,7 +109,6 @@ public abstract class BaseStepControllerImpl implements IExecutionElementControl
 
     @Override
     public ExecutionStatus execute() {
-
         // Here we're just setting up to decide if we're going to run the step or not (if it's already complete and
         // allow-start-if-complete=false.
         try {
@@ -241,7 +242,7 @@ public abstract class BaseStepControllerImpl implements IExecutionElementControl
         Timestamp startTS = new Timestamp(time);
         stepContext.setStartTime(startTS);
 
-        _persistenceManagementService.updateStepExecution(rootJobExecutionId, stepContext);
+        PERSISTENCE_MANAGER_SERVICE.updateStepExecution(rootJobExecutionId, stepContext);
     }
 
 
@@ -264,17 +265,17 @@ public abstract class BaseStepControllerImpl implements IExecutionElementControl
 
     protected void updateBatchStatus(final BatchStatus updatedBatchStatus) {
         stepStatus.setBatchStatus(updatedBatchStatus);
-        _jobStatusService.updateStepStatus(stepStatus.getStepExecutionId(), stepStatus);
+        JOB_STATUS_MANAGER_SERVICE.updateStepStatus(stepStatus.getStepExecutionId(), stepStatus);
         stepContext.setBatchStatus(updatedBatchStatus);
     }
 
     protected boolean shouldStepBeExecuted() {
-        this.stepStatus = _jobStatusService.getStepStatus(jobInstance.getInstanceId(), step.getId());
+        this.stepStatus = JOB_STATUS_MANAGER_SERVICE.getStepStatus(jobInstance.getInstanceId(), step.getId());
         if (stepStatus == null) {
             // create new step execution
             StepExecutionImpl stepExecution = getNewStepExecution(rootJobExecutionId, stepContext);
             // create new step status for this run
-            stepStatus = _jobStatusService.createStepStatus(stepExecution.getStepExecutionId());
+            stepStatus = JOB_STATUS_MANAGER_SERVICE.createStepStatus(stepExecution.getStepExecutionId());
             stepContext.setStepExecutionId(stepExecution.getStepExecutionId());
             return true;
         } else {
@@ -335,8 +336,8 @@ public abstract class BaseStepControllerImpl implements IExecutionElementControl
 
     protected void statusStarting() {
         stepStatus.setBatchStatus(BatchStatus.STARTING);
-        _jobStatusService.updateJobCurrentStep(jobInstance.getInstanceId(), step.getId());
-        _jobStatusService.updateStepStatus(stepStatus.getStepExecutionId(), stepStatus);
+        JOB_STATUS_MANAGER_SERVICE.updateJobCurrentStep(jobInstance.getInstanceId(), step.getId());
+        JOB_STATUS_MANAGER_SERVICE.updateStepStatus(stepStatus.getStepExecutionId(), stepStatus);
         stepContext.setBatchStatus(BatchStatus.STARTING);
     }
 
@@ -353,23 +354,23 @@ public abstract class BaseStepControllerImpl implements IExecutionElementControl
         }
 
         stepStatus.setPersistentUserData(new PersistentDataWrapper(persistentBAOS.toByteArray()));
-        _jobStatusService.updateStepStatus(stepStatus.getStepExecutionId(), stepStatus);
+        JOB_STATUS_MANAGER_SERVICE.updateStepStatus(stepStatus.getStepExecutionId(), stepStatus);
     }
 
     protected void persistExitStatusAndEndTimestamp() {
         stepStatus.setExitStatus(stepContext.getExitStatus());
-        _jobStatusService.updateStepStatus(stepStatus.getStepExecutionId(), stepStatus);
+        JOB_STATUS_MANAGER_SERVICE.updateStepStatus(stepStatus.getStepExecutionId(), stepStatus);
 
         // set the end time metric before flushing
         long time = System.currentTimeMillis();
         Timestamp endTS = new Timestamp(time);
         stepContext.setEndTime(endTS);
 
-        _persistenceManagementService.updateStepExecution(rootJobExecutionId, stepContext);
+        PERSISTENCE_MANAGER_SERVICE.updateStepExecution(rootJobExecutionId, stepContext);
     }
 
     private StepExecutionImpl getNewStepExecution(long rootJobExecutionId, StepContextImpl stepContext) {
-        return _persistenceManagementService.createStepExecution(rootJobExecutionId, stepContext);
+        return PERSISTENCE_MANAGER_SERVICE.createStepExecution(rootJobExecutionId, stepContext);
     }
 
     private void setContextProperties() {
@@ -392,20 +393,17 @@ public abstract class BaseStepControllerImpl implements IExecutionElementControl
         stepContext.addMetric(MetricImpl.MetricType.COMMIT_COUNT, 0);
         stepContext.addMetric(MetricImpl.MetricType.ROLLBACK_COUNT, 0);
 
-        ITransactionManagementService transMgr = ServicesManagerImpl.getInstance().getTransactionManagementService();
-        transactionManager = transMgr.getTransactionManager(stepContext);
+        transactionManager = ServicesManager.getTransactionManagementService().getTransactionManager(stepContext);
     }
 
-    public void setStepContext(StepContextImpl stepContext) {
+    public void setStepContext(final StepContextImpl stepContext) {
         this.stepContext = stepContext;
     }
 
     @Override
     public List<Long> getLastRunStepExecutions() {
-
-        List<Long> stepExecIdList = new ArrayList<Long>(1);
+        final List<Long> stepExecIdList = new ArrayList<Long>(1);
         stepExecIdList.add(this.stepStatus.getLastRunStepExecutionId());
-
         return stepExecIdList;
     }
 

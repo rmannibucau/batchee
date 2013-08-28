@@ -19,7 +19,7 @@ package org.apache.batchee.container.jobinstance;
 import org.apache.batchee.container.impl.JobContextImpl;
 import org.apache.batchee.container.navigator.ModelNavigator;
 import org.apache.batchee.container.proxy.ListenerFactory;
-import org.apache.batchee.container.services.IJobExecution;
+import org.apache.batchee.container.services.InternalJobExecution;
 import org.apache.batchee.jaxb.JSLJob;
 
 import javax.batch.runtime.BatchStatus;
@@ -39,7 +39,7 @@ public class RuntimeJobExecution {
     private String restartOn;
     private JobContextImpl jobContext = null;
     private ListenerFactory listenerFactory;
-    private IJobExecution operatorJobExecution = null;
+    private InternalJobExecution operatorJobExecution = null;
     private Integer partitionInstance = null;
     private Collection<Closeable> releasables = new ArrayList<Closeable>();
 
@@ -104,7 +104,7 @@ public class RuntimeJobExecution {
         this.listenerFactory = listenerFactory;
     }
 
-    public IJobExecution getJobOperatorJobExecution() {
+    public InternalJobExecution getJobOperatorJobExecution() {
         return operatorJobExecution;
     }
 

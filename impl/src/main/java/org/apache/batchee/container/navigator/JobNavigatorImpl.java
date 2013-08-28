@@ -29,18 +29,9 @@ public class JobNavigatorImpl extends AbstractNavigatorImpl<JSLJob> implements M
         this.job = job;
     }
 
-    public String toString() {
-        return "JobNavigatorImpl for job id = " + job.getId();
-    }
-
     @Override
     public ExecutionElement getFirstExecutionElement(String restartOn) throws IllegalTransitionException {
         return getFirstExecutionElement(job.getExecutionElements(), restartOn);
-    }
-
-    @Override
-    public ExecutionElement getFirstExecutionElement() throws IllegalTransitionException {
-        return getFirstExecutionElement(null);
     }
 
     @Override
@@ -51,6 +42,11 @@ public class JobNavigatorImpl extends AbstractNavigatorImpl<JSLJob> implements M
     @Override
     public JSLJob getRootModelElement() {
         return job;
+    }
+
+    @Override
+    public String toString() {
+        return "JobNavigatorImpl for job id = " + job.getId();
     }
 }
 

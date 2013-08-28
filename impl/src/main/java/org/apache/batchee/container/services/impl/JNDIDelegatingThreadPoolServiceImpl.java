@@ -17,8 +17,8 @@
 package org.apache.batchee.container.services.impl;
 
 import org.apache.batchee.container.exception.BatchContainerServiceException;
+import org.apache.batchee.spi.services.BatchThreadPoolService;
 import org.apache.batchee.spi.services.IBatchConfig;
-import org.apache.batchee.spi.services.IBatchThreadPoolService;
 import org.apache.batchee.spi.services.ParallelTaskResult;
 
 import javax.naming.Context;
@@ -27,7 +27,7 @@ import javax.naming.NamingException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-public class JNDIDelegatingThreadPoolServiceImpl implements IBatchThreadPoolService {
+public class JNDIDelegatingThreadPoolServiceImpl implements BatchThreadPoolService {
     public static final String THREADPOOL_JNDI_LOCATION = "THREADPOOL_JNDI_LOCATION";
 
     public final String DEFAULT_JNDI_LOCATION = "java:comp/DefaultManagedExecutorService";

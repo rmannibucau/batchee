@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.container.impl;
 
-import org.apache.batchee.container.IExecutionElementController;
+import org.apache.batchee.container.ExecutionElementController;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
@@ -24,8 +24,8 @@ import org.apache.batchee.container.jsl.ExecutionElement;
 import org.apache.batchee.container.proxy.DeciderProxy;
 import org.apache.batchee.container.proxy.InjectionReferences;
 import org.apache.batchee.container.proxy.ProxyFactory;
-import org.apache.batchee.container.services.IPersistenceManagerService;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
+import org.apache.batchee.container.services.PersistenceManagerService;
+import org.apache.batchee.container.servicesmanager.ServicesManager;
 import org.apache.batchee.container.status.ExecutionStatus;
 import org.apache.batchee.container.status.ExtendedBatchStatus;
 import org.apache.batchee.container.validation.ArtifactValidationException;
@@ -34,25 +34,20 @@ import org.apache.batchee.jaxb.Property;
 
 import javax.batch.runtime.StepExecution;
 import java.util.List;
-import java.util.logging.Logger;
 
-public class DecisionControllerImpl implements IExecutionElementController {
-
-    private final static String sourceClass = SplitControllerImpl.class.getName();
-    private final static Logger logger = Logger.getLogger(sourceClass);
-
+public class DecisionControllerImpl implements ExecutionElementController {
     private RuntimeJobExecution jobExecution;
 
     private Decision decision;
 
     private StepExecution[] previousStepExecutions = null;
 
-    private IPersistenceManagerService persistenceService = null;
+    private final PersistenceManagerService persistenceService;
 
     public DecisionControllerImpl(RuntimeJobExecution jobExecution, Decision decision) {
         this.jobExecution = jobExecution;
         this.decision = decision;
-        persistenceService = ServicesManagerImpl.getInstance().getPersistenceManagerService();
+        this.persistenceService = ServicesManager.getPersistenceManagerService();
     }
 
     @Override
@@ -85,7 +80,7 @@ public class DecisionControllerImpl implements IExecutionElementController {
         return new ExecutionStatus(ExtendedBatchStatus.NORMAL_COMPLETION, exitStatus);
     }
 
-    protected void setPreviousStepExecutions(ExecutionElement previousExecutionElement, IExecutionElementController previousElementController) {
+    protected void setPreviousStepExecutions(ExecutionElement previousExecutionElement, ExecutionElementController previousElementController) {
         if (previousExecutionElement == null) {
             // only job context is available to the decider
         } else if (previousExecutionElement instanceof Decision) {

@@ -23,7 +23,7 @@ package org.apache.batchee.spi.services;
  * service. The caller is responsible for shutting down the service when work is completed
  * 
  */
-public interface IBatchThreadPoolService extends IBatchServiceBase {
+public interface BatchThreadPoolService extends BatchService {
 
     /**
      * (Required) Runs the given task. A task is usually short lived

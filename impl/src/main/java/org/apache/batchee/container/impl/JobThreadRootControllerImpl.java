@@ -16,16 +16,16 @@
  */
 package org.apache.batchee.container.impl;
 
-import org.apache.batchee.container.IController;
-import org.apache.batchee.container.IThreadRootController;
+import org.apache.batchee.container.Controller;
+import org.apache.batchee.container.ThreadRootController;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.navigator.ModelNavigator;
 import org.apache.batchee.container.proxy.InjectionReferences;
 import org.apache.batchee.container.proxy.JobListenerProxy;
 import org.apache.batchee.container.proxy.ListenerFactory;
-import org.apache.batchee.container.services.IJobStatusManagerService;
-import org.apache.batchee.container.services.IPersistenceManagerService;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
+import org.apache.batchee.container.services.JobStatusManagerService;
+import org.apache.batchee.container.services.PersistenceManagerService;
+import org.apache.batchee.container.servicesmanager.ServicesManager;
 import org.apache.batchee.container.status.ExecutionStatus;
 import org.apache.batchee.container.status.ExtendedBatchStatus;
 import org.apache.batchee.container.util.PartitionDataWrapper;
@@ -38,17 +38,17 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-public abstract class JobThreadRootControllerImpl implements IThreadRootController {
-    protected RuntimeJobExecution jobExecution;
-    protected JobContextImpl jobContext;
-    protected long rootJobExecutionId;
-    protected long jobInstanceId;
-    protected IJobStatusManagerService jobStatusService;
-    protected IPersistenceManagerService persistenceService;
-    private ListenerFactory listenerFactory = null;
+public abstract class JobThreadRootControllerImpl implements ThreadRootController {
+    protected final RuntimeJobExecution jobExecution;
+    protected final JobContextImpl jobContext;
+    protected final long rootJobExecutionId;
+    protected final long jobInstanceId;
+    private final ListenerFactory listenerFactory;
+    protected final ModelNavigator<JSLJob> jobNavigator;
+    protected final JobStatusManagerService jobStatusService;
+    protected final PersistenceManagerService persistenceService;
 
     private ExecutionTransitioner transitioner;
-    protected final ModelNavigator<JSLJob> jobNavigator;
     private BlockingQueue<PartitionDataWrapper> analyzerQueue;
 
     public JobThreadRootControllerImpl(final RuntimeJobExecution jobExecution, final long rootJobExecutionId) {
@@ -56,10 +56,14 @@ public abstract class JobThreadRootControllerImpl implements IThreadRootControll
         this.jobContext = jobExecution.getJobContext();
         this.rootJobExecutionId = rootJobExecutionId;
         this.jobInstanceId = jobExecution.getInstanceId();
-        this.jobStatusService = ServicesManagerImpl.getInstance().getJobStatusManagerService();
-        this.persistenceService = ServicesManagerImpl.getInstance().getPersistenceManagerService();
+        this.jobStatusService = ServicesManager.getJobStatusManagerService();
+        this.persistenceService = ServicesManager.getPersistenceManagerService();
         this.jobNavigator = jobExecution.getJobNavigator();
-        setupListeners();
+
+        final JSLJob jobModel = jobExecution.getJobNavigator().getRootModelElement();
+        final InjectionReferences injectionRef = new InjectionReferences(jobContext, null, null);
+        listenerFactory = new ListenerFactory(jobModel, injectionRef, jobExecution);
+        jobExecution.setListenerFactory(listenerFactory);
     }
 
     /*
@@ -223,22 +227,13 @@ public abstract class JobThreadRootControllerImpl implements IThreadRootControll
         persistenceService.updateBatchStatusOnly(jobExecution.getExecutionId(), BatchStatus.STOPPING, timestamp);
     }
 
-
-    private void setupListeners() {
-        final JSLJob jobModel = jobExecution.getJobNavigator().getRootModelElement();
-        final InjectionReferences injectionRef = new InjectionReferences(jobContext, null, null);
-        listenerFactory = new ListenerFactory(jobModel, injectionRef, jobExecution);
-        jobExecution.setListenerFactory(listenerFactory);
-    }
-
-
     @Override
     public void stop() {
         if (jobContext.getBatchStatus().equals(BatchStatus.STARTING) || jobContext.getBatchStatus().equals(BatchStatus.STARTED)) {
             batchStatusStopping();
 
             if (transitioner != null) {
-                final IController stoppableElementController = transitioner.getCurrentStoppableElementController();
+                final Controller stoppableElementController = transitioner.getCurrentStoppableElementController();
                 if (stoppableElementController != null) {
                     stoppableElementController.stop();
                 }

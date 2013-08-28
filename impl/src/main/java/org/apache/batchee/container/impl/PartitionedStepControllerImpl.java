@@ -97,7 +97,7 @@ public class PartitionedStepControllerImpl extends BaseStepControllerImpl {
             if (parallelBatchWorkUnits != null) {
                 for (BatchWorkUnit subJob : parallelBatchWorkUnits) {
                     try {
-                        batchKernel.stopJob(subJob.getJobExecutionImpl().getExecutionId());
+                        BATCH_KERNEL.stopJob(subJob.getJobExecutionImpl().getExecutionId());
                     } catch (Exception e) {
                         // TODO - Is this what we want to know.
                         // Blow up if it happens to force the issue.
@@ -290,9 +290,9 @@ public class PartitionedStepControllerImpl extends BaseStepControllerImpl {
             PartitionsBuilderConfig config = new PartitionsBuilderConfig(subJobs, partitionProperties, analyzerStatusQueue, completedWorkQueue, jobExecutionImpl.getExecutionId());
             // Then build all the subjobs but do not start them yet
             if (stepStatus.getStartCount() > 1 && !plan.getPartitionsOverride()) {
-                parallelBatchWorkUnits = batchKernel.buildOnRestartParallelPartitions(config);
+                parallelBatchWorkUnits = BATCH_KERNEL.buildOnRestartParallelPartitions(config);
             } else {
-                parallelBatchWorkUnits = batchKernel.buildNewParallelPartitions(config);
+                parallelBatchWorkUnits = BATCH_KERNEL.buildNewParallelPartitions(config);
             }
 
             // NOTE:  At this point I might not have as many work units as I had partitions, since some may have already completed.
@@ -313,9 +313,9 @@ public class PartitionedStepControllerImpl extends BaseStepControllerImpl {
         //Start up to to the max num we are allowed from the num threads attribute
         for (int i = 0; i < this.threads && i < numTotalForThisExecution; i++, numCurrentSubmitted++) {
             if (stepStatus.getStartCount() > 1 && !plan.getPartitionsOverride()) {
-                batchKernel.restartGeneratedJob(parallelBatchWorkUnits.get(i));
+                BATCH_KERNEL.restartGeneratedJob(parallelBatchWorkUnits.get(i));
             } else {
-                batchKernel.startGeneratedJob(parallelBatchWorkUnits.get(i));
+                BATCH_KERNEL.startGeneratedJob(parallelBatchWorkUnits.get(i));
             }
         }
 
@@ -345,9 +345,9 @@ public class PartitionedStepControllerImpl extends BaseStepControllerImpl {
             if (numCurrentCompleted < numTotalForThisExecution) {
                 if (numCurrentSubmitted < numTotalForThisExecution) {
                     if (stepStatus.getStartCount() > 1) {
-                        batchKernel.startGeneratedJob(parallelBatchWorkUnits.get(numCurrentSubmitted++));
+                        BATCH_KERNEL.startGeneratedJob(parallelBatchWorkUnits.get(numCurrentSubmitted++));
                     } else {
-                        batchKernel.restartGeneratedJob(parallelBatchWorkUnits.get(numCurrentSubmitted++));
+                        BATCH_KERNEL.restartGeneratedJob(parallelBatchWorkUnits.get(numCurrentSubmitted++));
                     }
                 }
             } else {

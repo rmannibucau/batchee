@@ -35,7 +35,6 @@ public class PartitionsBuilderConfig {
                                    BlockingQueue<PartitionDataWrapper> analyzerQueue,
                                    BlockingQueue<BatchPartitionWorkUnit> completedQueue,
                                    long rootJobExecutionId) {
-        super();
         this.jobModels = jobModels;
         this.partitionProperties = partitionProperties;
         this.analyzerQueue = analyzerQueue;
@@ -51,34 +50,15 @@ public class PartitionsBuilderConfig {
         return jobModels;
     }
 
-    public void setJobModels(List<JSLJob> jobModels) {
-        this.jobModels = jobModels;
-    }
-
     public Properties[] getPartitionProperties() {
         return partitionProperties;
-    }
-
-    public void setPartitionProperties(Properties[] partitionProperties) {
-        this.partitionProperties = partitionProperties;
     }
 
     public BlockingQueue<PartitionDataWrapper> getAnalyzerQueue() {
         return analyzerQueue;
     }
 
-    public void setAnalyzerQueue(BlockingQueue<PartitionDataWrapper> analyzerQueue) {
-        this.analyzerQueue = analyzerQueue;
-    }
-
     public BlockingQueue<BatchPartitionWorkUnit> getCompletedQueue() {
         return completedQueue;
     }
-
-    public void setCompletedQueue(
-        BlockingQueue<BatchPartitionWorkUnit> completedQueue) {
-        this.completedQueue = completedQueue;
-    }
-
-
 }

@@ -16,7 +16,6 @@
  */
 package org.apache.batchee.container.cdi;
 
-import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.AfterDeploymentValidation;
@@ -24,30 +23,21 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.BeforeShutdown;
 import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.InjectionTarget;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-// excepted beforeBeanDiscovery() all is forked from DeltaSpike
+// excepted beforeBeanDiscovery() all is forked from DeltaSpike - we don't want to depend from it here
 public class BatchCDIInjectionExtension implements Extension {
     private static BatchCDIInjectionExtension bmpSingleton = null;
     private volatile Map<ClassLoader, BeanManagerInfo> bmInfos = new ConcurrentHashMap<ClassLoader, BeanManagerInfo>();
-
-    public static BatchCDIInjectionExtension getInstance() {
-        return bmpSingleton;
-    }
 
     void beforeBeanDiscovery(final @Observes BeforeBeanDiscovery bbd, BeanManager bm) {
         bbd.addAnnotatedType(bm.createAnnotatedType(BatchProducerBean.class));
     }
 
     public void setBeanManager(final @Observes AfterBeanDiscovery afterBeanDiscovery, final BeanManager beanManager) {
-        captureBeanManager(beanManager);
-    }
-
-    private void captureBeanManager(final BeanManager beanManager) {
         // bean manager holder
         if (bmpSingleton == null) {
             bmpSingleton = this;
@@ -56,8 +46,22 @@ public class BatchCDIInjectionExtension implements Extension {
         bmi.loadTimeBm = beanManager;
     }
 
+    public void cleanupFinalBeanManagers(final @Observes AfterDeploymentValidation adv) {
+        for (final BeanManagerInfo bmi : bmpSingleton.bmInfos.values()) {
+            bmi.finalBm = null;
+        }
+    }
+
+    public void cleanupStoredBeanManagerOnShutdown(final @Observes BeforeShutdown beforeShutdown) {
+        bmpSingleton.bmInfos.remove(loader());
+    }
+
     private static ClassLoader loader() {
         return Thread.currentThread().getContextClassLoader();
+    }
+
+    public static BatchCDIInjectionExtension getInstance() {
+        return bmpSingleton;
     }
 
     public BeanManager getBeanManager() {
@@ -80,16 +84,6 @@ public class BatchCDIInjectionExtension implements Extension {
         }
 
         return result;
-    }
-
-    public void cleanupFinalBeanManagers(final @Observes AfterDeploymentValidation adv) {
-        for (final BeanManagerInfo bmi : bmpSingleton.bmInfos.values()) {
-            bmi.finalBm = null;
-        }
-    }
-
-    public void cleanupStoredBeanManagerOnShutdown(final @Observes BeforeShutdown beforeShutdown) {
-        bmpSingleton.bmInfos.remove(loader());
     }
 
     private static BeanManager resolveBeanManagerViaJndi() {
@@ -118,33 +112,5 @@ public class BatchCDIInjectionExtension implements Extension {
         private BeanManager loadTimeBm = null;
         private BeanManager finalBm = null;
         private Boolean cdi = null;
-    }
-
-    public static class Releasable<T> {
-        private final CreationalContext<T> context;
-        private final InjectionTarget<T> injectionTarget;
-        private final T instance;
-
-        private Releasable(final CreationalContext<T> context, final InjectionTarget<T> injectionTarget, final T instance) {
-            this.context = context;
-            this.injectionTarget = injectionTarget;
-            this.instance = instance;
-        }
-
-        public void release() {
-            try {
-                injectionTarget.preDestroy(instance);
-                injectionTarget.dispose(instance);
-                context.release();
-            } catch (final Exception e) {
-                // no-op
-            } catch (final NoClassDefFoundError e) {
-                // no-op
-            }
-        }
-
-        public T getInstance() {
-            return instance;
-        }
     }
 }

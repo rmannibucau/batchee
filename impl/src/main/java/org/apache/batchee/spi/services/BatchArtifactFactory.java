@@ -60,7 +60,7 @@ package org.apache.batchee.spi.services;
 
 import java.io.Closeable;
 
-public interface IBatchArtifactFactory extends IBatchServiceBase {
+public interface BatchArtifactFactory extends BatchService {
 
     /**
      * @param batchId The value of a @ref attribute in a JSL element, e.g. 'batchlet'

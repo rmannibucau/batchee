@@ -16,8 +16,8 @@
  */
 package org.apache.batchee.container.impl;
 
-import org.apache.batchee.container.IController;
-import org.apache.batchee.container.IExecutionElementController;
+import org.apache.batchee.container.Controller;
+import org.apache.batchee.container.ExecutionElementController;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.jsl.ExecutionElement;
@@ -47,8 +47,8 @@ public class ExecutionTransitioner {
     private ModelNavigator<?> modelNavigator;
 
     // 'volatile' since it receives stop on separate thread.
-    private volatile IExecutionElementController currentStoppableElementController;
-    private IExecutionElementController previousElementController;
+    private volatile ExecutionElementController currentStoppableElementController;
+    private ExecutionElementController previousElementController;
     private ExecutionElement currentExecutionElement = null;
     private ExecutionElement previousExecutionElement = null;
 
@@ -86,7 +86,7 @@ public class ExecutionTransitioner {
                 return new ExecutionStatus(ExtendedBatchStatus.JOB_OPERATOR_STOPPING);
             }
 
-            final IExecutionElementController currentElementController = getNextElementController();
+            final ExecutionElementController currentElementController = getNextElementController();
             currentStoppableElementController = currentElementController;
 
             final ExecutionStatus status = currentElementController.execute();
@@ -156,8 +156,8 @@ public class ExecutionTransitioner {
     }
 
 
-    private IExecutionElementController getNextElementController() {
-        final IExecutionElementController elementController;
+    private ExecutionElementController getNextElementController() {
+        final ExecutionElementController elementController;
 
         if (currentExecutionElement instanceof Decision) {
             final Decision decision = (Decision) currentExecutionElement;
@@ -221,7 +221,7 @@ public class ExecutionTransitioner {
         return retVal;
     }
 
-    public IController getCurrentStoppableElementController() {
+    public Controller getCurrentStoppableElementController() {
         return currentStoppableElementController;
     }
 

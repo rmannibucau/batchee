@@ -17,11 +17,10 @@
 package org.apache.batchee.container.jobinstance;
 
 import org.apache.batchee.container.impl.JobContextImpl;
-import org.apache.batchee.container.services.IJobExecution;
-import org.apache.batchee.container.services.IPersistenceManagerService;
-import org.apache.batchee.container.services.IPersistenceManagerService.TimestampType;
+import org.apache.batchee.container.services.InternalJobExecution;
+import org.apache.batchee.container.services.PersistenceManagerService;
+import org.apache.batchee.container.services.PersistenceManagerService.TimestampType;
 import org.apache.batchee.container.servicesmanager.ServicesManager;
-import org.apache.batchee.container.servicesmanager.ServicesManagerImpl;
 import org.apache.batchee.spi.TaggedJobExecution;
 
 import javax.batch.runtime.BatchStatus;
@@ -29,9 +28,8 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Properties;
 
-public class JobOperatorJobExecution implements IJobExecution, TaggedJobExecution {
-    private static ServicesManager servicesManager = ServicesManagerImpl.getInstance();
-    private static IPersistenceManagerService _persistenceManagementService = servicesManager.getPersistenceManagerService();
+public class JobOperatorJobExecution implements InternalJobExecution, TaggedJobExecution {
+    private static final PersistenceManagerService PERSISTENCE_MANAGER_SERVICE = ServicesManager.getPersistenceManagerService();
 
     private long executionID = 0L;
     private long instanceID = 0L;
@@ -68,7 +66,7 @@ public class JobOperatorJobExecution implements IJobExecution, TaggedJobExecutio
             batchStatus = this.jobContext.getBatchStatus();
         } else {
             // old job, retrieve from the backend
-            batchStatus = BatchStatus.valueOf(_persistenceManagementService.jobOperatorQueryJobExecutionBatchStatus(executionID));
+            batchStatus = BatchStatus.valueOf(PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionBatchStatus(executionID));
         }
         return batchStatus;
     }
@@ -77,7 +75,7 @@ public class JobOperatorJobExecution implements IJobExecution, TaggedJobExecutio
     public Date getCreateTime() {
 
         if (this.jobContext == null) {
-            createTime = _persistenceManagementService.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.CREATE);
+            createTime = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.CREATE);
         }
 
         if (createTime != null) {
@@ -90,7 +88,7 @@ public class JobOperatorJobExecution implements IJobExecution, TaggedJobExecutio
 
 
         if (this.jobContext == null) {
-            endTime = _persistenceManagementService.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.END);
+            endTime = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.END);
         }
 
         if (endTime != null) {
@@ -109,7 +107,7 @@ public class JobOperatorJobExecution implements IJobExecution, TaggedJobExecutio
         if (this.jobContext != null) {
             return this.jobContext.getExitStatus();
         } else {
-            exitStatus = _persistenceManagementService.jobOperatorQueryJobExecutionExitStatus(executionID);
+            exitStatus = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionExitStatus(executionID);
             return exitStatus;
         }
 
@@ -119,7 +117,7 @@ public class JobOperatorJobExecution implements IJobExecution, TaggedJobExecutio
     public Date getLastUpdatedTime() {
 
         if (this.jobContext == null) {
-            this.updateTime = _persistenceManagementService.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.LAST_UPDATED);
+            this.updateTime = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.LAST_UPDATED);
         }
 
         if (updateTime != null) {
@@ -131,7 +129,7 @@ public class JobOperatorJobExecution implements IJobExecution, TaggedJobExecutio
     public Date getStartTime() {
 
         if (this.jobContext == null) {
-            startTime = _persistenceManagementService.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.STARTED);
+            startTime = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.STARTED);
         }
 
         if (startTime != null) {
@@ -195,7 +193,7 @@ public class JobOperatorJobExecution implements IJobExecution, TaggedJobExecutio
 
     @Override
     public String getTagName() {
-        return _persistenceManagementService.getTagName(executionID);
+        return PERSISTENCE_MANAGER_SERVICE.getTagName(executionID);
     }
 
     @Override
