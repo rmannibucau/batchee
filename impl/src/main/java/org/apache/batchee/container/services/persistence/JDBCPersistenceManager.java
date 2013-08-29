@@ -1331,69 +1331,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
     }
 
     @Override
-    public String getJobCurrentTag(long jobInstanceId) {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        String apptag = null;
-
-        try {
-            conn = getConnection();
-            statement = conn.prepareStatement(SELECT_JOBINSTANCEDATA_APPTAG);
-            statement.setLong(1, jobInstanceId);
-            rs = statement.executeQuery();
-            while (rs.next()) {
-                apptag = rs.getString(APPTAG);
-            }
-
-        } catch (SQLException e) {
-            throw new PersistenceException(e);
-        } finally {
-            cleanupConnection(conn, rs, statement);
-        }
-
-        return apptag;
-    }
-
-    @Override
-    public void purge(final String apptag) {
-        String deleteJobs = "DELETE FROM jobinstancedata WHERE apptag = ?";
-        String deleteJobExecutions = "DELETE FROM executioninstancedata "
-            + "WHERE jobexecid IN ("
-            + "SELECT B.jobexecid FROM jobinstancedata AS A INNER JOIN executioninstancedata AS B "
-            + "ON A.jobinstanceid = B.jobinstanceid "
-            + "WHERE A.apptag = ?)";
-        String deleteStepExecutions = "DELETE FROM stepexecutioninstancedata "
-            + "WHERE stepexecid IN ("
-            + "SELECT C.stepexecid FROM jobinstancedata AS A INNER JOIN executioninstancedata AS B "
-            + "ON A.jobinstanceid = B.jobinstanceid INNER JOIN stepexecutioninstancedata AS C "
-            + "ON B.jobexecid = C.jobexecid "
-            + "WHERE A.apptag = ?)";
-
-        Connection conn = null;
-        PreparedStatement statement = null;
-        try {
-            conn = getConnection();
-            statement = conn.prepareStatement(deleteStepExecutions);
-            statement.setString(1, apptag);
-            statement.executeUpdate();
-
-            statement = conn.prepareStatement(deleteJobExecutions);
-            statement.setString(1, apptag);
-            statement.executeUpdate();
-
-            statement = conn.prepareStatement(deleteJobs);
-            statement.setString(1, apptag);
-            statement.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new PersistenceException(e);
-        } finally {
-            cleanupConnection(conn, null, statement);
-        }
-    }
-
-    @Override
     public JobStatus getJobStatusFromExecution(final long executionId) {
 
         Connection conn = null;
@@ -1933,33 +1870,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
         } finally {
             cleanupConnection(conn, null, statement);
         }
-    }
-
-    /* (non-Javadoc)
-     * @see org.apache.batchee.spi.PersistenceManagerService#getTagName(long)
-     */
-    @Override
-    public String getTagName(final long jobExecutionId) {
-        String apptag = null;
-        Connection conn = null;
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        String query = "SELECT A.apptag FROM jobinstancedata A INNER JOIN executioninstancedata B ON A.jobinstanceid = B.jobinstanceid"
-            + " WHERE B.jobexecid = ?";
-        try {
-            conn = getConnection();
-            statement = conn.prepareStatement(query);
-            statement.setLong(1, jobExecutionId);
-            rs = statement.executeQuery();
-            if (rs.next()) {
-                apptag = rs.getString(1);
-            }
-        } catch (final SQLException e) {
-            throw new PersistenceException(e);
-        } finally {
-            cleanupConnection(conn, rs, statement);
-        }
-        return apptag;
     }
 
     @Override

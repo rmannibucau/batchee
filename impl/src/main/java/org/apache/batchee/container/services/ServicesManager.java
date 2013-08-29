@@ -24,6 +24,7 @@ import org.apache.batchee.container.services.factory.DefaultBatchArtifactFactory
 import org.apache.batchee.container.services.kernel.DefaultBatchKernel;
 import org.apache.batchee.container.services.loader.DefaultJobXMLLoaderService;
 import org.apache.batchee.container.services.persistence.JDBCPersistenceManager;
+import org.apache.batchee.container.services.security.DefaultSecurityService;
 import org.apache.batchee.container.services.status.DefaultJobStatusManager;
 import org.apache.batchee.container.services.transaction.DefaultBatchTransactionService;
 import org.apache.batchee.container.util.BatchContainerConstants;
@@ -32,6 +33,7 @@ import org.apache.batchee.spi.BatchService;
 import org.apache.batchee.spi.BatchThreadPoolService;
 import org.apache.batchee.spi.JobXMLLoaderService;
 import org.apache.batchee.spi.PersistenceManagerService;
+import org.apache.batchee.spi.SecurityService;
 import org.apache.batchee.spi.TransactionManagementService;
 
 import java.io.IOException;
@@ -56,6 +58,7 @@ public class ServicesManager implements BatchContainerConstants {
         serviceImplClassNames.put(BatchKernelService.class.getName(), DefaultBatchKernel.class.getName());
         serviceImplClassNames.put(JobXMLLoaderService.class.getName(), DefaultJobXMLLoaderService.class.getName());
         serviceImplClassNames.put(BatchArtifactFactory.class.getName(), DefaultBatchArtifactFactory.class.getName());
+        serviceImplClassNames.put(SecurityService.class.getName(), DefaultSecurityService.class.getName());
     }
 
     private ServicesManager() {
@@ -80,6 +83,10 @@ public class ServicesManager implements BatchContainerConstants {
 
     public static TransactionManagementService getTransactionManagementService() {
         return getService(TransactionManagementService.class);
+    }
+
+    public static SecurityService getSecurityService() {
+        return getService(SecurityService.class);
     }
 
     public static BatchArtifactFactory getArtifactFactory() {

@@ -18,7 +18,6 @@ package org.apache.batchee.container.impl.jobinstance;
 
 import org.apache.batchee.container.impl.JobContextImpl;
 import org.apache.batchee.container.impl.JobInstanceImpl;
-import org.apache.batchee.container.impl.JobOperatorImpl;
 import org.apache.batchee.container.jsl.JobModelResolver;
 import org.apache.batchee.container.modelresolver.PropertyResolver;
 import org.apache.batchee.container.modelresolver.PropertyResolverFactory;
@@ -26,11 +25,11 @@ import org.apache.batchee.container.navigator.ModelNavigator;
 import org.apache.batchee.container.navigator.NavigatorFactory;
 import org.apache.batchee.container.services.InternalJobExecution;
 import org.apache.batchee.container.services.JobStatusManagerService;
-import org.apache.batchee.spi.PersistenceManagerService;
 import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.jaxb.JSLJob;
 import org.apache.batchee.jaxb.JSLProperties;
+import org.apache.batchee.spi.PersistenceManagerService;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
 import javax.batch.operations.JobExecutionNotMostRecentException;
@@ -69,11 +68,11 @@ public class JobExecutionHelper {
     }
 
     private static JobInstance getNewJobInstance(final String name, final String jobXml) {
-        return PERSISTENCE_MANAGER_SERVICE.createJobInstance(name, JobOperatorImpl.DEFAULT_USER, jobXml);
+        return PERSISTENCE_MANAGER_SERVICE.createJobInstance(name, ServicesManager.getSecurityService().getLoggedUser(), jobXml);
     }
 
     private static JobInstance getNewSubJobInstance(final String name) {
-        return PERSISTENCE_MANAGER_SERVICE.createSubJobInstance(name, JobOperatorImpl.DEFAULT_USER);
+        return PERSISTENCE_MANAGER_SERVICE.createSubJobInstance(name, ServicesManager.getSecurityService().getLoggedUser());
     }
 
     private static JobStatus createNewJobStatus(final JobInstance jobInstance) {

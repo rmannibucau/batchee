@@ -53,6 +53,8 @@ public class ProxyFactory {
             return instance.getValue();
         } catch (final Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            INJECTION_CONTEXT.remove();
         }
     }
 

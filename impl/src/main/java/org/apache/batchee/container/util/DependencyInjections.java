@@ -135,35 +135,42 @@ public class DependencyInjections {
      * @param delegate An instance of the batch artifact
      * @return A map of Fields annotated with @BatchProperty.
      */
-    private static Map<String, Field> findPropertyFields(Object delegate) {
+    private static Map<String, Field> findPropertyFields(final Object delegate) {
+        Map<String, Field> propertyMap = null;
 
-        HashMap<String, Field> propertyMap = null;
-        // Go through declared field annotations
-        for (final Field field : delegate.getClass().getDeclaredFields()) {
-            setAccessible(field);
+        Class<?> current = delegate.getClass();
+        while (current.getName().contains("$$")) { // remove common proxies
+            current = current.getSuperclass();
+        }
 
-            BatchProperty batchPropertyAnnotation = field.getAnnotation(BatchProperty.class);
-            if (batchPropertyAnnotation != null) {
-                if (propertyMap == null) {
-                    propertyMap = new HashMap<String, Field>();
+        while (current != null && current != Object.class) {
+            for (final Field field : current.getDeclaredFields()) {
+                setAccessible(field);
+
+                final BatchProperty batchPropertyAnnotation = field.getAnnotation(BatchProperty.class);
+                if (batchPropertyAnnotation != null) {
+                    if (propertyMap == null) {
+                        propertyMap = new HashMap<String, Field>();
+                    }
+                    // If a name is not supplied the batch property name defaults to
+                    // the field name
+                    String batchPropName = null;
+                    if (batchPropertyAnnotation.name().equals("")) {
+                        batchPropName = field.getName();
+                    } else {
+                        batchPropName = batchPropertyAnnotation.name();
+                    }
+
+                    // Check if we have already used this name for a property.
+                    if (propertyMap.containsKey(batchPropName)) {
+                        throw new IllegalBatchPropertyException("There is already a batch property with this name: " + batchPropName);
+                    }
+
+                    propertyMap.put(batchPropName, field);
                 }
-                // If a name is not supplied the batch property name defaults to
-                // the field name
-                String batchPropName = null;
-                if (batchPropertyAnnotation.name().equals("")) {
-                    batchPropName = field.getName();
-                } else {
-                    batchPropName = batchPropertyAnnotation.name();
-                }
 
-                // Check if we have already used this name for a property.
-                if (propertyMap.containsKey(batchPropName)) {
-                    throw new IllegalBatchPropertyException("There is already a batch property with this name: " + batchPropName);
-                }
-
-                propertyMap.put(batchPropName, field);
             }
-
+            current = current.getSuperclass();
         }
         return propertyMap;
     }

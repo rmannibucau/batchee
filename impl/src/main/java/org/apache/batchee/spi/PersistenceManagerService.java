@@ -76,10 +76,6 @@ public interface PersistenceManagerService extends BatchService {
 
     Set<Long> jobOperatorGetRunningExecutions(String jobName);
 
-    String getJobCurrentTag(long jobInstanceId);
-
-    void purge(String apptag);
-
     JobStatus getJobStatusFromExecution(long executionId);
 
     long getJobInstanceIdByExecutionId(long executionId) throws NoSuchJobExecutionException;
@@ -183,15 +179,6 @@ public interface PersistenceManagerService extends BatchService {
      * @param stepStatus      the step status to be updated
      */
     void updateStepStatus(long stepExecutionId, StepStatus stepStatus);
-
-
-    /**
-     * Get the application name from an execution id.
-     *
-     * @param jobExecutionId the job execution id
-     * @return the application name
-     */
-    String getTagName(long jobExecutionId);
 
     void updateCheckpointData(CheckpointDataKey key, CheckpointData value);
 
