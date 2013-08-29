@@ -33,10 +33,6 @@ public class JobContextImpl implements JobContext {
     private Object transientUserData = null;
     private ModelNavigator<JSLJob> navigator = null;
 
-    public ModelNavigator<JSLJob> getNavigator() {
-        return navigator;
-    }
-
     private String id;  // Name
     private Properties properties = new Properties();
 
@@ -44,17 +40,15 @@ public class JobContextImpl implements JobContext {
     private long instanceId;
     protected String restartOn;
 
-
-    public JobContextImpl(ModelNavigator<JSLJob> navigator, JSLProperties jslProperties) {
+    public JobContextImpl(final ModelNavigator<JSLJob> navigator, final JSLProperties jslProperties) {
         this.navigator = navigator;
         this.id = navigator.getRootModelElement().getId();
         this.batchStatus = BatchStatus.STARTING;
         this.properties = convertJSProperties(jslProperties);
     }
 
-    private Properties convertJSProperties(JSLProperties jslProperties) {
-
-        Properties jobProperties = new Properties();
+    private Properties convertJSProperties(final JSLProperties jslProperties) {
+        final Properties jobProperties = new Properties();
         if (jslProperties != null) { // null if not job properties defined.
             for (Property property : jslProperties.getPropertyList()) {
                 jobProperties.setProperty(property.getName(), property.getValue());
@@ -63,6 +57,9 @@ public class JobContextImpl implements JobContext {
         return jobProperties;
     }
 
+    public ModelNavigator<JSLJob> getNavigator() {
+        return navigator;
+    }
 
     public String getExitStatus() {
         return exitStatus;
@@ -78,7 +75,6 @@ public class JobContextImpl implements JobContext {
         return id;
     }
 
-
     public BatchStatus getBatchStatus() {
         return batchStatus;
     }
@@ -92,7 +88,6 @@ public class JobContextImpl implements JobContext {
     public Object getTransientUserData() {
         return transientUserData;
     }
-
 
     public Properties getProperties() {
         return properties;

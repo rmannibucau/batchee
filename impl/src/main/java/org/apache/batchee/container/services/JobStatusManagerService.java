@@ -19,7 +19,7 @@ package org.apache.batchee.container.services;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.container.status.StepStatus;
-import org.apache.batchee.spi.services.BatchService;
+import org.apache.batchee.spi.BatchService;
 
 import javax.batch.runtime.BatchStatus;
 

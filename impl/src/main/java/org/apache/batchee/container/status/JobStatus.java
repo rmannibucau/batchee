@@ -16,7 +16,7 @@
 */
 package org.apache.batchee.container.status;
 
-import org.apache.batchee.container.jobinstance.JobInstanceImpl;
+import org.apache.batchee.container.impl.JobInstanceImpl;
 
 import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobInstance;

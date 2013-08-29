@@ -19,12 +19,10 @@ package org.apache.batchee.container.impl;
 import javax.batch.runtime.Metric;
 
 public class MetricImpl implements Metric {
-
     private MetricType name;
-
     private long value;
 
-    public MetricImpl(MetricType name, long value) {
+    public MetricImpl(final MetricType name, final long value) {
         this.name = name;
         this.value = value;
     }
@@ -36,14 +34,14 @@ public class MetricImpl implements Metric {
 
     @Override
     public long getValue() {
-        return this.value;
+        return value;
     }
 
     public void incValue() {
-        ++this.value;
+        ++value;
     }
 
-    public void incValueBy(long incValue) {
-        this.value = this.value + incValue;
+    public void incValueBy(final long incValue) {
+        value = value + incValue;
     }
 }

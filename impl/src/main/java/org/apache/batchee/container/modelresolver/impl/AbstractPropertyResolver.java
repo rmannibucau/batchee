@@ -32,16 +32,6 @@ public abstract class AbstractPropertyResolver<B> implements PropertyResolver<B>
         this.isPartitionedStep = isPartitionStep;
     }
 
-
-    /*
-     * Convenience method that is the same as calling substituteProperties(job,
-     * null, null)
-     */
-    public B substituteProperties(final B b) {
-
-        return this.substituteProperties(b, null, null);
-    }
-
     /*
      * Convenience method that is the same as calling substituteProperties(job,
      * submittedProps, null)

@@ -16,14 +16,13 @@
  */
 package org.apache.batchee.container.services;
 
-import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
+import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.util.BatchFlowInSplitWorkUnit;
 import org.apache.batchee.container.util.BatchPartitionWorkUnit;
 import org.apache.batchee.container.util.BatchWorkUnit;
 import org.apache.batchee.container.util.FlowInSplitBuilderConfig;
 import org.apache.batchee.container.util.PartitionsBuilderConfig;
-import org.apache.batchee.spi.BatchSecurityHelper;
-import org.apache.batchee.spi.services.BatchService;
+import org.apache.batchee.spi.BatchService;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
 import javax.batch.operations.JobExecutionNotMostRecentException;
@@ -50,8 +49,6 @@ public interface BatchKernelService extends BatchService {
     int getJobInstanceCount(String jobName);
 
     JobInstance getJobInstance(long instanceId);
-
-    BatchSecurityHelper getBatchSecurityHelper();
 
     List<BatchPartitionWorkUnit> buildNewParallelPartitions(PartitionsBuilderConfig config) throws JobRestartException, JobStartException;
 

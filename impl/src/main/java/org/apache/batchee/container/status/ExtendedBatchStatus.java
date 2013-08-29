@@ -17,6 +17,5 @@
 package org.apache.batchee.container.status;
 
 public enum ExtendedBatchStatus {
-
     JSL_END, JSL_FAIL, JSL_STOP, NORMAL_COMPLETION, EXCEPTION_THROWN, JOB_OPERATOR_STOPPING, DO_NOT_RUN
 }

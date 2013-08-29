@@ -16,8 +16,8 @@
  */
 package org.apache.batchee.container.util;
 
-import org.apache.batchee.container.impl.PartitionThreadRootControllerImpl;
-import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
+import org.apache.batchee.container.impl.controller.PartitionThreadRootController;
+import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.services.BatchKernelService;
 
 import java.util.concurrent.BlockingQueue;
@@ -30,7 +30,7 @@ public class BatchPartitionWorkUnit extends BatchParallelWorkUnit {
                                   PartitionsBuilderConfig config) {
         super(batchKernelService, jobExecution, true);
         this.completedThreadQueue = config.getCompletedQueue();
-        this.controller = new PartitionThreadRootControllerImpl(jobExecution, config);
+        this.controller = new PartitionThreadRootController(jobExecution, config);
     }
 
     @Override

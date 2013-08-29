@@ -19,16 +19,6 @@ package org.apache.batchee.container.modelresolver;
 import java.util.Properties;
 
 public interface PropertyResolver<B> {
-
-    /**
-     * Convenience method that is the same as calling substituteProperties(batchElement,
-     * null, null)
-     *
-     * @param b
-     * @return
-     */
-    public B substituteProperties(final B b);
-
     /**
      * Convenience method that is the same as calling substituteProperties(batchElement,
      * submittedProps, null)

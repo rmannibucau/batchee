@@ -16,8 +16,8 @@
  */
 package org.apache.batchee.container.util;
 
-import org.apache.batchee.container.impl.FlowInSplitThreadRootControllerImpl;
-import org.apache.batchee.container.jobinstance.RuntimeFlowInSplitExecution;
+import org.apache.batchee.container.impl.controller.FlowInSplitThreadRootController;
+import org.apache.batchee.container.impl.jobinstance.RuntimeFlowInSplitExecution;
 import org.apache.batchee.container.services.BatchKernelService;
 
 import java.util.concurrent.BlockingQueue;
@@ -30,7 +30,7 @@ public class BatchFlowInSplitWorkUnit extends BatchParallelWorkUnit {
                                     final FlowInSplitBuilderConfig config) {
         super(batchKernelService, jobExecution, true);
         this.completedThreadQueue = config.getCompletedQueue();
-        this.controller = new FlowInSplitThreadRootControllerImpl(jobExecution, config);
+        this.controller = new FlowInSplitThreadRootController(jobExecution, config);
     }
 
     @Override

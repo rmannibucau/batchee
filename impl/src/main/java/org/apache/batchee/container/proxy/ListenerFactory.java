@@ -17,7 +17,7 @@
 package org.apache.batchee.container.proxy;
 
 import org.apache.batchee.container.impl.StepContextImpl;
-import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
+import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.jaxb.JSLJob;
 import org.apache.batchee.jaxb.Listener;
 import org.apache.batchee.jaxb.Listeners;

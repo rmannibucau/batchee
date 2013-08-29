@@ -19,11 +19,10 @@ package org.apache.batchee.container.impl;
 import org.apache.batchee.container.services.BatchKernelService;
 import org.apache.batchee.container.services.InternalJobExecution;
 import org.apache.batchee.container.services.JobStatusManagerService;
-import org.apache.batchee.container.services.PersistenceManagerService;
-import org.apache.batchee.container.servicesmanager.ServicesManager;
+import org.apache.batchee.spi.PersistenceManagerService;
+import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.container.status.JobStatus;
-import org.apache.batchee.spi.BatchSecurityHelper;
-import org.apache.batchee.spi.services.JobXMLLoaderService;
+import org.apache.batchee.spi.JobXMLLoaderService;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
 import javax.batch.operations.JobExecutionIsRunningException;
@@ -52,6 +51,9 @@ import java.util.Set;
 
 
 public class JobOperatorImpl implements JobOperator {
+    public static final String JBATCH_ADMIN = "jbatch:admin";
+    public static final String DEFAULT_USER = "jbatch";
+
     private final BatchKernelService batchKernel = ServicesManager.getBatchKernelService();
     private final PersistenceManagerService persistenceService = ServicesManager.getPersistenceManagerService();
     private final JobXMLLoaderService jobXMLLoaderService = ServicesManager.getJobXMLLoaderService();
@@ -151,14 +153,12 @@ public class JobOperatorImpl implements JobOperator {
 
     @Override
     public int getJobInstanceCount(String jobName) throws NoSuchJobException, JobSecurityException {
-        final BatchSecurityHelper helper = getBatchSecurityHelper();
-
         int jobInstanceCount;
-        if (isCurrentTagAdmin(helper)) {
+        if (isAuthorized(JBATCH_ADMIN)) {
             // Do an unfiltered query
             jobInstanceCount = persistenceService.jobOperatorGetJobInstanceCount(jobName);
         } else {
-            jobInstanceCount = persistenceService.jobOperatorGetJobInstanceCount(jobName, helper.getCurrentTag());
+            jobInstanceCount = persistenceService.jobOperatorGetJobInstanceCount(jobName, getLoggedUser());
         }
 
         if (jobInstanceCount > 0) {
@@ -179,13 +179,12 @@ public class JobOperatorImpl implements JobOperator {
             throw new IllegalArgumentException("Count should be a positive integer (or 0, which will return an empty list)");
         }
 
-        final BatchSecurityHelper helper = getBatchSecurityHelper();
         final List<Long> instanceIds;
-        if (isCurrentTagAdmin(helper)) {
+        if (isAuthorized(JBATCH_ADMIN)) {
             // Do an unfiltered query
             instanceIds = persistenceService.jobOperatorGetJobInstanceIds(jobName, start, count);
         } else {
-            instanceIds = persistenceService.jobOperatorGetJobInstanceIds(jobName, helper.getCurrentTag(), start, count);
+            instanceIds = persistenceService.jobOperatorGetJobInstanceIds(jobName, getLoggedUser(), start, count);
         }
 
         // get the jobinstance ids associated with this job name
@@ -325,27 +324,20 @@ public class JobOperatorImpl implements JobOperator {
     }
 
     public void purge(final String apptag) {
-        final BatchSecurityHelper bsh = getBatchSecurityHelper();
-        if (isCurrentTagAdmin(bsh) || bsh.getCurrentTag().equals(apptag)) {
+        if (isAuthorized("jbatch:purge")) {
             persistenceService.purge(apptag);
         }
     }
 
     private boolean isAuthorized(final long instanceId) {
-        final String apptag = persistenceService.getJobCurrentTag(instanceId);
-        final BatchSecurityHelper bsh = getBatchSecurityHelper();
-        return isCurrentTagAdmin(bsh) || bsh.getCurrentTag().equals(apptag);
+        return true; // TODO
     }
 
-    private boolean isCurrentTagAdmin(final BatchSecurityHelper helper) {
-        return helper.isAdmin(helper.getCurrentTag());
+    private boolean isAuthorized(final String perm) {
+        return true; // TODO
     }
 
-    private BatchSecurityHelper getBatchSecurityHelper() {
-        final BatchSecurityHelper bsh = batchKernel.getBatchSecurityHelper();
-        if (bsh == null) {
-            throw new IllegalStateException("Expect to have a security helper, at least the NoOp security helper.");
-        }
-        return bsh;
+    private String getLoggedUser() {
+        return DEFAULT_USER;
     }
 }

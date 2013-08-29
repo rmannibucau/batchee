@@ -17,7 +17,7 @@
 package org.apache.batchee.container.cdi;
 
 import org.apache.batchee.container.proxy.ProxyFactory;
-import org.apache.batchee.container.util.DependencyInjectionUtility;
+import org.apache.batchee.container.util.DependencyInjections;
 
 import javax.batch.api.BatchProperty;
 import javax.batch.runtime.context.JobContext;
@@ -40,7 +40,7 @@ public class BatchProducerBean {
                 batchPropName = batchPropAnnotation.name();
             }
 
-            return DependencyInjectionUtility.getPropertyValue(ProxyFactory.getInjectionReferences().getProps(), batchPropName);
+            return DependencyInjections.getPropertyValue(ProxyFactory.getInjectionReferences().getProps(), batchPropName);
         }
         return null;
 

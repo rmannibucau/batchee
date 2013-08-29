@@ -17,7 +17,7 @@
 package org.apache.batchee.container.proxy;
 
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
-import org.apache.batchee.container.persistence.ItemCheckpointAlgorithm;
+import org.apache.batchee.container.impl.controller.chunk.ItemCheckpointAlgorithm;
 
 import javax.batch.api.chunk.CheckpointAlgorithm;
 

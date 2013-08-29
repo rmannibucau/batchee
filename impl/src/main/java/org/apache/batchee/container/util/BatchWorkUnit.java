@@ -18,8 +18,8 @@ package org.apache.batchee.container.util;
 
 import org.apache.batchee.container.ThreadRootController;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
-import org.apache.batchee.container.impl.JobControllerImpl;
-import org.apache.batchee.container.jobinstance.RuntimeJobExecution;
+import org.apache.batchee.container.impl.controller.JobController;
+import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.services.BatchKernelService;
 
 import javax.batch.runtime.BatchStatus;
@@ -48,7 +48,7 @@ public class BatchWorkUnit implements Runnable {
         this.setBatchKernel(batchKernel);
         this.setJobExecutionImpl(jobExecutionImpl);
         this.setNotifyCallbackWhenDone(notifyCallbackWhenDone);
-        this.controller = new JobControllerImpl(jobExecutionImpl);
+        this.controller = new JobController(jobExecutionImpl);
     }
 
     public ThreadRootController getController() {

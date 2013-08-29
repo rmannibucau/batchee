@@ -17,7 +17,7 @@
 package org.apache.batchee.container.status;
 
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
-import org.apache.batchee.container.persistence.PersistentDataWrapper;
+import org.apache.batchee.container.impl.controller.chunk.PersistentDataWrapper;
 import org.apache.batchee.container.util.TCCLObjectInputStream;
 
 import javax.batch.runtime.BatchStatus;
@@ -93,19 +93,16 @@ public class StepStatus implements Serializable {
 
     public Serializable getPersistentUserData() {
         if (this.persistentUserData != null) {
-            byte[] persistentToken = this.persistentUserData.getPersistentDataBytes();
-            ByteArrayInputStream persistentByteArrayInputStream = new ByteArrayInputStream(persistentToken);
-            TCCLObjectInputStream persistentOIS = null;
-
-            Serializable persistentObject = null;
-
+            final byte[] persistentToken = this.persistentUserData.getPersistentDataBytes();
+            final ByteArrayInputStream persistentByteArrayInputStream = new ByteArrayInputStream(persistentToken);
+            TCCLObjectInputStream persistentOIS;
+            Serializable persistentObject;
             try {
                 persistentOIS = new TCCLObjectInputStream(persistentByteArrayInputStream);
                 persistentObject = (Serializable) persistentOIS.readObject();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 throw new BatchContainerRuntimeException(e);
             }
-
             return persistentObject;
         } else {
             return null;

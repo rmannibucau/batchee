@@ -18,26 +18,26 @@ package org.apache.batchee.container.modelresolver;
 
 
 import org.apache.batchee.container.jsl.TransitionElement;
-import org.apache.batchee.container.modelresolver.impl.AnalyzerPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.BatchletPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.CheckpointAlgorithmPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.ChunkPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.CollectorPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.ControlElementPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.DecisionPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.ExceptionClassesPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.FlowPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.ItemProcessorPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.ItemReaderPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.ItemWriterPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.JobPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.ListenerPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.PartitionMapperPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.PartitionPlanPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.PartitionPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.PartitionReducerPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.SplitPropertyResolverImpl;
-import org.apache.batchee.container.modelresolver.impl.StepPropertyResolverImpl;
+import org.apache.batchee.container.modelresolver.impl.AnalyzerPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.BatchletPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.CheckpointAlgorithmPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.ChunkPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.CollectorPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.ControlElementPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.DecisionPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.ExceptionClassesPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.FlowPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.ItemProcessorPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.ItemReaderPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.ItemWriterPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.JobPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.ListenerPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.PartitionMapperPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.PartitionPlanPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.PartitionPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.PartitionReducerPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.SplitPropertyResolver;
+import org.apache.batchee.container.modelresolver.impl.StepPropertyResolver;
 import org.apache.batchee.jaxb.Analyzer;
 import org.apache.batchee.jaxb.Batchlet;
 import org.apache.batchee.jaxb.Chunk;
@@ -58,94 +58,95 @@ import org.apache.batchee.jaxb.Split;
 import org.apache.batchee.jaxb.Step;
 
 public class PropertyResolverFactory {
-
-
     public static PropertyResolver<JSLJob> createJobPropertyResolver(boolean isPartitionedStep) {
-        return new JobPropertyResolverImpl(isPartitionedStep);
+        return new JobPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Step> createStepPropertyResolver(boolean isPartitionedStep) {
-        return new StepPropertyResolverImpl(isPartitionedStep);
+        return new StepPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Batchlet> createBatchletPropertyResolver(boolean isPartitionedStep) {
-        return new BatchletPropertyResolverImpl(isPartitionedStep);
+        return new BatchletPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Split> createSplitPropertyResolver(boolean isPartitionedStep) {
-        return new SplitPropertyResolverImpl(isPartitionedStep);
+        return new SplitPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Flow> createFlowPropertyResolver(boolean isPartitionedStep) {
-        return new FlowPropertyResolverImpl(isPartitionedStep);
+        return new FlowPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Chunk> createChunkPropertyResolver(boolean isPartitionedStep) {
-        return new ChunkPropertyResolverImpl(isPartitionedStep);
+        return new ChunkPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<TransitionElement> createTransitionElementPropertyResolver(boolean isPartitionedStep) {
-        return new ControlElementPropertyResolverImpl(isPartitionedStep);
+        return new ControlElementPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Decision> createDecisionPropertyResolver(boolean isPartitionedStep) {
-        return new DecisionPropertyResolverImpl(isPartitionedStep);
+        return new DecisionPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Listener> createListenerPropertyResolver(boolean isPartitionedStep) {
-        return new ListenerPropertyResolverImpl(isPartitionedStep);
+        return new ListenerPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Partition> createPartitionPropertyResolver(boolean isPartitionedStep) {
-        return new PartitionPropertyResolverImpl(isPartitionedStep);
+        return new PartitionPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<PartitionMapper> createPartitionMapperPropertyResolver(boolean isPartitionedStep) {
-        return new PartitionMapperPropertyResolverImpl(isPartitionedStep);
+        return new PartitionMapperPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<PartitionPlan> createPartitionPlanPropertyResolver(boolean isPartitionedStep) {
-        return new PartitionPlanPropertyResolverImpl(isPartitionedStep);
+        return new PartitionPlanPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<PartitionReducer> createPartitionReducerPropertyResolver(boolean isPartitionedStep) {
-        return new PartitionReducerPropertyResolverImpl(isPartitionedStep);
+        return new PartitionReducerPropertyResolver(isPartitionedStep);
     }
 
-    public static CheckpointAlgorithmPropertyResolverImpl createCheckpointAlgorithmPropertyResolver(boolean isPartitionedStep) {
-        return new CheckpointAlgorithmPropertyResolverImpl(isPartitionedStep);
+    public static CheckpointAlgorithmPropertyResolver createCheckpointAlgorithmPropertyResolver(boolean isPartitionedStep) {
+        return new CheckpointAlgorithmPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Collector> createCollectorPropertyResolver(boolean isPartitionedStep) {
-        return new CollectorPropertyResolverImpl(isPartitionedStep);
+        return new CollectorPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<Analyzer> createAnalyzerPropertyResolver(boolean isPartitionedStep) {
-        return new AnalyzerPropertyResolverImpl(isPartitionedStep);
+        return new AnalyzerPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<ItemReader> createReaderPropertyResolver(boolean isPartitionedStep) {
-        return new ItemReaderPropertyResolverImpl(isPartitionedStep);
+        return new ItemReaderPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<ItemProcessor> createProcessorPropertyResolver(boolean isPartitionedStep) {
-        return new ItemProcessorPropertyResolverImpl(isPartitionedStep);
+        return new ItemProcessorPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<ItemWriter> createWriterPropertyResolver(boolean isPartitionedStep) {
-        return new ItemWriterPropertyResolverImpl(isPartitionedStep);
+        return new ItemWriterPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<ExceptionClassFilter> createSkippableExceptionClassesPropertyResolver(boolean isPartitionedStep) {
-        return new ExceptionClassesPropertyResolverImpl(isPartitionedStep);
+        return new ExceptionClassesPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<ExceptionClassFilter> createRetryableExceptionClassesPropertyResolver(boolean isPartitionedStep) {
-        return new ExceptionClassesPropertyResolverImpl(isPartitionedStep);
+        return new ExceptionClassesPropertyResolver(isPartitionedStep);
     }
 
     public static PropertyResolver<ExceptionClassFilter> createNoRollbackExceptionClassesPropertyResolver(boolean isPartitionedStep) {
-        return new ExceptionClassesPropertyResolverImpl(isPartitionedStep);
+        return new ExceptionClassesPropertyResolver(isPartitionedStep);
     }
 
+    private PropertyResolverFactory() {
+        // no-op
+    }
 }
