@@ -28,6 +28,7 @@
 
   <modules>
     <module>impl</module>
+    <module>shiro</module>
   </modules>
 
   <dependencyManagement>

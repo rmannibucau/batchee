@@ -66,7 +66,7 @@ public class ServicesManager implements BatchContainerConstants {
     }
 
     // Lazily-loaded singleton.
-    private static class ServicesManagerImplHolder {
+    private static class Holder {
         private static final ServicesManager INSTANCE = new ServicesManager();
     }
 
@@ -124,7 +124,11 @@ public class ServicesManager implements BatchContainerConstants {
         if (!isInited) {
             synchronized (isInitedLock) {
                 if (!isInited) {
-                    batchRuntimeConfig = new Properties(System.getProperties());
+                    batchRuntimeConfig = new Properties();
+
+                    batchRuntimeConfig.putAll(serviceImplClassNames);
+                    batchRuntimeConfig.putAll(System.getProperties());
+
                     final InputStream batchServicesListInputStream = getClass().getResourceAsStream(SERVICES_CONFIGURATION_FILE);
                     if (batchServicesListInputStream != null) {
                         try {
@@ -139,6 +143,7 @@ public class ServicesManager implements BatchContainerConstants {
                             }
                         }
                     }
+
                     isInited = Boolean.TRUE;
                 }
             }
@@ -146,16 +151,16 @@ public class ServicesManager implements BatchContainerConstants {
     }
 
     private static <T extends BatchService> T getService(final Class<T> clazz) throws BatchContainerServiceException {
-        ServicesManagerImplHolder.INSTANCE.initIfNecessary();
-        T service = clazz.cast(ServicesManagerImplHolder.INSTANCE.serviceRegistry.get(clazz.getName()));
+        Holder.INSTANCE.initIfNecessary();
+        T service = clazz.cast(Holder.INSTANCE.serviceRegistry.get(clazz.getName()));
         if (service == null) {
             // Probably don't want to be loading two on two different threads so lock the whole table.
-            synchronized (ServicesManagerImplHolder.INSTANCE.serviceRegistry) {
-                service = clazz.cast(ServicesManagerImplHolder.INSTANCE.serviceRegistry.get(clazz.getName()));
+            synchronized (Holder.INSTANCE.serviceRegistry) {
+                service = clazz.cast(Holder.INSTANCE.serviceRegistry.get(clazz.getName()));
                 if (service == null) {
                     service = loadServiceHelper(clazz);
-                    service.init(ServicesManagerImplHolder.INSTANCE.batchRuntimeConfig);
-                    ServicesManagerImplHolder.INSTANCE.serviceRegistry.putIfAbsent(clazz.getName(), service);
+                    service.init(Holder.INSTANCE.batchRuntimeConfig);
+                    Holder.INSTANCE.serviceRegistry.putIfAbsent(clazz.getName(), service);
                 }
             }
         }
@@ -164,12 +169,12 @@ public class ServicesManager implements BatchContainerConstants {
 
     private static <T extends BatchService> T loadServiceHelper(final Class<T> serviceType) {
         T service = null;
-        String className = serviceImplClassNames.get(serviceType.getName());
+        String className = Holder.INSTANCE.batchRuntimeConfig.getProperty(serviceType.getSimpleName());
         try {
             if (className != null) {
                 service = load(serviceType, className);
             } else {
-                className = serviceImplClassNames.get(serviceType.getSimpleName());
+                className = Holder.INSTANCE.batchRuntimeConfig.getProperty(serviceType.getName());
                 if (className != null) {
                     service = load(serviceType, className);
                 }

@@ -52,7 +52,17 @@ import java.util.Set;
 
 
 public class JobOperatorImpl implements JobOperator {
-    public static final String JBATCH_ADMIN = "jbatch:admin";
+    enum Permissions {
+        START("start");
+
+        private final String name;
+
+        Permissions(final String permName) {
+            name = permName;
+        }
+    }
+
+    public static final String JBATCH_ADMIN = "admin";
 
     private static final BatchKernelService KERNEL_SERVICE = ServicesManager.getBatchKernelService();
     private static final PersistenceManagerService PERSISTENCE_SERVICE = ServicesManager.getPersistenceManagerService();
@@ -62,6 +72,10 @@ public class JobOperatorImpl implements JobOperator {
 
     @Override
     public long start(final String jobXMLName, final Properties jobParameters) throws JobStartException, JobSecurityException {
+        if (!SECURITY_SERVICE.isAuthorized(Permissions.START.name)) {
+            throw new JobSecurityException("The current user is not authorized to perform this operation");
+        }
+
         /*
 		 * The whole point of this method is to have JobStartException serve as a blanket exception for anything other 
 		 * than the rest of the more specific exceptions declared on the throws clause.  So we won't log but just rethrow.
@@ -94,7 +108,6 @@ public class JobOperatorImpl implements JobOperator {
 
     @Override
     public void abandon(final long executionId) throws NoSuchJobExecutionException, JobExecutionIsRunningException, JobSecurityException {
-
         if (!SECURITY_SERVICE.isAuthorized(PERSISTENCE_SERVICE.getJobInstanceIdByExecutionId(executionId))) {
             throw new JobSecurityException("The current user is not authorized to perform this operation");
         }

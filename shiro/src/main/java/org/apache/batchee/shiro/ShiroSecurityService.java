@@ -14,38 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.container.services.security;
+package org.apache.batchee.shiro;
 
-import org.apache.batchee.spi.SecurityService;
+import org.apache.batchee.container.services.security.DefaultSecurityService;
 
 import java.util.Properties;
 
-public class DefaultSecurityService implements SecurityService {
-    protected String defaultUser;
-    protected boolean allowDefault;
+import static org.apache.shiro.SecurityUtils.getSubject;
+
+public class ShiroSecurityService extends DefaultSecurityService {
+    private String instancePrefix;
+    private String permissionPrefix;
+
+    private boolean isAuthenticatedAndAuthorized(final String permission) {
+        return getSubject().isAuthenticated() && getSubject().isPermitted(permission);
+    }
 
     @Override
     public boolean isAuthorized(final long instanceId) {
-        return isDefaultUserAuthorized();
+        return isAuthenticatedAndAuthorized(instancePrefix + instanceId);
     }
 
     @Override
     public boolean isAuthorized(final String perm) {
-        return isDefaultUserAuthorized();
+        return isAuthenticatedAndAuthorized(permissionPrefix + perm);
     }
 
     @Override
     public String getLoggedUser() {
-        return defaultUser;
-    }
-
-    private boolean isDefaultUserAuthorized() {
-        return defaultUser.equals(getLoggedUser()) || allowDefault;
+        if (getSubject().isAuthenticated()) {
+            return getSubject().getPrincipal().toString();
+        }
+        return super.getLoggedUser();
     }
 
     @Override
     public void init(final Properties batchConfig) {
-        defaultUser = batchConfig.getProperty("security.user", "jbatch");
-        allowDefault = "true".equalsIgnoreCase(batchConfig.getProperty("security.anonymous-allowed", "false"));
+        super.init(batchConfig);
+        permissionPrefix = batchConfig.getProperty("security.job.permission-prefix", "jbatch:");
+        instancePrefix = permissionPrefix + batchConfig.getProperty("security.job.permission-prefix", "instance:");
     }
 }
