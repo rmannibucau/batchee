@@ -14,27 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.extras.util;
+package org.apache.batchee.extras.typed;
 
-import javax.batch.operations.JobOperator;
-import javax.batch.runtime.BatchStatus;
-import java.util.Arrays;
-import java.util.Collection;
+import javax.batch.api.chunk.ItemProcessor;
 
-public class Batches {
-    private static final Collection<BatchStatus> BATCH_END_STATUSES = Arrays.asList(BatchStatus.COMPLETED, BatchStatus.FAILED);
+public abstract class TypedProcessor<R> implements ItemProcessor {
+    protected abstract Object doProcessItem(R item);
 
-    private Batches() {
-        // no-op
-    }
-
-    public static void waitForEnd(final JobOperator jobOperator, final long id) {
-        do {
-            try {
-                Thread.sleep(100);
-            } catch (final InterruptedException e) {
-                return;
-            }
-        } while (!BATCH_END_STATUSES.contains(jobOperator.getJobExecution(id).getBatchStatus()));
+    @Override
+    public Object processItem(Object item) throws Exception {
+        return doProcessItem((R) item);
     }
 }

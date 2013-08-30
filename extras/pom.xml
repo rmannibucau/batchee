@@ -35,6 +35,10 @@
       <artifactId>javax.batch-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.geronimo.components</groupId>
+      <artifactId>geronimo-transaction</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-atinject_1.0_spec</artifactId>
     </dependency>

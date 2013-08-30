@@ -13,16 +13,16 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<job id="flat-reader" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+<job id="stax-writer" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
   <step id="step1">
     <chunk>
-      <reader ref="org.apache.batchee.extras.flat.FlatFileItemReader">
+      <reader ref="org.apache.batchee.extras.StaxItemWriterTest$TwoItemsReader" />
+      <writer ref="org.apache.batchee.extras.stax.StaxItemWriter">
         <properties>
-          <property name="input" value="#{jobParameters['input']}" />
+          <property name="output" value="#{jobParameters['output']}"/>
+          <property name="marshallingClasses" value="org.apache.batchee.extras.StaxItemWriterTest$Foo"/>
         </properties>
-      </reader>
-      <processor ref="org.apache.batchee.extras.FlatFileItemReaderTest$StoreItems" />
-      <writer ref="org.apache.batchee.extras.noop.NoopItemWriter" />
+      </writer>
     </chunk>
   </step>
 </job>

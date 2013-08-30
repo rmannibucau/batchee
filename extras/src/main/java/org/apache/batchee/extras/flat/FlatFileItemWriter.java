@@ -14,16 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.extras.writer;
+package org.apache.batchee.extras.flat;
+
+import org.apache.batchee.extras.transaction.TransactionalWriter;
 
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemWriter;
 import javax.batch.operations.BatchRuntimeException;
 import javax.inject.Inject;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.RandomAccessFile;
 import java.io.Serializable;
+import java.io.Writer;
+import java.nio.channels.FileChannel;
 import java.util.List;
 
 public class FlatFileItemWriter implements ItemWriter {
@@ -31,7 +34,17 @@ public class FlatFileItemWriter implements ItemWriter {
     @BatchProperty(name = "output")
     private String output;
 
-    private BufferedWriter writer = null;
+    @Inject
+    @BatchProperty(name = "encoding")
+    private String encoding;
+
+    @Inject
+    @BatchProperty(name = "line.separator")
+    private String lineSeparator;
+
+    private Writer writer = null;
+    private long offset;
+    private FileChannel channel;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -42,8 +55,26 @@ public class FlatFileItemWriter implements ItemWriter {
         if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
             throw new BatchRuntimeException("Can't create parent for " + output);
         }
+        if (lineSeparator == null) {
+            lineSeparator = System.getProperty("line.separator", "\n");
+        }
 
-        writer = new BufferedWriter(new FileWriter(file, checkpoint != null && Boolean.class.isInstance(checkpoint) && Boolean.class.cast(checkpoint)));
+        channel = new RandomAccessFile(file, "rw").getChannel();
+        writer = new TransactionalWriter(channel, encoding);
+
+        final long restartOffset;
+        if (checkpoint != null && Number.class.isInstance(checkpoint)) {
+            restartOffset = Number.class.cast(checkpoint).longValue();
+            if (channel.size() < restartOffset) {
+                throw new BatchRuntimeException("File seems too small");
+            }
+            channel.truncate(restartOffset);
+            channel.position(restartOffset);
+        } else {
+            restartOffset = 0;
+        }
+        channel.truncate(restartOffset);
+        channel.position(restartOffset);
     }
 
     @Override
@@ -58,9 +89,12 @@ public class FlatFileItemWriter implements ItemWriter {
         for (final Object item : items) {
             final String string = preWrite(item);
             if (string != null) {
-                writer.write(string);
+                final String toWrite = string + lineSeparator;
+                writer.write(toWrite);
             }
         }
+        writer.flush();
+        offset = channel.position();
     }
 
     protected String preWrite(final Object object) {
@@ -72,6 +106,6 @@ public class FlatFileItemWriter implements ItemWriter {
 
     @Override
     public Serializable checkpointInfo() throws Exception {
-        return true; // append mode in writer
+        return offset;
     }
 }

@@ -23,25 +23,24 @@ import org.testng.annotations.Test;
 import javax.batch.api.chunk.ItemReader;
 import javax.batch.operations.JobOperator;
 import javax.batch.runtime.BatchRuntime;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Properties;
 
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertEquals;
 
-public class FlatFileItemWriterTest {
+public class StaxItemWriterTest {
     @Test
-    public void write() throws Exception {
-        final String path = "target/work/FlatFileItemWriter.txt";
+    public void read() throws Exception {
+        final String path = "target/work/StaxItemWriter.xml";
 
         final Properties jobParams = new Properties();
         jobParams.setProperty("output", path);
 
         final JobOperator jobOperator = BatchRuntime.getJobOperator();
-
-        Batches.waitForEnd(jobOperator, jobOperator.start("flat-file-writer", jobParams));
-        final String output = IOs.slurp(path);
-        assertTrue(output.contains("line 1"));
-        assertTrue(output.contains("line 2"));
+        Batches.waitForEnd(jobOperator, jobOperator.start("stax-writer", jobParams));
+        final String content = IOs.slurp(path);
+        assertEquals(content.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", ""), "<root><foo><value>item 1</value></foo><foo><value>item 2</value></foo></root>");
     }
 
     public static class TwoItemsReader implements ItemReader {
@@ -60,7 +59,7 @@ public class FlatFileItemWriterTest {
         @Override
         public Object readItem() throws Exception {
             if (count++ < 2) {
-                return "line " + count;
+                return new Foo("item " + count);
             }
             return null;
         }
@@ -68,6 +67,27 @@ public class FlatFileItemWriterTest {
         @Override
         public Serializable checkpointInfo() throws Exception {
             return null;
+        }
+    }
+
+    @XmlRootElement
+    public static class Foo {
+        private String value;
+
+        public Foo() {
+            // no-op
+        }
+
+        public Foo(final String s) {
+            value = s;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(final String value) {
+            this.value = value;
         }
     }
 }

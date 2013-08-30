@@ -23,33 +23,50 @@ import org.testng.annotations.Test;
 import javax.batch.api.chunk.ItemProcessor;
 import javax.batch.operations.JobOperator;
 import javax.batch.runtime.BatchRuntime;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
 import static org.testng.Assert.assertEquals;
 
-public class FlatFileItemReaderTest {
+public class StaxItemReaderTest {
     @Test
     public void read() throws Exception {
-        final String path = "target/work/FlatFileItemReader.txt";
+        final String path = "target/work/StaxItemReader.xml";
 
         final Properties jobParams = new Properties();
+        jobParams.setProperty("tag", "bar");
         jobParams.setProperty("input", path);
 
         final JobOperator jobOperator = BatchRuntime.getJobOperator();
-        IOs.write(path, "line 1\r\n#ignored\r\nline2");
-        Batches.waitForEnd(jobOperator, jobOperator.start("flat-file-reader", jobParams));
+        IOs.write(path, "<foo><bar><value>1</value></bar><bar><value>2</value></bar></foo>");
+        Batches.waitForEnd(jobOperator, jobOperator.start("stax-reader", jobParams));
         assertEquals(StoreItems.ITEMS.size(), 2);
+        assertEquals("1", StoreItems.ITEMS.get(0).getValue());
+        assertEquals("2", StoreItems.ITEMS.get(1).getValue());
     }
 
     public static class StoreItems implements ItemProcessor {
-        public static final Collection<Object> ITEMS = new ArrayList<Object>();
+        public static final List<Bar> ITEMS = new ArrayList<Bar>(2);
 
         @Override
         public Object processItem(final Object item) throws Exception {
-            ITEMS.add(item);
+            ITEMS.add(Bar.class.cast(item));
             return item;
+        }
+    }
+
+    @XmlRootElement
+    public static class Bar {
+        private String value;
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(final String value) {
+            this.value = value;
         }
     }
 }

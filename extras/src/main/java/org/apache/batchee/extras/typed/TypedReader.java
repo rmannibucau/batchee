@@ -14,30 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.extras.writer;
+package org.apache.batchee.extras.typed;
 
-import javax.batch.api.chunk.ItemWriter;
+import javax.batch.api.chunk.ItemReader;
 import java.io.Serializable;
-import java.util.List;
 
-public class NoopItemWriter implements ItemWriter {
+public abstract class TypedReader<R, C extends Serializable> implements ItemReader {
+    protected abstract void doOpen(C checkpoint);
+    protected abstract C doCheckpointInfo();
+    protected abstract R doRead();
+
     @Override
-    public void open(final Serializable checkpoint) throws Exception {
-        // no-op
+    public void open(Serializable checkpoint) throws Exception {
+        doOpen((C) checkpoint);
     }
 
     @Override
-    public void close() throws Exception {
-        // no-op
-    }
-
-    @Override
-    public void writeItems(final List<Object> items) throws Exception {
-        // no-op
+    public Object readItem() throws Exception {
+        return doRead();
     }
 
     @Override
     public Serializable checkpointInfo() throws Exception {
-        return null;
+        return doCheckpointInfo();
     }
 }
