@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.extras.flat;
+package org.apache.batchee.beanio;
 
 import org.apache.batchee.extras.checkpoint.ChannelPositions;
 import org.apache.batchee.extras.transaction.TransactionalWriter;
+import org.beanio.BeanWriter;
 
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemWriter;
@@ -26,75 +27,58 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
-import java.io.Writer;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
-public class FlatFileItemWriter implements ItemWriter {
-    @Inject
-    @BatchProperty(name = "output")
-    private String output;
-
+public class BeanIOWriter extends BaseBeanIO implements ItemWriter {
     @Inject
     @BatchProperty(name = "encoding")
-    private String encoding;
+    protected String encoding;
 
     @Inject
     @BatchProperty(name = "line.separator")
-    private String lineSeparator;
+    protected String lineSeparator;
 
-    private Writer writer = null;
-    private long offset;
+    private BeanWriter writer;
+    private long position = 0;
     private FileChannel channel;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
-        if (output == null) {
-            throw new BatchRuntimeException("Can't find any output");
+        if (encoding == null) {
+            encoding = "UTF-8";
         }
-        final File file = new File(output);
+
+        final File file = new File(filePath);
         if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
-            throw new BatchRuntimeException("Can't create parent for " + output);
-        }
-        if (lineSeparator == null) {
-            lineSeparator = System.getProperty("line.separator", "\n");
+            throw new BatchRuntimeException(file.getParentFile().getAbsolutePath());
         }
 
         channel = new RandomAccessFile(file, "rw").getChannel();
-        writer = new TransactionalWriter(channel, encoding);
+        writer = super.open().createWriter(streamName, new TransactionalWriter(channel, encoding));
 
         ChannelPositions.reset(channel, checkpoint);
     }
 
     @Override
     public void close() throws Exception {
-        if (writer != null) {
-            writer.close();
-        }
+        writer.close();
     }
 
     @Override
     public void writeItems(final List<Object> items) throws Exception {
         for (final Object item : items) {
-            final String string = preWrite(item);
-            if (string != null) {
-                final String toWrite = string + lineSeparator;
-                writer.write(toWrite);
+            writer.write(item);
+            if (lineSeparator != null) {
+                channel.write(ByteBuffer.wrap(lineSeparator.getBytes(encoding)));
             }
         }
-        writer.flush();
-        offset = channel.position();
-    }
-
-    protected String preWrite(final Object object) {
-        if (object == null) {
-            return null;
-        }
-        return object.toString();
+        position = channel.position();
     }
 
     @Override
     public Serializable checkpointInfo() throws Exception {
-        return offset;
+        return position;
     }
 }

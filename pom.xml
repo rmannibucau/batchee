@@ -30,6 +30,7 @@
     <module>impl</module>
     <module>shiro</module>
     <module>extras</module>
+    <module>beanio</module>
   </modules>
 
   <dependencyManagement>

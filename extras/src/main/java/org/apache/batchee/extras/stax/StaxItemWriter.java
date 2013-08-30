@@ -16,6 +16,7 @@
  */
 package org.apache.batchee.extras.stax;
 
+import org.apache.batchee.extras.checkpoint.ChannelPositions;
 import org.apache.batchee.extras.stax.util.JAXBContextFactory;
 import org.apache.batchee.extras.stax.util.SAXStAXHandler;
 import org.apache.batchee.extras.transaction.TransactionalWriter;
@@ -97,14 +98,7 @@ public class StaxItemWriter implements ItemWriter {
         channel = new RandomAccessFile(file, "rw").getChannel();
         writer = xmlOutputFactory.createXMLEventWriter(new TransactionalWriter(channel, encoding));
 
-        if (checkpoint != null && Number.class.isInstance(checkpoint)) {
-            position = Number.class.cast(checkpoint).longValue();
-        } else {
-            position = 0;
-        }
-
-        channel.truncate(position);
-        channel.position(position);
+        ChannelPositions.reset(channel, checkpoint);
 
         if (position == 0) {
             writer.add(xmlEventFactory.createStartDocument(encoding, version));
