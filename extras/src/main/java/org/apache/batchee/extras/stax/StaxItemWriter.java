@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.extras.stax;
 
-import org.apache.batchee.extras.checkpoint.ChannelPositions;
+import org.apache.batchee.extras.checkpoint.Positions;
 import org.apache.batchee.extras.stax.util.JAXBContextFactory;
 import org.apache.batchee.extras.stax.util.SAXStAXHandler;
 import org.apache.batchee.extras.transaction.TransactionalWriter;
@@ -31,9 +31,7 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.transform.sax.SAXResult;
 import java.io.File;
-import java.io.RandomAccessFile;
 import java.io.Serializable;
-import java.nio.channels.FileChannel;
 import java.util.List;
 
 public class StaxItemWriter implements ItemWriter {
@@ -65,7 +63,7 @@ public class StaxItemWriter implements ItemWriter {
     private XMLEventWriter writer;
     private XMLEventFactory xmlEventFactory;
     private long position = 0;
-    private FileChannel channel;
+    private TransactionalWriter txWriter;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -95,10 +93,10 @@ public class StaxItemWriter implements ItemWriter {
         woodStoxConfig(xmlOutputFactory);
 
         xmlEventFactory = XMLEventFactory.newFactory();
-        channel = new RandomAccessFile(file, "rw").getChannel();
-        writer = xmlOutputFactory.createXMLEventWriter(new TransactionalWriter(channel, encoding));
+        txWriter = new TransactionalWriter(file, encoding);
+        writer = xmlOutputFactory.createXMLEventWriter(txWriter);
 
-        ChannelPositions.reset(channel, checkpoint);
+        Positions.reset(txWriter, checkpoint);
 
         if (position == 0) {
             writer.add(xmlEventFactory.createStartDocument(encoding, version));
@@ -130,7 +128,7 @@ public class StaxItemWriter implements ItemWriter {
             marshaller.marshal(item, new SAXResult(new SAXStAXHandler(writer, xmlEventFactory)));
         }
         writer.flush();
-        position = channel.position();
+        position = txWriter.position();
     }
 
     @Override

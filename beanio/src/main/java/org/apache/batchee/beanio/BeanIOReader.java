@@ -16,6 +16,8 @@
  */
 package org.apache.batchee.beanio;
 
+import org.apache.batchee.extras.checkpoint.Positions;
+import org.apache.batchee.extras.reader.TransactionalReader;
 import org.beanio.BeanReader;
 import org.beanio.BeanReaderErrorHandler;
 
@@ -26,7 +28,7 @@ import java.io.FileReader;
 import java.io.Serializable;
 import java.util.Locale;
 
-public class BeanIOReader extends BaseBeanIO implements ItemReader {
+public class BeanIOReader extends BaseBeanIO implements ItemReader, TransactionalReader {
     @Inject
     @BatchProperty(name = "locale")
     protected String localeStr;
@@ -62,7 +64,7 @@ public class BeanIOReader extends BaseBeanIO implements ItemReader {
     @Override
     public Object readItem() throws Exception {
         final Object read = reader.read();
-        count++;
+        Positions.incrementReaderCount(this);
         return read;
     }
 
@@ -83,5 +85,10 @@ public class BeanIOReader extends BaseBeanIO implements ItemReader {
             return new Locale(s[0], s[1]);
         }
         return new Locale(localeStr);
+    }
+
+    @Override
+    public void incrementCount() {
+        count++;
     }
 }

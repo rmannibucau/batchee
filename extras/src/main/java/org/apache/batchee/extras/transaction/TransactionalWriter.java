@@ -20,7 +20,10 @@ import org.apache.batchee.extras.transaction.integration.SynchronizationService;
 import org.apache.batchee.extras.transaction.integration.Synchronizations;
 
 import javax.batch.operations.BatchRuntimeException;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -31,9 +34,10 @@ public class TransactionalWriter extends Writer {
     private final String encoding;
     private final String bufferKey;
     private final FileChannel delegate;
+    private long position = 0;
 
-    public TransactionalWriter(final FileChannel delegate, final String encoding) {
-        this.delegate = delegate;
+    public TransactionalWriter(final File file, final String encoding) throws FileNotFoundException {
+        this.delegate = new RandomAccessFile(file, "rw").getChannel();
         this.bufferKey = BASE_BUFFER_KEY + "." + hashCode();
         if (encoding != null) {
             this.encoding = encoding;
@@ -51,6 +55,8 @@ public class TransactionalWriter extends Writer {
             if(delegate.write(ByteBuffer.wrap(string.getBytes(encoding))) != string.length()) {
                 throw new IOException("Some data were not written");
             }
+            flush();
+            position = delegate.position();
         }
     }
 
@@ -64,6 +70,16 @@ public class TransactionalWriter extends Writer {
     @Override
     public void close() throws IOException {
         delegate.close();
+    }
+
+    public void setPosition(final long pos) throws IOException {
+        delegate.truncate(pos);
+        delegate.position(pos);
+        position = pos;
+    }
+
+    public long position() {
+        return position;
     }
 
     private StringBuilder buffer() {
@@ -91,7 +107,8 @@ public class TransactionalWriter extends Writer {
                             if(delegate.write(ByteBuffer.wrap(bytes)) != bytes.length) {
                                 throw new BatchRuntimeException("Some part of the chunk was not written");
                             }
-                            flush();
+                            delegate.force(false);
+                            position = delegate.position();
                         } catch (final IOException ioe) {
                             throw new BatchRuntimeException(ioe);
                         }
@@ -100,5 +117,9 @@ public class TransactionalWriter extends Writer {
             });
         }
         return buffer;
+    }
+
+    public long size() throws IOException {
+        return delegate.size();
     }
 }

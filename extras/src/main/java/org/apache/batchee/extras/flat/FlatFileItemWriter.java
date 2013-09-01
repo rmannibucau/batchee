@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.extras.flat;
 
-import org.apache.batchee.extras.checkpoint.ChannelPositions;
+import org.apache.batchee.extras.checkpoint.Positions;
 import org.apache.batchee.extras.transaction.TransactionalWriter;
 
 import javax.batch.api.BatchProperty;
@@ -24,10 +24,7 @@ import javax.batch.api.chunk.ItemWriter;
 import javax.batch.operations.BatchRuntimeException;
 import javax.inject.Inject;
 import java.io.File;
-import java.io.RandomAccessFile;
 import java.io.Serializable;
-import java.io.Writer;
-import java.nio.channels.FileChannel;
 import java.util.List;
 
 public class FlatFileItemWriter implements ItemWriter {
@@ -43,9 +40,8 @@ public class FlatFileItemWriter implements ItemWriter {
     @BatchProperty(name = "line.separator")
     private String lineSeparator;
 
-    private Writer writer = null;
+    private TransactionalWriter writer = null;
     private long offset;
-    private FileChannel channel;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -60,10 +56,8 @@ public class FlatFileItemWriter implements ItemWriter {
             lineSeparator = System.getProperty("line.separator", "\n");
         }
 
-        channel = new RandomAccessFile(file, "rw").getChannel();
-        writer = new TransactionalWriter(channel, encoding);
-
-        ChannelPositions.reset(channel, checkpoint);
+        writer = new TransactionalWriter(file, encoding);
+        Positions.reset(writer, checkpoint);
     }
 
     @Override
@@ -83,7 +77,7 @@ public class FlatFileItemWriter implements ItemWriter {
             }
         }
         writer.flush();
-        offset = channel.position();
+        offset = writer.position();
     }
 
     protected String preWrite(final Object object) {

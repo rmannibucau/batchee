@@ -16,6 +16,9 @@
  */
 package org.apache.batchee.extras.flat;
 
+import org.apache.batchee.extras.checkpoint.Positions;
+import org.apache.batchee.extras.reader.TransactionalReader;
+
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemReader;
 import javax.batch.operations.BatchRuntimeException;
@@ -25,7 +28,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Serializable;
 
-public class FlatFileItemReader implements ItemReader {
+public class FlatFileItemReader implements ItemReader, TransactionalReader {
     @Inject
     @BatchProperty(name = "input")
     private String input;
@@ -82,7 +85,7 @@ public class FlatFileItemReader implements ItemReader {
             if (line == null) {
                 return null;
             }
-            readLines++;
+            Positions.incrementReaderCount(this);
         } while (isComment(line));
         return preReturn(line, readLines);
     }
@@ -103,5 +106,10 @@ public class FlatFileItemReader implements ItemReader {
     @Override
     public Serializable checkpointInfo() throws Exception {
         return readLines;
+    }
+
+    @Override
+    public void incrementCount() {
+        readLines++;
     }
 }

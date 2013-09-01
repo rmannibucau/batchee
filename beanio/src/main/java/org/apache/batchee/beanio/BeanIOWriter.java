@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.beanio;
 
-import org.apache.batchee.extras.checkpoint.ChannelPositions;
+import org.apache.batchee.extras.checkpoint.Positions;
 import org.apache.batchee.extras.transaction.TransactionalWriter;
 import org.beanio.BeanWriter;
 
@@ -25,10 +25,7 @@ import javax.batch.api.chunk.ItemWriter;
 import javax.batch.operations.BatchRuntimeException;
 import javax.inject.Inject;
 import java.io.File;
-import java.io.RandomAccessFile;
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.List;
 
 public class BeanIOWriter extends BaseBeanIO implements ItemWriter {
@@ -42,7 +39,7 @@ public class BeanIOWriter extends BaseBeanIO implements ItemWriter {
 
     private BeanWriter writer;
     private long position = 0;
-    private FileChannel channel;
+    private TransactionalWriter transactionalWriter;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -55,10 +52,9 @@ public class BeanIOWriter extends BaseBeanIO implements ItemWriter {
             throw new BatchRuntimeException(file.getParentFile().getAbsolutePath());
         }
 
-        channel = new RandomAccessFile(file, "rw").getChannel();
-        writer = super.open().createWriter(streamName, new TransactionalWriter(channel, encoding));
-
-        ChannelPositions.reset(channel, checkpoint);
+        transactionalWriter = new TransactionalWriter(file, encoding);
+        Positions.reset(transactionalWriter, checkpoint);
+        writer = super.open().createWriter(streamName, transactionalWriter);
     }
 
     @Override
@@ -71,10 +67,10 @@ public class BeanIOWriter extends BaseBeanIO implements ItemWriter {
         for (final Object item : items) {
             writer.write(item);
             if (lineSeparator != null) {
-                channel.write(ByteBuffer.wrap(lineSeparator.getBytes(encoding)));
+                transactionalWriter.write(lineSeparator);
             }
         }
-        position = channel.position();
+        position = transactionalWriter.position();
     }
 
     @Override

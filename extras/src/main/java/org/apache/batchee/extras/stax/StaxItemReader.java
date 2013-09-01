@@ -16,13 +16,14 @@
  */
 package org.apache.batchee.extras.stax;
 
+import org.apache.batchee.extras.checkpoint.Positions;
+import org.apache.batchee.extras.reader.TransactionalReader;
 import org.apache.batchee.extras.stax.util.JAXBContextFactory;
 
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemReader;
 import javax.batch.operations.BatchRuntimeException;
 import javax.inject.Inject;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -36,7 +37,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Serializable;
 
-public class StaxItemReader implements ItemReader {
+public class StaxItemReader implements ItemReader, TransactionalReader {
     @Inject
     @BatchProperty(name = "marshallingClasses")
     private String marshallingClasses;
@@ -55,6 +56,7 @@ public class StaxItemReader implements ItemReader {
 
     private XMLEventReader reader;
     private Unmarshaller unmarshaller;
+    private int count = 0;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -75,24 +77,13 @@ public class StaxItemReader implements ItemReader {
         }
 
         reader = XMLInputFactory.newInstance().createXMLEventReader(is);
-    }
 
-    private JAXBContext getJaxbContext() throws JAXBException {
-        if (marshallingPackage != null) {
-            return JAXBContext.newInstance(marshallingPackage);
-        }
-
-        final String[] classesStr = marshallingClasses.split(",");
-        final Class<?>[] classes = new Class<?>[classesStr.length];
-        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        for (int i = 0; i < classes.length; i++) {
-            try {
-                classes[i] = contextClassLoader.loadClass(classesStr[i]);
-            } catch (final ClassNotFoundException e) {
-                throw new BatchRuntimeException(e);
+        if (checkpoint != null && Number.class.isInstance(checkpoint)) {
+            final long loop = Number.class.cast(checkpoint).longValue();
+            for (int i = 0; i < loop; i++) {
+                doRead(false);
             }
         }
-        return JAXBContext.newInstance(classes);
     }
 
     private InputStream findInput() throws FileNotFoundException {
@@ -110,6 +101,10 @@ public class StaxItemReader implements ItemReader {
 
     @Override
     public Object readItem() throws Exception {
+        return doRead(true);
+    }
+
+    private Object doRead(final boolean count) {
         XMLEvent xmlEvent;
         boolean found = false;
         while (reader.hasNext()) {
@@ -130,6 +125,11 @@ public class StaxItemReader implements ItemReader {
 
         try {
             final Object jaxbObject = unmarshaller.unmarshal(reader);
+
+            if (count) {
+                Positions.incrementReaderCount(this);
+            }
+
             if (JAXBElement.class.isInstance(jaxbObject)) {
                 JAXBElement jbe = (JAXBElement) jaxbObject;
                 return JAXBElement.class.cast(jbe).getValue();
@@ -142,6 +142,11 @@ public class StaxItemReader implements ItemReader {
 
     @Override
     public Serializable checkpointInfo() throws Exception {
-        return null; // TODO
+        return count;
+    }
+
+    @Override
+    public void incrementCount() {
+        count++;
     }
 }
