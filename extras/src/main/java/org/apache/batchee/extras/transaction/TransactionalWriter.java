@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.Serializable;
 import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -36,7 +37,7 @@ public class TransactionalWriter extends Writer {
     private final FileChannel delegate;
     private long position = 0;
 
-    public TransactionalWriter(final File file, final String encoding) throws FileNotFoundException {
+    public TransactionalWriter(final File file, final String encoding, final Serializable checkpoint) throws FileNotFoundException {
         this.delegate = new RandomAccessFile(file, "rw").getChannel();
         this.bufferKey = BASE_BUFFER_KEY + "." + hashCode();
         if (encoding != null) {
@@ -44,6 +45,27 @@ public class TransactionalWriter extends Writer {
         } else {
             this.encoding = "UTF-8";
         }
+
+        final long restartOffset;
+        if (checkpoint != null && Number.class.isInstance(checkpoint)) {
+            restartOffset = Number.class.cast(checkpoint).longValue();
+            try {
+                if (delegate.size() < restartOffset) {
+                    throw new BatchRuntimeException("File seems too small");
+                }
+            } catch (final IOException e) {
+                throw new BatchRuntimeException(e);
+            }
+        } else {
+            restartOffset = 0;
+        }
+        try {
+            delegate.truncate(restartOffset);
+            delegate.position(restartOffset);
+        } catch (final IOException e) {
+            throw new BatchRuntimeException(e);
+        }
+        position = restartOffset;
     }
 
     @Override
@@ -55,7 +77,6 @@ public class TransactionalWriter extends Writer {
             if(delegate.write(ByteBuffer.wrap(string.getBytes(encoding))) != string.length()) {
                 throw new IOException("Some data were not written");
             }
-            flush();
             position = delegate.position();
         }
     }
@@ -64,18 +85,15 @@ public class TransactionalWriter extends Writer {
     public void flush() throws IOException {
         if (!Synchronizations.hasTransaction()) {
             delegate.force(false);
+            position = delegate.position();
+        } else {
+            position = delegate.position() + buffer().length();
         }
     }
 
     @Override
     public void close() throws IOException {
         delegate.close();
-    }
-
-    public void setPosition(final long pos) throws IOException {
-        delegate.truncate(pos);
-        delegate.position(pos);
-        position = pos;
     }
 
     public long position() {
@@ -98,7 +116,6 @@ public class TransactionalWriter extends Writer {
                                 throw new BatchRuntimeException("Some part of the chunk was not written");
                             }
                             delegate.force(false);
-                            position = delegate.position();
                         } catch (final IOException ioe) {
                             throw new BatchRuntimeException(ioe);
                         }
@@ -107,9 +124,5 @@ public class TransactionalWriter extends Writer {
             });
         }
         return buffer;
-    }
-
-    public long size() throws IOException {
-        return delegate.size();
     }
 }

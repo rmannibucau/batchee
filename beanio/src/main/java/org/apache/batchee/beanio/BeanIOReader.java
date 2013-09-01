@@ -16,7 +16,6 @@
  */
 package org.apache.batchee.beanio;
 
-import org.apache.batchee.extras.checkpoint.Positions;
 import org.apache.batchee.extras.reader.TransactionalReader;
 import org.beanio.BeanReader;
 import org.beanio.BeanReaderErrorHandler;
@@ -28,7 +27,19 @@ import java.io.FileReader;
 import java.io.Serializable;
 import java.util.Locale;
 
-public class BeanIOReader extends BaseBeanIO implements ItemReader, TransactionalReader {
+public class BeanIOReader extends TransactionalReader implements ItemReader {
+    @Inject
+    @BatchProperty(name = "file")
+    protected String filePath;
+
+    @Inject
+    @BatchProperty(name = "streamName")
+    protected String streamName;
+
+    @Inject
+    @BatchProperty(name = "configuration")
+    protected String configuration;
+
     @Inject
     @BatchProperty(name = "locale")
     protected String localeStr;
@@ -38,22 +49,16 @@ public class BeanIOReader extends BaseBeanIO implements ItemReader, Transactiona
     protected String errorHandlerStr;
 
     private BeanReader reader;
-    private long count = 0;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
-        reader = super.open().createReader(streamName, new FileReader(filePath), initLocale());
+        reader = BeanIOs.open(filePath, streamName, configuration).createReader(streamName, new FileReader(filePath), initLocale());
         if (errorHandlerStr != null) {
             final BeanReaderErrorHandler handler = BeanReaderErrorHandler.class.cast(Thread.currentThread().getContextClassLoader().loadClass(errorHandlerStr).newInstance());
             reader.setErrorHandler(handler);
         }
 
-        if (checkpoint != null && Number.class.isInstance(checkpoint)) {
-            final long loop = Number.class.cast(checkpoint).longValue();
-            for (int i = 0; i < loop; i++) {
-                reader.read();
-            }
-        }
+        super.open(checkpoint);
     }
 
     @Override
@@ -62,15 +67,8 @@ public class BeanIOReader extends BaseBeanIO implements ItemReader, Transactiona
     }
 
     @Override
-    public Object readItem() throws Exception {
-        final Object read = reader.read();
-        Positions.incrementReaderCount(this);
-        return read;
-    }
-
-    @Override
-    public Serializable checkpointInfo() throws Exception {
-        return count;
+    protected Object doRead() throws Exception {
+        return reader.read();
     }
 
     private Locale initLocale() {
@@ -85,10 +83,5 @@ public class BeanIOReader extends BaseBeanIO implements ItemReader, Transactiona
             return new Locale(s[0], s[1]);
         }
         return new Locale(localeStr);
-    }
-
-    @Override
-    public void incrementCount(final int number) {
-        count += number;
     }
 }

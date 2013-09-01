@@ -16,7 +16,6 @@
  */
 package org.apache.batchee.extras.flat;
 
-import org.apache.batchee.extras.checkpoint.Positions;
 import org.apache.batchee.extras.reader.TransactionalReader;
 
 import javax.batch.api.BatchProperty;
@@ -28,7 +27,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Serializable;
 
-public class FlatFileItemReader implements ItemReader, TransactionalReader {
+public class FlatFileItemReader extends TransactionalReader implements ItemReader {
     @Inject
     @BatchProperty(name = "input")
     private String input;
@@ -39,7 +38,6 @@ public class FlatFileItemReader implements ItemReader, TransactionalReader {
 
     private BufferedReader reader = null;
     private String[] comments = new String[0];
-    private long readLines = 0;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -57,17 +55,7 @@ public class FlatFileItemReader implements ItemReader, TransactionalReader {
         comments = commentStr.split(",");
 
         reader = new BufferedReader(new FileReader(file));
-        if (checkpoint != null && Number.class.isInstance(checkpoint)) {
-            readLines = Number.class.cast(checkpoint).longValue();
-            if (readLines > 0) {
-                int i = 0;
-                String l;
-                do {
-                    l = reader.readLine();
-                    i++;
-                } while (l != null && i < readLines);
-            }
-        }
+        super.open(checkpoint);
     }
 
     @Override
@@ -78,16 +66,16 @@ public class FlatFileItemReader implements ItemReader, TransactionalReader {
     }
 
     @Override
-    public Object readItem() throws Exception {
+    protected Object doRead() throws Exception {
         String line;
         do {
             line = reader.readLine();
             if (line == null) {
                 return null;
             }
-            Positions.incrementReaderCount(this);
+            incrementReaderCount();
         } while (isComment(line));
-        return preReturn(line, readLines);
+        return preReturn(line, items);
     }
 
     protected boolean isComment(final String line) {
@@ -101,15 +89,5 @@ public class FlatFileItemReader implements ItemReader, TransactionalReader {
 
     protected Object preReturn(final String rawLine, final long lineNumber) {
         return rawLine;
-    }
-
-    @Override
-    public Serializable checkpointInfo() throws Exception {
-        return readLines;
-    }
-
-    @Override
-    public void incrementCount(final int number) {
-        readLines += number;
     }
 }

@@ -19,8 +19,8 @@ package org.apache.batchee.container.impl.controller.chunk;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.impl.MetricImpl;
-import org.apache.batchee.container.impl.controller.SingleThreadedStepController;
 import org.apache.batchee.container.impl.StepContextImpl;
+import org.apache.batchee.container.impl.controller.SingleThreadedStepController;
 import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.proxy.CheckpointAlgorithmProxy;
 import org.apache.batchee.container.proxy.ChunkListenerProxy;
@@ -38,7 +38,6 @@ import org.apache.batchee.container.proxy.RetryWriteListenerProxy;
 import org.apache.batchee.container.proxy.SkipProcessListenerProxy;
 import org.apache.batchee.container.proxy.SkipReadListenerProxy;
 import org.apache.batchee.container.proxy.SkipWriteListenerProxy;
-import org.apache.batchee.spi.PersistenceManagerService;
 import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.container.util.PartitionDataWrapper;
 import org.apache.batchee.container.util.TCCLObjectInputStream;
@@ -48,13 +47,12 @@ import org.apache.batchee.jaxb.ItemReader;
 import org.apache.batchee.jaxb.ItemWriter;
 import org.apache.batchee.jaxb.Property;
 import org.apache.batchee.jaxb.Step;
+import org.apache.batchee.spi.PersistenceManagerService;
 
 import javax.batch.api.chunk.CheckpointAlgorithm;
 import javax.batch.runtime.BatchStatus;
 import java.io.ByteArrayInputStream;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -590,13 +588,12 @@ public class ChunkStepController extends SingleThreadedStepController {
                 try {
                     chunkProxy.onError(e);
                 } catch (final Exception e1) {
-                    final StringWriter sw = new StringWriter();
-                    final PrintWriter pw = new PrintWriter(sw);
-                    e1.printStackTrace(pw);
+                    logger.log(Level.SEVERE, e1.getMessage(), e1);
                 }
             }
         } catch (final Throwable t) {
             caughtThrowable = t;
+            logger.log(Level.SEVERE, t.getMessage(), t);
         } finally {
             if (caughtThrowable != null) {
                 transactionManager.setRollbackOnly();

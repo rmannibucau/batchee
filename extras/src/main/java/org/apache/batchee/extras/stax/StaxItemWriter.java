@@ -16,7 +16,6 @@
  */
 package org.apache.batchee.extras.stax;
 
-import org.apache.batchee.extras.checkpoint.Positions;
 import org.apache.batchee.extras.stax.util.JAXBContextFactory;
 import org.apache.batchee.extras.stax.util.SAXStAXHandler;
 import org.apache.batchee.extras.transaction.TransactionalWriter;
@@ -62,7 +61,6 @@ public class StaxItemWriter implements ItemWriter {
     private Marshaller marshaller;
     private XMLEventWriter writer;
     private XMLEventFactory xmlEventFactory;
-    private long position = 0;
     private TransactionalWriter txWriter;
 
     @Override
@@ -93,12 +91,10 @@ public class StaxItemWriter implements ItemWriter {
         woodStoxConfig(xmlOutputFactory);
 
         xmlEventFactory = XMLEventFactory.newFactory();
-        txWriter = new TransactionalWriter(file, encoding);
+        txWriter = new TransactionalWriter(file, encoding, checkpoint);
         writer = xmlOutputFactory.createXMLEventWriter(txWriter);
 
-        Positions.reset(txWriter, checkpoint);
-
-        if (position == 0) {
+        if (txWriter.position() == 0) {
             writer.add(xmlEventFactory.createStartDocument(encoding, version));
             writer.add(xmlEventFactory.createStartElement("", "", rootTag));
             writer.flush();
@@ -128,11 +124,11 @@ public class StaxItemWriter implements ItemWriter {
             marshaller.marshal(item, new SAXResult(new SAXStAXHandler(writer, xmlEventFactory)));
         }
         writer.flush();
-        position = txWriter.position();
+        txWriter.flush();
     }
 
     @Override
     public Serializable checkpointInfo() throws Exception {
-        return position;
+        return txWriter.position();
     }
 }

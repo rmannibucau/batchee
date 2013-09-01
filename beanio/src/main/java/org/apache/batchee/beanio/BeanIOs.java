@@ -18,34 +18,20 @@ package org.apache.batchee.beanio;
 
 import org.beanio.StreamFactory;
 
-import javax.batch.api.BatchProperty;
 import javax.batch.operations.BatchRuntimeException;
-import javax.inject.Inject;
 import java.io.InputStream;
 
-public class BaseBeanIO {
-    @Inject
-    @BatchProperty(name = "file")
-    protected String filePath;
-
-    @Inject
-    @BatchProperty(name = "streamName")
-    protected String streamName;
-
-    @Inject
-    @BatchProperty(name = "configuration")
-    protected String configuration;
-
-    public StreamFactory open() throws Exception {
+public abstract class BeanIOs {
+    public static StreamFactory open(final String filePath, final String streamName, final String configuration) throws Exception {
         if (filePath == null) {
             throw new BatchRuntimeException("input can't be null");
         }
         if (streamName == null) {
-            streamName = filePath;
+            throw new BatchRuntimeException("streamName can't be null");
         }
         final StreamFactory streamFactory = StreamFactory.newInstance();
         if (!streamFactory.isMapped(streamName)) {
-            final InputStream is = findStream();
+            final InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(configuration);
             if (is == null) {
                 throw new BatchRuntimeException("Can't find " + configuration);
             }
@@ -56,9 +42,5 @@ public class BaseBeanIO {
             }
         }
         return streamFactory;
-    }
-
-    protected InputStream findStream() {
-        return Thread.currentThread().getContextClassLoader().getResourceAsStream(configuration);
     }
 }

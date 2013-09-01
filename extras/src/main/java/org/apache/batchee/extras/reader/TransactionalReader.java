@@ -16,6 +16,77 @@
  */
 package org.apache.batchee.extras.reader;
 
-public interface TransactionalReader {
-    void incrementCount(int number);
+import org.apache.batchee.extras.transaction.integration.SynchronizationService;
+import org.apache.batchee.extras.transaction.integration.Synchronizations;
+
+import javax.batch.api.chunk.ItemReader;
+import java.io.Serializable;
+
+public abstract class TransactionalReader implements ItemReader {
+    private static final String READER_COUNT = TransactionalReader.class.getName() + ".reader-count";
+
+    private final String key;
+    protected long items = 0;
+
+    protected TransactionalReader() {
+        key = READER_COUNT + hashCode();
+    }
+
+    protected void incrementReaderCount() {
+        if (Synchronizations.hasTransaction()) {
+            Long count = (Long) Synchronizations.get(key);
+            if (count == null) {
+                count = items;
+                Synchronizations.registerSynchronization(new SynchronizationService.OnCommit() {
+                    @Override
+                    public void afterCommit() {
+                        Integer max = (Integer) Synchronizations.get(key);
+                        if (max == null) {
+                            return;
+                        }
+
+                        incrementCount(max);
+                    }
+                });
+            }
+            Synchronizations.put(key, count + 1);
+        } else {
+            incrementCount(1);
+        }
+    }
+
+    protected void incrementCount(int number) {
+        items += number;
+    }
+
+    @Override
+    public void open(final Serializable checkpoint) throws Exception {
+        if (checkpoint != null && Number.class.isInstance(checkpoint)) {
+            items = Number.class.cast(checkpoint).longValue();
+            if (items > 0) {
+                int i = 0;
+                Object l;
+                do {
+                    l = doRead();
+                    i++;
+                } while (l != null && i < items);
+            }
+        }
+    }
+
+    protected abstract Object doRead() throws Exception;
+
+    @Override
+    public Object readItem() throws Exception {
+        final Object s = doRead();
+        if (s != null) {
+            incrementReaderCount();
+        }
+        return s;
+    }
+
+    @Override
+    public Serializable checkpointInfo() throws Exception {
+        return items;
+    }
 }

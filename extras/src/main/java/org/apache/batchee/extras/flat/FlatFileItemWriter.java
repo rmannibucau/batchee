@@ -16,7 +16,6 @@
  */
 package org.apache.batchee.extras.flat;
 
-import org.apache.batchee.extras.checkpoint.Positions;
 import org.apache.batchee.extras.transaction.TransactionalWriter;
 
 import javax.batch.api.BatchProperty;
@@ -41,7 +40,6 @@ public class FlatFileItemWriter implements ItemWriter {
     private String lineSeparator;
 
     private TransactionalWriter writer = null;
-    private long offset;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -56,8 +54,7 @@ public class FlatFileItemWriter implements ItemWriter {
             lineSeparator = System.getProperty("line.separator", "\n");
         }
 
-        writer = new TransactionalWriter(file, encoding);
-        Positions.reset(writer, checkpoint);
+        writer = new TransactionalWriter(file, encoding, checkpoint);
     }
 
     @Override
@@ -77,7 +74,6 @@ public class FlatFileItemWriter implements ItemWriter {
             }
         }
         writer.flush();
-        offset = writer.position();
     }
 
     protected String preWrite(final Object object) {
@@ -89,6 +85,6 @@ public class FlatFileItemWriter implements ItemWriter {
 
     @Override
     public Serializable checkpointInfo() throws Exception {
-        return offset;
+        return writer.position();
     }
 }

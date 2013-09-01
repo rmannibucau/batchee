@@ -16,7 +16,6 @@
  */
 package org.apache.batchee.beanio;
 
-import org.apache.batchee.extras.checkpoint.Positions;
 import org.apache.batchee.extras.transaction.TransactionalWriter;
 import org.beanio.BeanWriter;
 
@@ -28,7 +27,19 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 
-public class BeanIOWriter extends BaseBeanIO implements ItemWriter {
+public class BeanIOWriter implements ItemWriter {
+    @Inject
+    @BatchProperty(name = "file")
+    protected String filePath;
+
+    @Inject
+    @BatchProperty(name = "streamName")
+    protected String streamName;
+
+    @Inject
+    @BatchProperty(name = "configuration")
+    protected String configuration;
+
     @Inject
     @BatchProperty(name = "encoding")
     protected String encoding;
@@ -38,7 +49,6 @@ public class BeanIOWriter extends BaseBeanIO implements ItemWriter {
     protected String lineSeparator;
 
     private BeanWriter writer;
-    private long position = 0;
     private TransactionalWriter transactionalWriter;
 
     @Override
@@ -52,9 +62,8 @@ public class BeanIOWriter extends BaseBeanIO implements ItemWriter {
             throw new BatchRuntimeException(file.getParentFile().getAbsolutePath());
         }
 
-        transactionalWriter = new TransactionalWriter(file, encoding);
-        Positions.reset(transactionalWriter, checkpoint);
-        writer = super.open().createWriter(streamName, transactionalWriter);
+        transactionalWriter = new TransactionalWriter(file, encoding, checkpoint);
+        writer = BeanIOs.open(filePath, streamName, configuration).createWriter(streamName, transactionalWriter);
     }
 
     @Override
@@ -70,11 +79,11 @@ public class BeanIOWriter extends BaseBeanIO implements ItemWriter {
                 transactionalWriter.write(lineSeparator);
             }
         }
-        position = transactionalWriter.position();
+        transactionalWriter.flush();
     }
 
     @Override
     public Serializable checkpointInfo() throws Exception {
-        return position;
+        return transactionalWriter.position();
     }
 }

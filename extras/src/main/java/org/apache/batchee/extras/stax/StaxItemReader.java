@@ -16,7 +16,6 @@
  */
 package org.apache.batchee.extras.stax;
 
-import org.apache.batchee.extras.checkpoint.Positions;
 import org.apache.batchee.extras.reader.TransactionalReader;
 import org.apache.batchee.extras.stax.util.JAXBContextFactory;
 
@@ -37,7 +36,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Serializable;
 
-public class StaxItemReader implements ItemReader, TransactionalReader {
+public class StaxItemReader extends TransactionalReader implements ItemReader {
     @Inject
     @BatchProperty(name = "marshallingClasses")
     private String marshallingClasses;
@@ -56,7 +55,6 @@ public class StaxItemReader implements ItemReader, TransactionalReader {
 
     private XMLEventReader reader;
     private Unmarshaller unmarshaller;
-    private int count = 0;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -78,12 +76,7 @@ public class StaxItemReader implements ItemReader, TransactionalReader {
 
         reader = XMLInputFactory.newInstance().createXMLEventReader(is);
 
-        if (checkpoint != null && Number.class.isInstance(checkpoint)) {
-            final long loop = Number.class.cast(checkpoint).longValue();
-            for (int i = 0; i < loop; i++) {
-                doRead(false);
-            }
-        }
+        super.open(checkpoint);
     }
 
     private InputStream findInput() throws FileNotFoundException {
@@ -100,11 +93,7 @@ public class StaxItemReader implements ItemReader, TransactionalReader {
     }
 
     @Override
-    public Object readItem() throws Exception {
-        return doRead(true);
-    }
-
-    private Object doRead(final boolean count) {
+    protected Object doRead() throws Exception {
         XMLEvent xmlEvent;
         boolean found = false;
         while (reader.hasNext()) {
@@ -126,10 +115,6 @@ public class StaxItemReader implements ItemReader, TransactionalReader {
         try {
             final Object jaxbObject = unmarshaller.unmarshal(reader);
 
-            if (count) {
-                Positions.incrementReaderCount(this);
-            }
-
             if (JAXBElement.class.isInstance(jaxbObject)) {
                 JAXBElement jbe = (JAXBElement) jaxbObject;
                 return JAXBElement.class.cast(jbe).getValue();
@@ -138,15 +123,5 @@ public class StaxItemReader implements ItemReader, TransactionalReader {
         } catch (final JAXBException ue) {
             throw new BatchRuntimeException(ue);
         }
-    }
-
-    @Override
-    public Serializable checkpointInfo() throws Exception {
-        return count;
-    }
-
-    @Override
-    public void incrementCount(final int number) {
-        count += number;
     }
 }
