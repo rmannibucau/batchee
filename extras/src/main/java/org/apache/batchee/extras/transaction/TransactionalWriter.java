@@ -87,17 +87,7 @@ public class TransactionalWriter extends Writer {
         if (buffer != null) {
             buffer = new StringBuilder();
             Synchronizations.put(bufferKey, buffer);
-            Synchronizations.registerSynchronization(new SynchronizationService.Synchronization() {
-                @Override
-                public void beforeCompletion() {
-                    // no-op
-                }
-
-                @Override
-                public void afterRollback() {
-                    // no-op
-                }
-
+            Synchronizations.registerSynchronization(new SynchronizationService.OnCommit() {
                 @Override
                 public void afterCommit() {
                     final StringBuilder buffer = StringBuilder.class.cast(Synchronizations.get(bufferKey));

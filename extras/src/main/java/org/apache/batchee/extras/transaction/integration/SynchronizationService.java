@@ -27,4 +27,16 @@ public interface SynchronizationService {
         void afterRollback();
         void afterCommit();
     }
+
+    static abstract class OnCommit implements Synchronization {
+        @Override
+        public void beforeCompletion() {
+            // no-op
+        }
+
+        @Override
+        public void afterRollback() {
+            // no-op
+        }
+    }
 }

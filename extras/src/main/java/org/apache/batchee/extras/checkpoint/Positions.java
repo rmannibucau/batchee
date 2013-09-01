@@ -46,17 +46,7 @@ public class Positions {
             Integer count = (Integer) Synchronizations.get(READER_COUNT);
             if (count == null) {
                 count = 0;
-                Synchronizations.registerSynchronization(new SynchronizationService.Synchronization() {
-                    @Override
-                    public void beforeCompletion() {
-                        // no-op
-                    }
-
-                    @Override
-                    public void afterRollback() {
-                        // no-op
-                    }
-
+                Synchronizations.registerSynchronization(new SynchronizationService.OnCommit() {
                     @Override
                     public void afterCommit() {
                         Integer max = (Integer) Synchronizations.get(READER_COUNT);
