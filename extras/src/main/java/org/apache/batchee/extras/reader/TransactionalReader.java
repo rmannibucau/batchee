@@ -17,5 +17,5 @@
 package org.apache.batchee.extras.reader;
 
 public interface TransactionalReader {
-    void incrementCount();
+    void incrementCount(int number);
 }

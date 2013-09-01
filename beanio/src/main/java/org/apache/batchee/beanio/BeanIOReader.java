@@ -88,7 +88,7 @@ public class BeanIOReader extends BaseBeanIO implements ItemReader, Transactiona
     }
 
     @Override
-    public void incrementCount() {
-        count++;
+    public void incrementCount(final int number) {
+        count += number;
     }
 }

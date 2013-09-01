@@ -146,7 +146,7 @@ public class StaxItemReader implements ItemReader, TransactionalReader {
     }
 
     @Override
-    public void incrementCount() {
-        count++;
+    public void incrementCount(final int number) {
+        count += number;
     }
 }

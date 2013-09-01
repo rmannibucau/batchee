@@ -54,15 +54,13 @@ public class Positions {
                             return;
                         }
 
-                        for (int i = 0; i < max; i++) {
-                            reader.incrementCount();
-                        }
+                        reader.incrementCount(max);
                     }
                 });
             }
             Synchronizations.put(READER_COUNT, count + 1);
         } else {
-            reader.incrementCount();
+            reader.incrementCount(1);
         }
     }
 

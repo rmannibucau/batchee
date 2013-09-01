@@ -109,7 +109,7 @@ public class FlatFileItemReader implements ItemReader, TransactionalReader {
     }
 
     @Override
-    public void incrementCount() {
-        readLines++;
+    public void incrementCount(final int number) {
+        readLines += number;
     }
 }
