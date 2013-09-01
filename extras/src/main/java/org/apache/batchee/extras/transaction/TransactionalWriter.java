@@ -77,7 +77,6 @@ public class TransactionalWriter extends Writer {
             if(delegate.write(ByteBuffer.wrap(string.getBytes(encoding))) != string.length()) {
                 throw new IOException("Some data were not written");
             }
-            position = delegate.position();
         }
     }
 
