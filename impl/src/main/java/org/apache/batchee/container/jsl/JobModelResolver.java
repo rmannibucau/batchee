@@ -17,8 +17,6 @@
 package org.apache.batchee.container.jsl;
 
 import org.apache.batchee.jaxb.JSLJob;
-import org.apache.batchee.jsl.JSLValidationEventHandler;
-import org.apache.batchee.jsl.Xsds;
 
 import javax.batch.operations.BatchRuntimeException;
 import javax.xml.bind.JAXBContext;

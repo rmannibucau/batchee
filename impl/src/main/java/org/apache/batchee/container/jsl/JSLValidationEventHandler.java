@@ -14,36 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.batchee.jsl;
+package org.apache.batchee.container.jsl;
 
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 import java.util.logging.Logger;
 
 public class JSLValidationEventHandler implements ValidationEventHandler {
-
-    private static final String CLASSNAME = JSLValidationEventHandler.class.getName();
-
-    private final static Logger logger = Logger.getLogger(CLASSNAME);
+    private final static Logger logger = Logger.getLogger(JSLValidationEventHandler.class.getName());
 
     private boolean eventOccurred = false;
 
-    public boolean handleEvent(ValidationEvent event) {
-        StringBuffer buf = new StringBuffer(150);
-        buf.append("\nMESSAGE: " + event.getMessage());
-        buf.append("\nSEVERITY: " + event.getSeverity());
-        buf.append("\nLINKED EXC: " + event.getLinkedException());
-        buf.append("\nLOCATOR INFO:\n------------");
-
-        buf.append("\n  COLUMN NUMBER:  " + event.getLocator().getColumnNumber());
-        buf.append("\n  LINE NUMBER:  " + event.getLocator().getLineNumber());
-        buf.append("\n  OFFSET:  " + event.getLocator().getOffset());
-        buf.append("\n  CLASS:  " + event.getLocator().getClass());
-        buf.append("\n  NODE:  " + event.getLocator().getNode());
-        buf.append("\n  OBJECT:  " + event.getLocator().getObject());
-        buf.append("\n  URL:  " + event.getLocator().getURL());
-
-        logger.warning("JSL invalid per XSD, details: " + buf.toString());
+    public boolean handleEvent(final ValidationEvent event) {
+        logger.warning("JSL invalid per XSD, details: " + ("\nMESSAGE: " + event.getMessage()) + "\nSEVERITY: " + event.getSeverity() + "\nLINKED EXC: " + event.getLinkedException() + "\nLOCATOR INFO:\n------------" + "\n  COLUMN NUMBER:  " + event.getLocator().getColumnNumber() + "\n  LINE NUMBER:  " + event.getLocator().getLineNumber() + "\n  OFFSET:  " + event.getLocator().getOffset() + "\n  CLASS:  " + event.getLocator().getClass() + "\n  NODE:  " + event.getLocator().getNode() + "\n  OBJECT:  " + event.getLocator().getObject() + "\n  URL:  " + event.getLocator().getURL());
 
         eventOccurred = true;
 
@@ -54,5 +37,4 @@ public class JSLValidationEventHandler implements ValidationEventHandler {
     public boolean eventOccurred() {
         return eventOccurred;
     }
-
 }

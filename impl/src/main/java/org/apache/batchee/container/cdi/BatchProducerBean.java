@@ -22,13 +22,11 @@ import org.apache.batchee.container.util.DependencyInjections;
 import javax.batch.api.BatchProperty;
 import javax.batch.runtime.context.JobContext;
 import javax.batch.runtime.context.StepContext;
-import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.InjectionPoint;
 
 public class BatchProducerBean {
     @Produces
-    @Dependent
     @BatchProperty
     public String produceProperty(final InjectionPoint injectionPoint) {
         if (injectionPoint != null && ProxyFactory.getInjectionReferences() != null) {
@@ -47,7 +45,6 @@ public class BatchProducerBean {
     }
 
     @Produces
-    @Dependent
     public JobContext getJobContext() {
         if (ProxyFactory.getInjectionReferences() != null) {
             return ProxyFactory.getInjectionReferences().getJobContext();
@@ -56,7 +53,6 @@ public class BatchProducerBean {
     }
 
     @Produces
-    @Dependent
     public StepContext getStepContext() {
         if (ProxyFactory.getInjectionReferences() != null) {
             return ProxyFactory.getInjectionReferences().getStepContext();

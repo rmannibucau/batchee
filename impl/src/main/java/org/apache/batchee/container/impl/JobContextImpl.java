@@ -70,7 +70,6 @@ public class JobContextImpl implements JobContext {
         this.exitStatus = exitStatus;
     }
 
-
     public String getJobName() {
         return id;
     }

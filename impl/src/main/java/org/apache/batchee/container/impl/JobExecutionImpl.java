@@ -84,8 +84,6 @@ public class JobExecutionImpl implements InternalJobExecution {
 
     @Override
     public Date getEndTime() {
-
-
         if (this.jobContext == null) {
             endTime = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.END);
         }
@@ -103,14 +101,11 @@ public class JobExecutionImpl implements InternalJobExecution {
 
     @Override
     public String getExitStatus() {
-
         if (this.jobContext != null) {
             return this.jobContext.getExitStatus();
-        } else {
-            exitStatus = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionExitStatus(executionID);
-            return exitStatus;
         }
-
+        exitStatus = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionExitStatus(executionID);
+        return exitStatus;
     }
 
     @Override

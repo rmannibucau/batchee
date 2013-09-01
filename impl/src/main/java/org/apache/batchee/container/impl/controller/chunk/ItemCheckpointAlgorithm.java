@@ -20,16 +20,15 @@ import javax.batch.api.chunk.CheckpointAlgorithm;
 
 public final class ItemCheckpointAlgorithm implements CheckpointAlgorithm {
     private long requests = 0;
-    private java.util.Date date = null;
     private long checkpointBeginTime = 0;
 
     private int time;
     private int item;
+    private long currentTime;
 
     public ItemCheckpointAlgorithm() {
-        date = new java.util.Date();
-        checkpointBeginTime = date.getTime();
-
+        checkpointBeginTime = System.currentTimeMillis();
+        currentTime = checkpointBeginTime;
     }
 
     @Override
@@ -49,16 +48,14 @@ public final class ItemCheckpointAlgorithm implements CheckpointAlgorithm {
 
     public boolean isReadyToCheckpointTime() throws Exception {
         boolean timeready = false;
-        final java.util.Date curDate = new java.util.Date();
-        final long curts = curDate.getTime();
-        final long curdiff = curts - checkpointBeginTime;
+        currentTime = System.currentTimeMillis();
+        final long curdiff = currentTime - checkpointBeginTime;
         final int diff = (int) curdiff / 1000;
 
         if (diff >= time) {
             timeready = true;
 
-            date = new java.util.Date();
-            checkpointBeginTime = date.getTime();
+            checkpointBeginTime = System.currentTimeMillis();
 
         }
 
@@ -87,7 +84,7 @@ public final class ItemCheckpointAlgorithm implements CheckpointAlgorithm {
 
     @Override
     public void beginCheckpoint() throws Exception {
-        checkpointBeginTime = date.getTime();
+        checkpointBeginTime = currentTime;
     }
 
     @Override
