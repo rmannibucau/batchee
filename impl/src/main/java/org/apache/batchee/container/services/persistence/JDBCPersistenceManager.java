@@ -69,7 +69,7 @@ import java.util.Set;
 
 public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPersistenceManagerSQLConstants {
     private static final String DEFAULT_JDBC_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
-    private static final String DEFAULT_JDBC_URL = "jdbc:derby:target/RUNTIMEDB;create=true";
+    private static final String DEFAULT_JDBC_URL = "jdbc:derby:memory:jbatch;create=true";
     private static final String DEFAULT_DB_SCHEMA = "JBATCH";
     private static final String DEFAULT_JDBC_USER = "app";
     private static final String DEFAULT_JDBC_PASSWORD = "app";
