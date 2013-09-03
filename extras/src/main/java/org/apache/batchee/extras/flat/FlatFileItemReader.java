@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.extras.flat;
 
-import org.apache.batchee.extras.transaction.TransactionalReader;
+import org.apache.batchee.extras.transaction.CountedReader;
 
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemReader;
@@ -27,7 +27,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Serializable;
 
-public class FlatFileItemReader extends TransactionalReader implements ItemReader {
+public class FlatFileItemReader extends CountedReader implements ItemReader {
     @Inject
     @BatchProperty
     private String input;

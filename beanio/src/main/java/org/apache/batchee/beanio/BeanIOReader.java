@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.beanio;
 
-import org.apache.batchee.extras.transaction.TransactionalReader;
+import org.apache.batchee.extras.transaction.CountedReader;
 import org.beanio.BeanReader;
 import org.beanio.BeanReaderErrorHandler;
 
@@ -27,7 +27,7 @@ import java.io.FileReader;
 import java.io.Serializable;
 import java.util.Locale;
 
-public class BeanIOReader extends TransactionalReader implements ItemReader {
+public class BeanIOReader extends CountedReader implements ItemReader {
     @Inject
     @BatchProperty(name = "file")
     protected String filePath;

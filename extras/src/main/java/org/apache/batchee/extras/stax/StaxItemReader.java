@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.extras.stax;
 
-import org.apache.batchee.extras.transaction.TransactionalReader;
+import org.apache.batchee.extras.transaction.CountedReader;
 import org.apache.batchee.extras.stax.util.JAXBContextFactory;
 
 import javax.batch.api.BatchProperty;
@@ -36,7 +36,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Serializable;
 
-public class StaxItemReader extends TransactionalReader implements ItemReader {
+public class StaxItemReader extends CountedReader implements ItemReader {
     @Inject
     @BatchProperty
     private String marshallingClasses;

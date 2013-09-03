@@ -16,43 +16,14 @@
  */
 package org.apache.batchee.extras.transaction;
 
-import org.apache.batchee.extras.transaction.integration.SynchronizationService;
-import org.apache.batchee.extras.transaction.integration.Synchronizations;
-
 import javax.batch.api.chunk.ItemReader;
 import java.io.Serializable;
 
-public abstract class TransactionalReader implements ItemReader {
-    private static final String READER_COUNT = TransactionalReader.class.getName() + ".reader-count";
-
-    private final String key;
+public abstract class CountedReader implements ItemReader {
     protected long items = 0;
 
-    protected TransactionalReader() {
-        key = READER_COUNT + hashCode();
-    }
-
     protected void incrementReaderCount() {
-        if (Synchronizations.hasTransaction()) {
-            Long count = (Long) Synchronizations.get(key);
-            if (count == null) {
-                count = items;
-                Synchronizations.registerSynchronization(new SynchronizationService.OnCommit() {
-                    @Override
-                    public void afterCommit() {
-                        Integer max = (Integer) Synchronizations.get(key);
-                        if (max == null) {
-                            return;
-                        }
-
-                        incrementCount(max);
-                    }
-                });
-            }
-            Synchronizations.put(key, count + 1);
-        } else {
-            incrementCount(1);
-        }
+        incrementCount(1);
     }
 
     protected void incrementCount(int number) {
