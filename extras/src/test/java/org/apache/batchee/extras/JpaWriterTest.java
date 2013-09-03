@@ -16,31 +16,47 @@
  */
 package org.apache.batchee.extras;
 
+import org.apache.batchee.extras.util.MyProvider;
+import org.apache.batchee.extras.util.Person;
 import org.apache.batchee.util.Batches;
-import org.apache.batchee.extras.util.IOs;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import javax.batch.api.chunk.ItemReader;
 import javax.batch.operations.JobOperator;
 import javax.batch.runtime.BatchRuntime;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Properties;
 
 import static org.testng.Assert.assertEquals;
 
-public class StaxItemWriterTest {
+public class JpaWriterTest {
     @Test
     public void write() throws Exception {
-        final String path = "target/work/StaxItemWriter.xml";
-
-        final Properties jobParams = new Properties();
-        jobParams.setProperty("output", path);
-
         final JobOperator jobOperator = BatchRuntime.getJobOperator();
-        Batches.waitForEnd(jobOperator, jobOperator.start("stax-writer", jobParams));
-        final String content = IOs.slurp(path);
-        assertEquals(content.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", ""), "<root><foo><value>item 1</value></foo><foo><value>item 2</value></foo></root>");
+        Batches.waitForEnd(jobOperator, jobOperator.start("jpa-writer", new Properties()));
+
+        final Connection c = DriverManager.getConnection("jdbc:derby:memory:jpa;create=true", "app", "app");
+        final PreparedStatement select = c.prepareStatement("select name from Person");
+        final ResultSet set = select.executeQuery();
+        final Collection<String> names = new ArrayList<String>();
+        while (set.next()) {
+            names.add(set.getString("name"));
+        }
+        c.close();
+
+        assertEquals(2, names.size());
+    }
+
+    @AfterClass
+    public static void clear() {
+        new MyProvider().cleanup();
     }
 
     public static class TwoItemsReader implements ItemReader {
@@ -59,7 +75,9 @@ public class StaxItemWriterTest {
         @Override
         public Object readItem() throws Exception {
             if (count++ < 2) {
-                return new Foo("item " + count);
+                final Person p = new Person();
+                p.setName("line " + count);
+                return p;
             }
             return null;
         }
@@ -67,27 +85,6 @@ public class StaxItemWriterTest {
         @Override
         public Serializable checkpointInfo() throws Exception {
             return null;
-        }
-    }
-
-    @XmlRootElement
-    public static class Foo {
-        private String value;
-
-        public Foo() {
-            // no-op
-        }
-
-        public Foo(final String s) {
-            value = s;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public void setValue(final String value) {
-            this.value = value;
         }
     }
 }

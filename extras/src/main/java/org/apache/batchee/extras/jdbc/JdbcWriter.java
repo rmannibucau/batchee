@@ -16,6 +16,7 @@
  */
 package org.apache.batchee.extras.jdbc;
 
+import org.apache.batchee.extras.locator.BeanLocator;
 import org.apache.batchee.extras.transaction.integration.Synchronizations;
 
 import javax.batch.api.BatchProperty;
@@ -28,23 +29,29 @@ import java.util.List;
 
 public class JdbcWriter extends JdbcConnectionConfiguration implements ItemWriter {
     @Inject
+    @BatchProperty
+    private String locator;
+
+    @Inject
     @BatchProperty(name = "mapper")
     private String mapperStr;
 
     @Inject
-    @BatchProperty(name = "sql")
+    @BatchProperty
     private String sql;
 
-    private ObjectMapper mapper;
+    private BeanLocator.LocatorInstance<ObjectMapper> mapper;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
-        mapper = ObjectMapper.class.cast(Thread.currentThread().getContextClassLoader().loadClass(mapperStr).newInstance());
+        mapper = BeanLocator.Finder.get(locator).newInstance(ObjectMapper.class, mapperStr);
     }
 
     @Override
     public void close() throws Exception {
-        // no-op
+        if (mapper != null) {
+            mapper.release();
+        }
     }
 
     @Override
@@ -54,7 +61,7 @@ public class JdbcWriter extends JdbcConnectionConfiguration implements ItemWrite
         try {
             preparedStatement = connection().prepareStatement(sql);
             for (final Object item : items) {
-                mapper.map(item, preparedStatement);
+                mapper.getValue().map(item, preparedStatement);
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();

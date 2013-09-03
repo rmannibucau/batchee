@@ -16,6 +16,8 @@
  */
 package org.apache.batchee.extras.jpa;
 
+import org.apache.batchee.extras.locator.BeanLocator;
+
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemReader;
 import javax.batch.operations.BatchRuntimeException;
@@ -25,8 +27,13 @@ import javax.persistence.Query;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 public class JpaItemReader implements ItemReader {
+    @Inject
+    @BatchProperty
+    private String locator;
+
     @Inject
     @BatchProperty
     private String entityManagerProvider;
@@ -45,30 +52,44 @@ public class JpaItemReader implements ItemReader {
 
     @Inject
     @BatchProperty
-    private int pageSize;
+    private String pageSize;
 
+    @Inject
+    @BatchProperty
+    private String detachEntities;
+
+    private int page = 10;
     private int firstResult = 0;
-    private EntityManagerProvider emProvider;
-    private ParameterProvider paramProvider = null;
+    private BeanLocator.LocatorInstance<EntityManagerProvider> emProvider;
+    private BeanLocator.LocatorInstance<ParameterProvider> paramProvider = null;
     private LinkedList<Object> items = new LinkedList<Object>();
+    private boolean detach;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
-        emProvider = EntityManagerProvider.class.cast(Thread.currentThread().getContextClassLoader().loadClass(entityManagerProvider));
+        final BeanLocator beanLocator = BeanLocator.Finder.get(locator);
+
+        emProvider = beanLocator.newInstance(EntityManagerProvider.class, entityManagerProvider);
         if (parameterProvider != null) {
-            paramProvider = ParameterProvider.class.cast(Thread.currentThread().getContextClassLoader().loadClass(parameterProvider));
+            paramProvider = beanLocator.newInstance(ParameterProvider.class, parameterProvider);
         }
-        if (pageSize <= 0) {
-            pageSize = 10;
+        if (pageSize != null) {
+            page = Integer.parseInt(pageSize, page);
         }
         if (namedQuery == null && query == null) {
             throw new BatchRuntimeException("a query should be provided");
         }
+        detach = Boolean.parseBoolean(detachEntities);
     }
 
     @Override
     public void close() throws Exception {
-        // no-op
+        if (emProvider != null) {
+            emProvider.release();
+        }
+        if (paramProvider != null) {
+            paramProvider.release();
+        }
     }
 
     @Override
@@ -86,7 +107,7 @@ public class JpaItemReader implements ItemReader {
     }
 
     private Collection<?> nextPage() {
-        final EntityManager em = emProvider.newEntityManager();
+        final EntityManager em = emProvider.getValue().newEntityManager();
         final Query jpaQuery;
         try {
             if (namedQuery != null) {
@@ -94,13 +115,19 @@ public class JpaItemReader implements ItemReader {
             } else {
                 jpaQuery = em.createQuery(query);
             }
-            jpaQuery.setFirstResult(firstResult).setMaxResults(pageSize);
+            jpaQuery.setFirstResult(firstResult).setMaxResults(page);
             if (paramProvider != null) {
-                paramProvider.setParameters(jpaQuery);
+                paramProvider.getValue().setParameters(jpaQuery);
             }
-            return jpaQuery.getResultList();
+            final List<?> resultList = jpaQuery.getResultList();
+            if (detach) {
+                for (final Object o : resultList) {
+                    em.detach(o);
+                }
+            }
+            return resultList;
         } finally {
-            emProvider.release(em);
+            emProvider.getValue().release(em);
         }
     }
 

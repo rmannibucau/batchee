@@ -16,31 +16,53 @@
  */
 package org.apache.batchee.extras;
 
+import org.apache.batchee.extras.typed.TypedProcessor;
 import org.apache.batchee.util.Batches;
-import org.apache.batchee.extras.util.IOs;
 import org.testng.annotations.Test;
 
 import javax.batch.api.chunk.ItemReader;
 import javax.batch.operations.JobOperator;
 import javax.batch.runtime.BatchRuntime;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Properties;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
-public class StaxItemWriterTest {
+public class ChainProcessorTest {
     @Test
-    public void write() throws Exception {
-        final String path = "target/work/StaxItemWriter.xml";
-
-        final Properties jobParams = new Properties();
-        jobParams.setProperty("output", path);
-
+    public void chain() throws Exception {
         final JobOperator jobOperator = BatchRuntime.getJobOperator();
-        Batches.waitForEnd(jobOperator, jobOperator.start("stax-writer", jobParams));
-        final String content = IOs.slurp(path);
-        assertEquals(content.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", ""), "<root><foo><value>item 1</value></foo><foo><value>item 2</value></foo></root>");
+        Batches.waitForEnd(jobOperator, jobOperator.start("chain-processor", new Properties()));
+
+        assertEquals(P1.instance.items.size(), 2);
+        assertEquals(P2.instance.items.size(), 2);
+
+        final int p1Hash = P1.instance.hashCode();
+        final int p2Hash = P2.instance.hashCode();
+
+        assertTrue(P1.instance.items.contains("1 " + p1Hash));
+        assertTrue(P1.instance.items.contains("2 " + p1Hash));
+        assertTrue(P2.instance.items.contains("1 " + p1Hash + " " + p2Hash));
+        assertTrue(P2.instance.items.contains("2 " + p1Hash + " " + p2Hash));
+    }
+
+    public static class P1 extends StoreItems {
+        public static P1 instance;
+
+        public P1() {
+            instance = this;
+        }
+    }
+
+    public static class P2 extends StoreItems {
+        public static P2 instance;
+
+        public P2() {
+            instance = this;
+        }
     }
 
     public static class TwoItemsReader implements ItemReader {
@@ -59,7 +81,7 @@ public class StaxItemWriterTest {
         @Override
         public Object readItem() throws Exception {
             if (count++ < 2) {
-                return new Foo("item " + count);
+                return "" + count;
             }
             return null;
         }
@@ -70,24 +92,14 @@ public class StaxItemWriterTest {
         }
     }
 
-    @XmlRootElement
-    public static class Foo {
-        private String value;
+    public static abstract class StoreItems extends TypedProcessor<Object> {
+        public final Collection<Object> items = new ArrayList<Object>();
 
-        public Foo() {
-            // no-op
-        }
-
-        public Foo(final String s) {
-            value = s;
-        }
-
-        public String getValue() {
+        @Override
+        protected Object doProcessItem(Object item) {
+            final String value = "" + item + " " + hashCode();
+            items.add(value);
             return value;
-        }
-
-        public void setValue(final String value) {
-            this.value = value;
         }
     }
 }

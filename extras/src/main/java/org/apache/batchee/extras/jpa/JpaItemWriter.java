@@ -16,6 +16,8 @@
  */
 package org.apache.batchee.extras.jpa;
 
+import org.apache.batchee.extras.locator.BeanLocator;
+
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemWriter;
 import javax.inject.Inject;
@@ -26,30 +28,46 @@ import java.util.List;
 public class JpaItemWriter implements ItemWriter {
     @Inject
     @BatchProperty
+    private String locator;
+
+    @Inject
+    @BatchProperty
     private String entityManagerProvider;
 
     @Inject
     @BatchProperty
     private String useMerge;
 
-    private EntityManagerProvider emProvider;
+    @Inject
+    @BatchProperty
+    private String jpaTransaction;
+
+    private BeanLocator.LocatorInstance<EntityManagerProvider> emProvider;
     private boolean merge;
+    private boolean transaction;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
-        emProvider = EntityManagerProvider.class.cast(Thread.currentThread().getContextClassLoader().loadClass(entityManagerProvider));
+        emProvider = BeanLocator.Finder.get(locator).newInstance(EntityManagerProvider.class, entityManagerProvider);
         merge = Boolean.parseBoolean(useMerge);
+        transaction = Boolean.parseBoolean(jpaTransaction);
     }
 
     @Override
     public void close() throws Exception {
-        // no-op
+        if (emProvider != null) {
+            emProvider.release();
+        }
     }
 
     @Override
     public void writeItems(final List<Object> items) throws Exception {
-        final EntityManager em = emProvider.newEntityManager();
+        final EntityManager em = emProvider.getValue().newEntityManager();
         try {
+            if (transaction) {
+                em.getTransaction().begin();
+            }
+
             for (final Object o : items) {
                 if (!merge) {
                     em.persist(o);
@@ -57,9 +75,14 @@ public class JpaItemWriter implements ItemWriter {
                     em.merge(o);
                 }
             }
-            em.flush();
+
+            if (transaction) {
+                em.getTransaction().commit();
+            } else {
+                em.flush();
+            }
         } finally {
-            emProvider.release(em);
+            emProvider.getValue().release(em);
         }
     }
 

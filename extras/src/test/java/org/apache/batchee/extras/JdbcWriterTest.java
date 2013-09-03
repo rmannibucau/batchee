@@ -37,7 +37,7 @@ import static org.testng.Assert.assertEquals;
 
 public class JdbcWriterTest {
     @Test
-    public void read() throws Exception {
+    public void write() throws Exception {
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
         Connection c = DriverManager.getConnection("jdbc:derby:memory:jdbcwriter;create=true", "app", "app");
 

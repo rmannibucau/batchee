@@ -16,6 +16,8 @@
  */
 package org.apache.batchee.extras.jdbc;
 
+import org.apache.batchee.extras.locator.BeanLocator;
+
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemReader;
 import javax.inject.Inject;
@@ -32,20 +34,26 @@ public class JdbcReader extends JdbcConnectionConfiguration implements ItemReade
 
     @Inject
     @BatchProperty
+    private String locator;
+
+    @Inject
+    @BatchProperty
     private String query;
 
     private LinkedList<Object> items;
-    private RecordMapper mapper;
+    private BeanLocator.LocatorInstance<RecordMapper> mapper;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
-        mapper = RecordMapper.class.cast(Thread.currentThread().getContextClassLoader().loadClass(mapperStr).newInstance());
+        mapper = BeanLocator.Finder.get(locator).newInstance(RecordMapper.class, mapperStr);
         items = new LinkedList<Object>();
     }
 
     @Override
     public void close() throws Exception {
-        // no-op
+        if (mapper != null) {
+            mapper.release();
+        }
     }
 
     @Override
@@ -57,7 +65,7 @@ public class JdbcReader extends JdbcConnectionConfiguration implements ItemReade
             try {
                 resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    items.add(mapper.map(resultSet));
+                    items.add(mapper.getValue().map(resultSet));
                 }
                 if (items.isEmpty()) {
                     return null;

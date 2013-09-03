@@ -62,7 +62,9 @@ public class DefaultBatchArtifactFactory implements BatchArtifactFactory, XMLStr
             }
         }
 
-        DependencyInjections.injectReferences(loadedArtifact, ProxyFactory.getInjectionReferences());
+        if (ProxyFactory.getInjectionReferences() != null) {
+            DependencyInjections.injectReferences(loadedArtifact, ProxyFactory.getInjectionReferences());
+        }
 
         return new Instance(loadedArtifact, null);
     }
