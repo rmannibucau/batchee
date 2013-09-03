@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/rmannibucau/batchee.png)](http://travis-ci.org/rmannibucau/batchee)
+
 ## Modules
 ### impl (aka batchee-impl)
 #### Dependency
