@@ -28,11 +28,11 @@ import java.util.List;
 
 public class FlatFileItemWriter implements ItemWriter {
     @Inject
-    @BatchProperty(name = "output")
+    @BatchProperty
     private String output;
 
     @Inject
-    @BatchProperty(name = "encoding")
+    @BatchProperty
     private String encoding;
 
     @Inject

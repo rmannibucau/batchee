@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.extras.reader;
+package org.apache.batchee.extras.transaction;
 
 import org.apache.batchee.extras.transaction.integration.SynchronizationService;
 import org.apache.batchee.extras.transaction.integration.Synchronizations;

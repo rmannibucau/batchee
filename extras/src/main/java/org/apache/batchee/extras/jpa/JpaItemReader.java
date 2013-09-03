@@ -58,12 +58,17 @@ public class JpaItemReader implements ItemReader {
     @BatchProperty
     private String detachEntities;
 
+    @Inject
+    @BatchProperty
+    private String jpaTransaction;
+
     private int page = 10;
     private int firstResult = 0;
     private BeanLocator.LocatorInstance<EntityManagerProvider> emProvider;
     private BeanLocator.LocatorInstance<ParameterProvider> paramProvider = null;
     private LinkedList<Object> items = new LinkedList<Object>();
     private boolean detach;
+    private boolean transaction;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -80,6 +85,7 @@ public class JpaItemReader implements ItemReader {
             throw new BatchRuntimeException("a query should be provided");
         }
         detach = Boolean.parseBoolean(detachEntities);
+        transaction = Boolean.parseBoolean(jpaTransaction);
     }
 
     @Override
@@ -108,6 +114,9 @@ public class JpaItemReader implements ItemReader {
 
     private Collection<?> nextPage() {
         final EntityManager em = emProvider.getValue().newEntityManager();
+        if (transaction) {
+            em.getTransaction().begin();
+        }
         final Query jpaQuery;
         try {
             if (namedQuery != null) {
@@ -127,6 +136,9 @@ public class JpaItemReader implements ItemReader {
             }
             return resultList;
         } finally {
+            if (transaction) {
+                em.getTransaction().commit();
+            }
             emProvider.getValue().release(em);
         }
     }

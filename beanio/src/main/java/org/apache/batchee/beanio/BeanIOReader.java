@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.beanio;
 
-import org.apache.batchee.extras.reader.TransactionalReader;
+import org.apache.batchee.extras.transaction.TransactionalReader;
 import org.beanio.BeanReader;
 import org.beanio.BeanReaderErrorHandler;
 
@@ -33,11 +33,11 @@ public class BeanIOReader extends TransactionalReader implements ItemReader {
     protected String filePath;
 
     @Inject
-    @BatchProperty(name = "streamName")
+    @BatchProperty
     protected String streamName;
 
     @Inject
-    @BatchProperty(name = "configuration")
+    @BatchProperty
     protected String configuration;
 
     @Inject

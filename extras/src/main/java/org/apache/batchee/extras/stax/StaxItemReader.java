@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.extras.stax;
 
-import org.apache.batchee.extras.reader.TransactionalReader;
+import org.apache.batchee.extras.transaction.TransactionalReader;
 import org.apache.batchee.extras.stax.util.JAXBContextFactory;
 
 import javax.batch.api.BatchProperty;
@@ -38,19 +38,19 @@ import java.io.Serializable;
 
 public class StaxItemReader extends TransactionalReader implements ItemReader {
     @Inject
-    @BatchProperty(name = "marshallingClasses")
+    @BatchProperty
     private String marshallingClasses;
 
     @Inject
-    @BatchProperty(name = "marshallingPackage")
+    @BatchProperty
     private String marshallingPackage;
 
     @Inject
-    @BatchProperty(name = "tag")
+    @BatchProperty
     private String tag;
 
     @Inject
-    @BatchProperty(name = "input")
+    @BatchProperty
     private String input;
 
     private XMLEventReader reader;

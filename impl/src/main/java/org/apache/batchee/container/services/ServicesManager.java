@@ -49,16 +49,16 @@ public class ServicesManager implements BatchContainerConstants {
     private static final String SERVICES_CONFIGURATION_FILE = "/batchee.properties";
 
     // Use class names instead of Class objects to not drag in any dependencies and to easily interact with properties
-    private static final Map<String, String> serviceImplClassNames = new ConcurrentHashMap<String, String>();
+    private static final Map<String, String> SERVICE_IMPL_CLASS_NAMES = new ConcurrentHashMap<String, String>();
     static {
-        serviceImplClassNames.put(TransactionManagementService.class.getName(), DefaultBatchTransactionService.class.getName());
-        serviceImplClassNames.put(PersistenceManagerService.class.getName(), JDBCPersistenceManager.class.getName());
-        serviceImplClassNames.put(JobStatusManagerService.class.getName(), DefaultJobStatusManager.class.getName());
-        serviceImplClassNames.put(BatchThreadPoolService.class.getName(), DefaultThreadPoolService.class.getName());
-        serviceImplClassNames.put(BatchKernelService.class.getName(), DefaultBatchKernel.class.getName());
-        serviceImplClassNames.put(JobXMLLoaderService.class.getName(), DefaultJobXMLLoaderService.class.getName());
-        serviceImplClassNames.put(BatchArtifactFactory.class.getName(), DefaultBatchArtifactFactory.class.getName());
-        serviceImplClassNames.put(SecurityService.class.getName(), DefaultSecurityService.class.getName());
+        SERVICE_IMPL_CLASS_NAMES.put(TransactionManagementService.class.getName(), DefaultBatchTransactionService.class.getName());
+        SERVICE_IMPL_CLASS_NAMES.put(PersistenceManagerService.class.getName(), JDBCPersistenceManager.class.getName());
+        SERVICE_IMPL_CLASS_NAMES.put(JobStatusManagerService.class.getName(), DefaultJobStatusManager.class.getName());
+        SERVICE_IMPL_CLASS_NAMES.put(BatchThreadPoolService.class.getName(), DefaultThreadPoolService.class.getName());
+        SERVICE_IMPL_CLASS_NAMES.put(BatchKernelService.class.getName(), DefaultBatchKernel.class.getName());
+        SERVICE_IMPL_CLASS_NAMES.put(JobXMLLoaderService.class.getName(), DefaultJobXMLLoaderService.class.getName());
+        SERVICE_IMPL_CLASS_NAMES.put(BatchArtifactFactory.class.getName(), DefaultBatchArtifactFactory.class.getName());
+        SERVICE_IMPL_CLASS_NAMES.put(SecurityService.class.getName(), DefaultSecurityService.class.getName());
     }
 
     private ServicesManager() {
@@ -126,7 +126,7 @@ public class ServicesManager implements BatchContainerConstants {
                 if (!isInited) {
                     batchRuntimeConfig = new Properties();
 
-                    batchRuntimeConfig.putAll(serviceImplClassNames);
+                    batchRuntimeConfig.putAll(SERVICE_IMPL_CLASS_NAMES);
                     batchRuntimeConfig.putAll(System.getProperties());
 
                     final InputStream batchServicesListInputStream = getClass().getResourceAsStream(SERVICES_CONFIGURATION_FILE);

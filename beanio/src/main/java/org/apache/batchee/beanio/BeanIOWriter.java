@@ -33,15 +33,15 @@ public class BeanIOWriter implements ItemWriter {
     protected String filePath;
 
     @Inject
-    @BatchProperty(name = "streamName")
+    @BatchProperty
     protected String streamName;
 
     @Inject
-    @BatchProperty(name = "configuration")
+    @BatchProperty
     protected String configuration;
 
     @Inject
-    @BatchProperty(name = "encoding")
+    @BatchProperty
     protected String encoding;
 
     @Inject
@@ -55,6 +55,9 @@ public class BeanIOWriter implements ItemWriter {
     public void open(final Serializable checkpoint) throws Exception {
         if (encoding == null) {
             encoding = "UTF-8";
+        }
+        if (lineSeparator != null) {
+            lineSeparator = lineSeparator.replace("\\\\n", "\n").replace("\\\\r", "\r");
         }
 
         final File file = new File(filePath);

@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.extras.flat;
 
-import org.apache.batchee.extras.reader.TransactionalReader;
+import org.apache.batchee.extras.transaction.TransactionalReader;
 
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemReader;
@@ -29,7 +29,7 @@ import java.io.Serializable;
 
 public class FlatFileItemReader extends TransactionalReader implements ItemReader {
     @Inject
-    @BatchProperty(name = "input")
+    @BatchProperty
     private String input;
 
     @Inject
