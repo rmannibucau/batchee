@@ -21,17 +21,15 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import javax.batch.api.chunk.listener.ItemReadListener;
 
 public class ItemReadListenerProxy extends AbstractProxy<ItemReadListener> implements ItemReadListener {
-
-    ItemReadListenerProxy(ItemReadListener delegate) {
+    ItemReadListenerProxy(final ItemReadListener delegate) {
         super(delegate);
     }
 
     @Override
-    public void afterRead(Object item) {
-
+    public void afterRead(final Object item) {
         try {
             this.delegate.afterRead(item);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
@@ -39,21 +37,19 @@ public class ItemReadListenerProxy extends AbstractProxy<ItemReadListener> imple
 
     @Override
     public void beforeRead() {
-
         try {
             this.delegate.beforeRead();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
 
     @Override
-    public void onReadError(Exception ex) {
-
+    public void onReadError(final Exception ex) {
         try {
             this.delegate.onReadError(ex);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }

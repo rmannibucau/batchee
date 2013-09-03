@@ -22,19 +22,17 @@ import javax.batch.api.Decider;
 import javax.batch.runtime.StepExecution;
 
 public class DeciderProxy extends AbstractProxy<Decider> implements Decider {
-
     DeciderProxy(Decider delegate) {
         super(delegate);
 
     }
 
     @Override
-    public String decide(StepExecution[] stepExecutions) {
+    public String decide(final StepExecution[] stepExecutions) {
         try {
             return delegate.decide(stepExecutions);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new BatchContainerRuntimeException(e);
         }
     }
-
 }

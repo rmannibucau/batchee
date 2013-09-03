@@ -21,12 +21,10 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import javax.batch.api.chunk.listener.ChunkListener;
 
 public class ChunkListenerProxy extends AbstractProxy<ChunkListener> implements ChunkListener {
-
     ChunkListenerProxy(final ChunkListener delegate) {
         super(delegate);
 
     }
-
 
     @Override
     public void afterChunk() throws Exception {
@@ -42,7 +40,7 @@ public class ChunkListenerProxy extends AbstractProxy<ChunkListener> implements 
     public void beforeChunk() throws Exception {
         try {
             this.delegate.beforeChunk();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
@@ -52,10 +50,9 @@ public class ChunkListenerProxy extends AbstractProxy<ChunkListener> implements 
     public void onError(Exception ex) throws Exception {
         try {
             this.delegate.onError(ex);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
-
 }

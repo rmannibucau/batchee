@@ -25,7 +25,7 @@ import org.apache.batchee.jaxb.Flow;
 public class FlowNavigator extends AbstractNavigator<Flow> implements ModelNavigator<Flow> {
     private Flow flow = null;
 
-    public FlowNavigator(Flow flow) {
+    public FlowNavigator(final Flow flow) {
         this.flow = flow;
     }
 
@@ -33,7 +33,6 @@ public class FlowNavigator extends AbstractNavigator<Flow> implements ModelNavig
     public ExecutionElement getFirstExecutionElement(String restartOn) throws IllegalTransitionException {
         return getFirstExecutionElement(flow.getExecutionElements(), restartOn);
     }
-
 
     @Override
     public Transition getNextTransition(ExecutionElement currentExecutionElem, ExecutionStatus currentStatus) throws IllegalTransitionException {

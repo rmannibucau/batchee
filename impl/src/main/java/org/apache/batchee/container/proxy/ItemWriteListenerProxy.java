@@ -22,38 +22,33 @@ import javax.batch.api.chunk.listener.ItemWriteListener;
 import java.util.List;
 
 public class ItemWriteListenerProxy extends AbstractProxy<ItemWriteListener> implements ItemWriteListener {
-
-
-    ItemWriteListenerProxy(ItemWriteListener delegate) {
+    ItemWriteListenerProxy(final ItemWriteListener delegate) {
         super(delegate);
     }
 
     @Override
-    public void afterWrite(List items) {
-
+    public void afterWrite(final List items) {
         try {
             this.delegate.afterWrite(items);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
 
     @Override
-    public void beforeWrite(List items) {
+    public void beforeWrite(final List items) {
 
         try {
             this.delegate.beforeWrite(items);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
 
     @Override
-    public void onWriteError(List items, Exception ex) {
-
-
+    public void onWriteError(final List items, final Exception ex) {
         try {
             this.delegate.onWriteError(items, ex);
         } catch (Exception e) {
@@ -61,6 +56,4 @@ public class ItemWriteListenerProxy extends AbstractProxy<ItemWriteListener> imp
             throw new BatchContainerRuntimeException(e);
         }
     }
-
-
 }

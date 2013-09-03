@@ -21,17 +21,15 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import javax.batch.api.chunk.listener.RetryReadListener;
 
 public class RetryReadListenerProxy extends AbstractProxy<RetryReadListener> implements RetryReadListener {
-
-    RetryReadListenerProxy(RetryReadListener delegate) {
+    RetryReadListenerProxy(final RetryReadListener delegate) {
         super(delegate);
     }
 
     @Override
-    public void onRetryReadException(Exception ex) {
-
+    public void onRetryReadException(final Exception ex) {
         try {
             this.delegate.onRetryReadException(ex);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }

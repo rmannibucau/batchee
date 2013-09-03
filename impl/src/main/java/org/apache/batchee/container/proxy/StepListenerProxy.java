@@ -21,17 +21,15 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import javax.batch.api.listener.StepListener;
 
 public class StepListenerProxy extends AbstractProxy<StepListener> implements StepListener {
-
-    StepListenerProxy(StepListener delegate) {
+    StepListenerProxy(final StepListener delegate) {
         super(delegate);
     }
 
     @Override
     public void afterStep() {
-
         try {
             this.delegate.afterStep();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
@@ -40,10 +38,9 @@ public class StepListenerProxy extends AbstractProxy<StepListener> implements St
 
     @Override
     public void beforeStep() {
-
         try {
             this.delegate.beforeStep();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }

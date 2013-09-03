@@ -21,27 +21,24 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import javax.batch.api.listener.JobListener;
 
 public class JobListenerProxy extends AbstractProxy<JobListener> implements JobListener {
-
-    JobListenerProxy(JobListener delegate) {
+    JobListenerProxy(final JobListener delegate) {
         super(delegate);
     }
 
     @Override
     public void afterJob() {
-
         try {
             this.delegate.afterJob();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new BatchContainerRuntimeException(e);
         }
     }
 
     @Override
     public void beforeJob() {
-
         try {
             this.delegate.beforeJob();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new BatchContainerRuntimeException(e);
         }
     }

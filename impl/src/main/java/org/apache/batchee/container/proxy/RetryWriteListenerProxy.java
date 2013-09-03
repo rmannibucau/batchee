@@ -22,17 +22,15 @@ import javax.batch.api.chunk.listener.RetryWriteListener;
 import java.util.List;
 
 public class RetryWriteListenerProxy extends AbstractProxy<RetryWriteListener> implements RetryWriteListener {
-
-    RetryWriteListenerProxy(RetryWriteListener delegate) {
+    RetryWriteListenerProxy(final RetryWriteListener delegate) {
         super(delegate);
     }
 
     @Override
-    public void onRetryWriteException(List items, Exception ex) {
-
+    public void onRetryWriteException(final List items, final Exception ex) {
         try {
             this.delegate.onRetryWriteException(items, ex);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }

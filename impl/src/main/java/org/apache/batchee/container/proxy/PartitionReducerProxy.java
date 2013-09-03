@@ -21,18 +21,15 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import javax.batch.api.partition.PartitionReducer;
 
 public class PartitionReducerProxy extends AbstractProxy<PartitionReducer> implements PartitionReducer {
-
-    PartitionReducerProxy(PartitionReducer delegate) {
+    PartitionReducerProxy(final PartitionReducer delegate) {
         super(delegate);
-
     }
 
     @Override
-    public void afterPartitionedStepCompletion(PartitionStatus status) {
-
+    public void afterPartitionedStepCompletion(final PartitionStatus status) {
         try {
             this.delegate.afterPartitionedStepCompletion(status);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
@@ -40,10 +37,9 @@ public class PartitionReducerProxy extends AbstractProxy<PartitionReducer> imple
 
     @Override
     public void beforePartitionedStepCompletion() {
-
         try {
             this.delegate.beforePartitionedStepCompletion();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
@@ -51,10 +47,9 @@ public class PartitionReducerProxy extends AbstractProxy<PartitionReducer> imple
 
     @Override
     public void beginPartitionedStep() {
-
         try {
             this.delegate.beginPartitionedStep();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
@@ -62,15 +57,13 @@ public class PartitionReducerProxy extends AbstractProxy<PartitionReducer> imple
 
     @Override
     public void rollbackPartitionedStep() {
-
         try {
             this.delegate.rollbackPartitionedStep();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
-
 }
 
 

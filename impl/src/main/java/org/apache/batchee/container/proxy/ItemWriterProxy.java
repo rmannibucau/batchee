@@ -23,17 +23,15 @@ import java.io.Serializable;
 import java.util.List;
 
 public class ItemWriterProxy extends AbstractProxy<ItemWriter> implements ItemWriter {
-
-    ItemWriterProxy(ItemWriter delegate) {
+    ItemWriterProxy(final ItemWriter delegate) {
         super(delegate);
     }
 
     @Override
     public Serializable checkpointInfo() {
-
         try {
             return this.delegate.checkpointInfo();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
@@ -43,17 +41,17 @@ public class ItemWriterProxy extends AbstractProxy<ItemWriter> implements ItemWr
     public void close() {
         try {
             this.delegate.close();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
 
     @Override
-    public void open(Serializable checkpoint) {
+    public void open(final Serializable checkpoint) {
         try {
             this.delegate.open(checkpoint);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
@@ -66,9 +64,7 @@ public class ItemWriterProxy extends AbstractProxy<ItemWriter> implements ItemWr
      * @see javax.batch.api.ItemReader#readItem()
      */
     @Override
-    public void writeItems(List items) throws Exception {
+    public void writeItems(final List items) throws Exception {
         this.delegate.writeItems(items);
     }
-
-
 }

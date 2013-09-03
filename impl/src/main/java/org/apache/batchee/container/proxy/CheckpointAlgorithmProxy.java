@@ -52,7 +52,6 @@ public class CheckpointAlgorithmProxy extends AbstractProxy<CheckpointAlgorithm>
         return checkpointName;
     }
 
-
     @Override
     public void beginCheckpoint() {
         try {
@@ -62,7 +61,6 @@ public class CheckpointAlgorithmProxy extends AbstractProxy<CheckpointAlgorithm>
             throw new BatchContainerRuntimeException(e);
         }
     }
-
 
     @Override
     public int checkpointTimeout() {
@@ -74,7 +72,6 @@ public class CheckpointAlgorithmProxy extends AbstractProxy<CheckpointAlgorithm>
         }
     }
 
-
     @Override
     public void endCheckpoint() {
         try {
@@ -85,7 +82,6 @@ public class CheckpointAlgorithmProxy extends AbstractProxy<CheckpointAlgorithm>
         }
     }
 
-
     @Override
     public boolean isReadyToCheckpoint() {
         try {
@@ -95,6 +91,4 @@ public class CheckpointAlgorithmProxy extends AbstractProxy<CheckpointAlgorithm>
             throw new BatchContainerRuntimeException(e);
         }
     }
-
-
 }

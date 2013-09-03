@@ -21,21 +21,19 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import javax.batch.api.chunk.listener.SkipProcessListener;
 
 public class SkipProcessListenerProxy extends AbstractProxy<SkipProcessListener> implements SkipProcessListener {
-
-    SkipProcessListenerProxy(SkipProcessListener delegate) {
+    SkipProcessListenerProxy(final SkipProcessListener delegate) {
         super(delegate);
 
     }
 
     @Override
-    public void onSkipProcessItem(Object item, Exception ex) {
+    public void onSkipProcessItem(final Object item, final Exception ex) {
         try {
             this.delegate.onSkipProcessItem(item, ex);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
-
 }
 

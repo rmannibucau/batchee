@@ -22,20 +22,18 @@ import javax.batch.api.chunk.listener.SkipWriteListener;
 import java.util.List;
 
 public class SkipWriteListenerProxy extends AbstractProxy<SkipWriteListener> implements SkipWriteListener {
-
-    SkipWriteListenerProxy(SkipWriteListener delegate) {
+    SkipWriteListenerProxy(final SkipWriteListener delegate) {
         super(delegate);
 
     }
 
     @Override
-    public void onSkipWriteItem(List items, Exception ex) {
+    public void onSkipWriteItem(final List items, final Exception ex) {
         try {
             this.delegate.onSkipWriteItem(items, ex);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
-
 }

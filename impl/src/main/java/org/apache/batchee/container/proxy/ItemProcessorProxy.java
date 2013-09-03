@@ -19,8 +19,7 @@ package org.apache.batchee.container.proxy;
 import javax.batch.api.chunk.ItemProcessor;
 
 public class ItemProcessorProxy extends AbstractProxy<ItemProcessor> implements ItemProcessor {
-
-    ItemProcessorProxy(ItemProcessor delegate) {
+    ItemProcessorProxy(final ItemProcessor delegate) {
         super(delegate);
     }
 
@@ -30,8 +29,7 @@ public class ItemProcessorProxy extends AbstractProxy<ItemProcessor> implements 
      * @see javax.batch.api.ItemReader#readItem()
      */
     @Override
-    public Object processItem(Object item) throws Exception {
+    public Object processItem(final Object item) throws Exception {
         return this.delegate.processItem(item);
     }
-
 }

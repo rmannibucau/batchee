@@ -18,26 +18,17 @@ package org.apache.batchee.container.proxy;
 
 import org.apache.batchee.container.impl.StepContextImpl;
 
-import java.util.logging.Logger;
-
 /**
  * An abstract class which contains the common behavior for a batch artifact
  * proxy. This class performs runtime introspection of an artifact instances
  * annotations and handles property injection.
  */
 public abstract class AbstractProxy<T> {
-
-    private final static String sourceClass = AbstractProxy.class.getName();
-    private final static Logger logger = Logger.getLogger(sourceClass);
-
     protected T delegate;
     protected StepContextImpl stepContext;
 
     /**
      * @param delegate An instance of a batch artifact which will back this proxy
-     * @param props    The properties directly associated with this batch artifact.
-     *                 These properties will be injected into fields annotated with
-     *                 the @BatchProperty annotation in the delegate object.
      */
     AbstractProxy(T delegate) {
         this.delegate = delegate;
@@ -47,7 +38,7 @@ public abstract class AbstractProxy<T> {
         return this.delegate;
     }
 
-    public void setStepContext(StepContextImpl stepContext) {
+    public void setStepContext(final StepContextImpl stepContext) {
         this.stepContext = stepContext;
     }
 }

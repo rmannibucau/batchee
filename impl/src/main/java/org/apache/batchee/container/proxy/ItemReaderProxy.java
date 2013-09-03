@@ -22,8 +22,7 @@ import javax.batch.api.chunk.ItemReader;
 import java.io.Serializable;
 
 public class ItemReaderProxy extends AbstractProxy<ItemReader> implements ItemReader {
-
-    ItemReaderProxy(ItemReader delegate) {
+    ItemReaderProxy(final ItemReader delegate) {
         super(delegate);
     }
 
@@ -48,7 +47,7 @@ public class ItemReaderProxy extends AbstractProxy<ItemReader> implements ItemRe
     }
 
     @Override
-    public void open(Serializable checkpoint) {
+    public void open(final Serializable checkpoint) {
         try {
             this.delegate.open(checkpoint);
         } catch (Exception e) {
@@ -66,5 +65,4 @@ public class ItemReaderProxy extends AbstractProxy<ItemReader> implements ItemRe
     public Object readItem() throws Exception {
         return this.delegate.readItem();
     }
-
 }

@@ -25,7 +25,7 @@ import org.apache.batchee.jaxb.JSLJob;
 public class JobNavigator extends AbstractNavigator<JSLJob> implements ModelNavigator<JSLJob> {
     private JSLJob job = null;
 
-    public JobNavigator(JSLJob job) {
+    public JobNavigator(final JSLJob job) {
         this.job = job;
     }
 

@@ -23,29 +23,26 @@ import javax.batch.runtime.BatchStatus;
 import java.io.Serializable;
 
 public class PartitionAnalyzerProxy extends AbstractProxy<PartitionAnalyzer> implements PartitionAnalyzer {
-
-    PartitionAnalyzerProxy(PartitionAnalyzer delegate) {
+    PartitionAnalyzerProxy(final PartitionAnalyzer delegate) {
         super(delegate);
 
     }
 
     @Override
-    public synchronized void analyzeCollectorData(Serializable data) {
-
+    public synchronized void analyzeCollectorData(final Serializable data) {
         try {
             this.delegate.analyzeCollectorData(data);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
 
     @Override
-    public synchronized void analyzeStatus(BatchStatus batchStatus, String exitStatus) {
-
+    public synchronized void analyzeStatus(final BatchStatus batchStatus, final String exitStatus) {
         try {
             this.delegate.analyzeStatus(batchStatus, exitStatus);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }

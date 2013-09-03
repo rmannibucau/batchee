@@ -22,16 +22,13 @@ import javax.batch.api.partition.PartitionCollector;
 import java.io.Serializable;
 
 public class PartitionCollectorProxy extends AbstractProxy<PartitionCollector> implements PartitionCollector {
-
-
-    PartitionCollectorProxy(PartitionCollector delegate) {
+    PartitionCollectorProxy(final PartitionCollector delegate) {
         super(delegate);
 
     }
 
     @Override
     public Serializable collectPartitionData() {
-
         try {
             return this.delegate.collectPartitionData();
         } catch (Exception e) {
@@ -39,5 +36,4 @@ public class PartitionCollectorProxy extends AbstractProxy<PartitionCollector> i
             throw new BatchContainerRuntimeException(e);
         }
     }
-
 }

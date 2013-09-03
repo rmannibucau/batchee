@@ -22,22 +22,17 @@ import javax.batch.api.partition.PartitionMapper;
 import javax.batch.api.partition.PartitionPlan;
 
 public class PartitionMapperProxy extends AbstractProxy<PartitionMapper> implements PartitionMapper {
-
-
-    PartitionMapperProxy(PartitionMapper delegate) {
+    PartitionMapperProxy(final PartitionMapper delegate) {
         super(delegate);
-
     }
 
     @Override
     public PartitionPlan mapPartitions() {
-
         try {
             return this.delegate.mapPartitions();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
     }
-
 }

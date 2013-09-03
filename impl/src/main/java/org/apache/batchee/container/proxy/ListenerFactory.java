@@ -43,7 +43,6 @@ import java.util.Map;
 
 
 public class ListenerFactory {
-
     private List<ListenerInfo> jobLevelListenerInfo = null;
 
     private Map<String, List<ListenerInfo>> stepLevelListenerInfo = new HashMap<String, List<ListenerInfo>>();
