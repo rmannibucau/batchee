@@ -571,3 +571,9 @@ batchee-camel includes a Camel component. Here is its format:
 
 with name the batch name. By default it is not intended to be synchronous but it can be forced (by polling) using synchronous attribute.
 Synchronous attribute is the polling period and needs to be > 0 to be active.
+
+
+After this endpoint (even in asynchrnous mode) the exchange will get the headers:
+
+* JBatchOperator: the operator used to launch this job (normally not useful but some implmentations can depend on it)
+* JBatchExecutionId: the job execution id
