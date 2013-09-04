@@ -24,7 +24,6 @@ public class CamelLocator implements BeanLocator {
     @Override
     public <T> LocatorInstance<T> newInstance(final Class<T> expected, final String batchId) {
         final CamelItemProcessor camelItemProcessor = new CamelItemProcessor();
-        camelItemProcessor.setUnwrap("false"); // don't unwrap in chains
         camelItemProcessor.setEndpoint(batchId);
         return new LocatorInstance<T>((T) camelItemProcessor, null);
     }

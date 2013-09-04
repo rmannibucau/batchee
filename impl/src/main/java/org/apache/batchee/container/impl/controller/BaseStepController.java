@@ -21,12 +21,11 @@ import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.impl.MetricImpl;
 import org.apache.batchee.container.impl.StepContextImpl;
-import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.impl.StepExecutionImpl;
 import org.apache.batchee.container.impl.controller.chunk.PersistentDataWrapper;
+import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.services.BatchKernelService;
 import org.apache.batchee.container.services.JobStatusManagerService;
-import org.apache.batchee.spi.PersistenceManagerService;
 import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.container.status.ExecutionStatus;
 import org.apache.batchee.container.status.ExtendedBatchStatus;
@@ -35,6 +34,7 @@ import org.apache.batchee.container.util.PartitionDataWrapper;
 import org.apache.batchee.jaxb.JSLProperties;
 import org.apache.batchee.jaxb.Property;
 import org.apache.batchee.jaxb.Step;
+import org.apache.batchee.spi.PersistenceManagerService;
 import org.apache.batchee.spi.TransactionManagerAdapter;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
@@ -52,11 +52,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Change the name of this class to something else!! Or change BaseStepController.
  */
 public abstract class BaseStepController implements ExecutionElementController {
+    private static final Logger LOGGER = Logger.getLogger(BaseStepController.class.getName());
+
     protected RuntimeJobExecution jobExecutionImpl;
     protected JobInstance jobInstance;
 
@@ -140,24 +144,17 @@ public abstract class BaseStepController implements ExecutionElementController {
         } catch (final Exception e) {
             // We're going to continue on so that we can execute the afterStep() and analyzer
             try {
-                final StringWriter sw = new StringWriter();
-                final PrintWriter pw = new PrintWriter(sw);
-                e.printStackTrace(pw);
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 markStepFailed();
             } catch (final Throwable t) {
                 // Since the first one is the original first failure, let's rethrow t1 and not the second error,
                 // but we'll log a severe error pointing out that the failure didn't get persisted..
                 // We won't try to call the afterStep() in this case either.
-                final StringWriter sw = new StringWriter();
-                final PrintWriter pw = new PrintWriter(sw);
-                t.printStackTrace(pw);
                 rethrowWithMsg("ERROR. PERSISTING BATCH STATUS FAILED.  STEP EXECUTION STATUS TABLES MIGHT HAVE CONSISTENCY ISSUES" +
                     "AND/OR UNEXPECTED ENTRIES.", t);
             }
         } catch (final Throwable t) {
-            final StringWriter sw = new StringWriter();
-            final PrintWriter pw = new PrintWriter(sw);
-            t.printStackTrace(pw);
+            LOGGER.log(Level.SEVERE, t.getMessage(), t);
             markJobAndStepFailed();
         }
 
@@ -168,9 +165,7 @@ public abstract class BaseStepController implements ExecutionElementController {
             //Call PartitionAnalyzer, PartitionReducer and StepListener(s)
             invokePostStepArtifacts();
         } catch (final Throwable t) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            t.printStackTrace(pw);
+            LOGGER.log(Level.SEVERE, t.getMessage(), t);
             markStepFailed();
         }
 

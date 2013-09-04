@@ -25,20 +25,12 @@ public class CamelItemProcessor implements ItemProcessor {
     @BatchProperty
     private String endpoint;
 
-    @Inject
-    @BatchProperty
-    private String unwrap;
-
     @Override
     public Object processItem(final Object item) throws Exception {
-        return CamelTask.camelize(endpoint, unwrap, item);
+        return CamelBridge.process(endpoint, item);
     }
 
     public void setEndpoint(final String endpoint) {
         this.endpoint = endpoint;
-    }
-
-    public void setUnwrap(final String unwrap) {
-        this.unwrap = unwrap;
     }
 }

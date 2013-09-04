@@ -53,6 +53,19 @@ Basic implementations for Readers/Writers/Processors/.... More on it in extensio
 
 Basic implementations of a reader and a writer using BeanIO library. Details in extensions part.
 
+### Camel
+#### Dependency
+
+    <dependency>
+      <groupId>org.apache.batchee</groupId>
+      <artifactId>batchee-camel</artifactId>
+      <version>${batchee.version}</version>
+    </dependency>
+
+#### Goal
+
+A simple integration with Apache Camel.
+
 # Configuration
 ## batchee.properties
 
@@ -481,7 +494,6 @@ Sample:
 Configuration:
 
 * endpoint: the endpoint to use
-* unwrap: a boolean to force to unwrap the exchange to body or not
 
 ### `org.apache.batchee.camel.CamelChainItemProcessor`
 
@@ -501,4 +513,49 @@ Sample:
       </chunk>
     </step>
 
-Configuration: mainly the chain configuration excepted "chain" value is a list of endpoints. It supports the unwrap configuration too.
+Configuration: mainly the chain configuration excepted "chain" value is a list of endpoints.
+
+### `org.apache.batchee.camel.CamelItemReader`
+
+A reader using camel consumers.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="org.apache.batchee.camel.CamelItemReader">
+          <properties>
+            <property name="endpoint" value="direct:reader"/>
+          </properties>
+        </reader>
+        <processor ref="..." />
+        <writer ref="..." />
+      </chunk>
+    </step>
+
+Configuration:
+
+* endpoint: the input camel endpoint URI
+
+### `org.apache.batchee.camel.CamelItemWriter`
+
+A writer using camel producer.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="..." />
+        <processor ref="..." />
+        <writer ref="org.apache.batchee.camel.CamelItemWriter">
+          <properties>
+            <property name="endpoint" value="direct:writer"/>
+          </properties>
+        </writer>
+      </chunk>
+    </step>
+
+Configuration:
+
+* endpoint: the input camel endpoint URI
+

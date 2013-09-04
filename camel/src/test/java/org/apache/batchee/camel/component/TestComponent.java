@@ -33,6 +33,11 @@ public class TestComponent extends DefaultComponent {
         final String value = String.class.cast(parameters.remove("value"));
         return new DefaultEndpoint() {
             @Override
+            protected String createEndpointUri() {
+                return uri;
+            }
+
+            @Override
             public Producer createProducer() throws Exception {
                 return new DefaultProducer(this) {
                     @Override

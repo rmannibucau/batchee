@@ -17,72 +17,50 @@
 package org.apache.batchee.camel;
 
 import org.apache.batchee.util.Batches;
-import org.apache.camel.Consumer;
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
+import org.apache.camel.ConsumerTemplate;
 import org.testng.annotations.Test;
 
 import javax.batch.api.chunk.ItemReader;
-import javax.batch.api.chunk.ItemWriter;
 import javax.batch.operations.JobOperator;
 import javax.batch.runtime.BatchRuntime;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
-public class CamelProcessorTest extends CamelBridge {
+public class CamelWriterTest extends CamelBridge {
     @Test
-    public void process() throws Exception {
-        final List<Exchange> exchanges = new ArrayList<Exchange>(2);
-        final Consumer consumer = CONTEXT.getEndpoint("direct:processor").createConsumer(new Processor() {
+    public void write() throws Exception {
+        final ConsumerTemplate tpl = CONTEXT.createConsumerTemplate();
+        final Collection<Object> received = new ArrayList<Object>(2);
+        final ExecutorService thread = Executors.newFixedThreadPool(1);
+        thread.submit(new Runnable() {
             @Override
-            public void process(final Exchange exchange) throws Exception {
-                exchanges.add(exchange);
+            public void run() {
+                Object o;
+                do {
+                    o = tpl.receiveBody("direct:writer");
+                    received.add(o);
+                } while (received.size() < 2);
             }
         });
-        consumer.start();
+        thread.shutdown();
 
         final JobOperator jobOperator = BatchRuntime.getJobOperator();
-        Batches.waitForEnd(jobOperator, jobOperator.start("camel-processor", new Properties()));
-        assertEquals(StoreItems.ITEMS.size(), 2);
-        assertEquals(exchanges.size(), 2);
+        Batches.waitForEnd(jobOperator, jobOperator.start("camel-writer", new Properties()));
 
-        for (int i = 1; i <= 2; i++) {
-            assertEquals("" + i, StoreItems.ITEMS.get(i - 1));
-            assertEquals("" + i, exchanges.get(i - 1).getIn().getBody());
-        }
+        assertTrue(received.contains("1"));
+        assertTrue(received.contains("2"));
 
-        consumer.stop();
+        thread.awaitTermination(5, TimeUnit.MINUTES);
     }
 
-    public static class StoreItems implements ItemWriter {
-        public static final List<Object> ITEMS = new ArrayList<Object>(2);
-
-        @Override
-        public void open(final Serializable checkpoint) throws Exception {
-            // no-op
-        }
-
-        @Override
-        public void close() throws Exception {
-            // no-op
-        }
-
-        @Override
-        public void writeItems(final List<Object> items) throws Exception {
-            ITEMS.addAll(items);
-        }
-
-        @Override
-        public Serializable checkpointInfo() throws Exception {
-            return null;
-        }
-    }
-
-    public static class TwoItemsReader implements ItemReader {
+    public static class Reader implements ItemReader {
         private int count = 0;
 
         @Override

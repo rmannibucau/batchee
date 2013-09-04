@@ -16,31 +16,36 @@
  */
 package org.apache.batchee.camel;
 
-import org.apache.batchee.extras.chain.Chain;
-import org.apache.batchee.extras.locator.BeanLocator;
+import javax.batch.api.BatchProperty;
+import javax.batch.api.chunk.ItemWriter;
+import javax.inject.Inject;
+import java.io.Serializable;
+import java.util.List;
 
-import javax.batch.api.chunk.ItemProcessor;
-
-public class CamelChainItemProcessor extends Chain<ItemProcessor> implements ItemProcessor {
-    private BeanLocator locatorInstance;
+public class CamelItemWriter implements ItemWriter {
+    @Inject
+    @BatchProperty
+    private String endpoint;
 
     @Override
-    public Object processItem(final Object item) throws Exception {
-        if (locator == null) {
-            locatorInstance = CamelLocator.INSTANCE;
-        } else {
-            locatorInstance = super.getBeanLocator();
+    public void writeItems(final List<Object> items) throws Exception {
+        for (final Object item : items) {
+            CamelBridge.process(endpoint, item);
         }
-        return super.runChain(item);
     }
 
     @Override
-    protected BeanLocator getBeanLocator() {
-        return locatorInstance;
+    public void close() throws Exception {
+        // no-op
     }
 
     @Override
-    protected Object invoke(final BeanLocator.LocatorInstance<ItemProcessor> next, final Object current) throws Exception {
-        return next.getValue().processItem(current);
+    public void open(final Serializable checkpoint) throws Exception {
+        //no-op: supportable?
+    }
+
+    @Override
+    public Serializable checkpointInfo() throws Exception {
+        return null; // supportable?
     }
 }
