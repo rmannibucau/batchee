@@ -459,3 +459,46 @@ Configuration:
 * configuration: the beanio xml configuration file (from the classloader)
 * encoding: the output file encoding
 * line.separator: the line separator to use to separate items (default is no line separator)
+
+### `org.apache.batchee.camel.CamelItemProcessor`
+
+A processor reusing Camel logic.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="..." />
+        <processor ref="org.apache.batchee.camel.CamelItemProcessor">
+          <properties>
+            <property name="endpoint" value="direct:processor"/>
+          </properties>
+        </processor>
+        <writer ref="..." />
+      </chunk>
+    </step>
+
+Configuration:
+
+* endpoint: the endpoint to use
+* unwrap: a boolean to force to unwrap the exchange to body or not
+
+### `org.apache.batchee.camel.CamelChainItemProcessor`
+
+Same as previous one but with a chain
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="..." />
+        <processor ref="org.apache.batchee.camel.CamelChainItemProcessor">
+          <properties>
+            <property name="chain" value="test:foo?value=first,test:bar?value=second"/>
+          </properties>
+        </processor>
+        <writer ref="..." />
+      </chunk>
+    </step>
+
+Configuration: mainly the chain configuration excepted "chain" value is a list of endpoints. It supports the unwrap configuration too.

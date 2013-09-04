@@ -52,7 +52,7 @@ public abstract class Chain<T> {
         }
 
         if (runtimeChain.isEmpty()) {
-            final BeanLocator beanLocator = BeanLocator.Finder.get(locator);
+            final BeanLocator beanLocator = getBeanLocator();
             final Class<T> type = findType();
             for (final String next : chain.split(separator)) {
                 runtimeChain.add(beanLocator.newInstance(type, next));
@@ -72,6 +72,10 @@ public abstract class Chain<T> {
         }
 
         return current;
+    }
+
+    protected BeanLocator getBeanLocator() {
+        return BeanLocator.Finder.get(locator);
     }
 
     protected Class<T> findType() {
