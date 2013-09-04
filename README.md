@@ -577,3 +577,6 @@ After this endpoint (even in asynchrnous mode) the exchange will get the headers
 
 * JBatchOperator: the operator used to launch this job (normally not useful but some implmentations can depend on it)
 * JBatchExecutionId: the job execution id
+
+Note: if you set JBatchExecutionId in the headers before this endpoint you can use ?restart=true or ?stop=true or ?abandon=true
+to restart/stop/abandon the job instead of starting it.

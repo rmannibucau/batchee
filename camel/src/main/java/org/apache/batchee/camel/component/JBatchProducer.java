@@ -34,17 +34,39 @@ public class JBatchProducer extends DefaultProducer {
     private final JobOperator operator;
     private final String jobName;
     private final int synchronous;
+    private final boolean restart;
+    private final boolean stop;
+    private final boolean abandon;
 
-    public JBatchProducer(final Endpoint jBatchEndpoint, final JobOperator operator, final String job, final int synchronous) {
+    public JBatchProducer(final Endpoint jBatchEndpoint, final JobOperator operator, final String job, final int synchronous,
+                          final boolean restart, final boolean stop, final boolean abandon) {
         super(jBatchEndpoint);
         this.operator = operator;
         this.jobName = job;
         this.synchronous = synchronous;
+        this.restart = restart;
+        this.stop = stop;
+        this.abandon = abandon;
     }
 
     @Override
     public void process(final Exchange exchange) throws Exception {
-        final long id = operator.start(jobName, toProperties(exchange.getIn().getHeaders()));
+        final long id;
+        if (stop) {
+            final long stopId = exchange.getIn().getHeader(JBATCH_EXECUTION_ID, Long.class);
+            operator.stop(stopId);
+            return;
+        } else if (abandon) {
+            final long abandonId = exchange.getIn().getHeader(JBATCH_EXECUTION_ID, Long.class);
+            operator.abandon(abandonId);
+            return;
+        } else if (restart) {
+            final long restartId = exchange.getIn().getHeader(JBATCH_EXECUTION_ID, Long.class);
+            id = operator.restart(restartId, toProperties(exchange.getIn().getHeaders()));
+        } else {
+            id = operator.start(jobName, toProperties(exchange.getIn().getHeaders()));
+        }
+
         exchange.getIn().setHeader(JBATCH_EXECUTION_ID, id);
         exchange.getIn().setHeader(JBATCH_OPERATOR, operator);
         if (synchronous > 0) {

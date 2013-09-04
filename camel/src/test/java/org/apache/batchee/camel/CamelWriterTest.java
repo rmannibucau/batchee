@@ -54,10 +54,10 @@ public class CamelWriterTest extends CamelBridge {
         final JobOperator jobOperator = BatchRuntime.getJobOperator();
         Batches.waitForEnd(jobOperator, jobOperator.start("camel-writer", new Properties()));
 
-        assertTrue(received.contains("1"));
-        assertTrue(received.contains("2"));
+        thread.awaitTermination(5, TimeUnit.MINUTES); // wait end of the thread before checking received
 
-        thread.awaitTermination(5, TimeUnit.MINUTES);
+        assertTrue(received.contains("1"), received.toString());
+        assertTrue(received.contains("2"), received.toString());
     }
 
     public static class Reader implements ItemReader {

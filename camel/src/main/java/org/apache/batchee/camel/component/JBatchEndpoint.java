@@ -28,6 +28,9 @@ public class JBatchEndpoint extends DefaultEndpoint {
     private final JobOperator operator;
     private final String job;
     private int synchronous;
+    private boolean restart;
+    private boolean abandon;
+    private boolean stop;
 
     public JBatchEndpoint(final String uri, final String remaining, final Component jBatchComponent, final JobOperator operator) {
         super(uri, jBatchComponent);
@@ -37,11 +40,23 @@ public class JBatchEndpoint extends DefaultEndpoint {
 
     @Override
     public Producer createProducer() throws Exception {
-        return new JBatchProducer(this, operator, job, synchronous);
+        return new JBatchProducer(this, operator, job, synchronous, restart, stop, abandon);
     }
 
     public void setSynchronous(final int synchronous) {
         this.synchronous = synchronous;
+    }
+
+    public void setRestart(final boolean restart) {
+        this.restart = restart;
+    }
+
+    public void setAbandon(final boolean abandon) {
+        this.abandon = abandon;
+    }
+
+    public void setStop(final boolean stop) {
+        this.stop = stop;
     }
 
     @Override
