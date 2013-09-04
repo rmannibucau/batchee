@@ -27,10 +27,14 @@ public class CamelItemWriter implements ItemWriter {
     @BatchProperty
     private String endpoint;
 
+    @Inject
+    @BatchProperty
+    private String templateLocator;
+
     @Override
     public void writeItems(final List<Object> items) throws Exception {
         for (final Object item : items) {
-            CamelBridge.process(endpoint, item);
+            CamelBridge.process(templateLocator, endpoint, item);
         }
     }
 

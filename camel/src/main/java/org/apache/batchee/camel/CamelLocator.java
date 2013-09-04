@@ -19,12 +19,17 @@ package org.apache.batchee.camel;
 import org.apache.batchee.extras.locator.BeanLocator;
 
 public class CamelLocator implements BeanLocator {
-    public static final BeanLocator INSTANCE = new CamelLocator();
+    private final String locator;
+
+    public CamelLocator(final String templateLocator) {
+        this.locator = templateLocator;
+    }
 
     @Override
     public <T> LocatorInstance<T> newInstance(final Class<T> expected, final String batchId) {
         final CamelItemProcessor camelItemProcessor = new CamelItemProcessor();
         camelItemProcessor.setEndpoint(batchId);
+        camelItemProcessor.setLocator(locator);
         return new LocatorInstance<T>((T) camelItemProcessor, null);
     }
 }

@@ -16,29 +16,10 @@
  */
 package org.apache.batchee.camel;
 
-import javax.batch.api.BatchProperty;
-import javax.batch.api.chunk.ItemProcessor;
-import javax.inject.Inject;
+import org.apache.camel.ConsumerTemplate;
+import org.apache.camel.ProducerTemplate;
 
-public class CamelItemProcessor implements ItemProcessor {
-    @Inject
-    @BatchProperty
-    private String endpoint;
-
-    @Inject
-    @BatchProperty
-    private String templateLocator;
-
-    @Override
-    public Object processItem(final Object item) throws Exception {
-        return CamelBridge.process(templateLocator, endpoint, item);
-    }
-
-    public void setEndpoint(final String endpoint) {
-        this.endpoint = endpoint;
-    }
-
-    public void setLocator(final String locator) {
-        templateLocator = locator;
-    }
+public interface CamelTemplateLocator {
+    ProducerTemplate findProducerTemplate();
+    ConsumerTemplate findConsumerTemplate();
 }

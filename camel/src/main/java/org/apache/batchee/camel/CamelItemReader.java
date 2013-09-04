@@ -34,6 +34,10 @@ public class CamelItemReader implements ItemReader {
     @BatchProperty
     private String expectedClass;
 
+    @Inject
+    @BatchProperty
+    private String templateLocator;
+
     @Override
     public Object readItem() throws Exception {
         final Class<?> expected;
@@ -50,7 +54,7 @@ public class CamelItemReader implements ItemReader {
             timeout = Integer.parseInt(timeoutStr);
         }
 
-        return CamelBridge.receive(endpoint, timeout, expected);
+        return CamelBridge.receive(templateLocator, endpoint, timeout, expected);
     }
 
     @Override

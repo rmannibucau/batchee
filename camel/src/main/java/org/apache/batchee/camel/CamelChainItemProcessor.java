@@ -19,15 +19,21 @@ package org.apache.batchee.camel;
 import org.apache.batchee.extras.chain.Chain;
 import org.apache.batchee.extras.locator.BeanLocator;
 
+import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemProcessor;
+import javax.inject.Inject;
 
 public class CamelChainItemProcessor extends Chain<ItemProcessor> implements ItemProcessor {
+    @Inject
+    @BatchProperty
+    private String templateLocator;
+
     private BeanLocator locatorInstance;
 
     @Override
     public Object processItem(final Object item) throws Exception {
         if (locator == null) {
-            locatorInstance = CamelLocator.INSTANCE;
+            locatorInstance = new CamelLocator(templateLocator);
         } else {
             locatorInstance = super.getBeanLocator();
         }

@@ -16,6 +16,7 @@
  */
 package org.apache.batchee.camel;
 
+import org.apache.batchee.extras.locator.BeanLocator;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -25,22 +26,55 @@ public class CamelBridge {
     protected static final ProducerTemplate PRODUCER_TEMPLATE = CONTEXT.createProducerTemplate();
     protected static final ConsumerTemplate CONSUMER_TEMPLATE = CONTEXT.createConsumerTemplate();
 
-    protected static Object process(final String endpoint, final Object body) throws Exception {
-        return PRODUCER_TEMPLATE.requestBody(endpoint, body);
+    protected static Object process(final String locator, final String endpoint, final Object body) throws Exception {
+        final BeanLocator.LocatorInstance<CamelTemplateLocator> locatorInstance = locator(locator);
+        try {
+            return locatorInstance.getValue().findProducerTemplate().requestBody(endpoint, body);
+        } finally {
+            locatorInstance.release();
+        }
     }
 
-    public static Object receive(final String endpoint, final long timeout, final Class<?> expected) {
-        if (timeout > 0) {
-            if (expected != null) {
-                return CONSUMER_TEMPLATE.receiveBody(endpoint, expected);
+    public static Object receive(final String locator, final String endpoint, final long timeout, final Class<?> expected) {
+        final BeanLocator.LocatorInstance<CamelTemplateLocator> locatorInstance = locator(locator);
+        try {
+            final ConsumerTemplate consumerTemplate = locatorInstance.getValue().findConsumerTemplate();
+            if (timeout > 0) {
+                if (expected != null) {
+                    return consumerTemplate.receiveBody(endpoint, expected);
+                }
+                return consumerTemplate.receiveBody(endpoint);
             }
-            return CONSUMER_TEMPLATE.receiveBody(endpoint);
+
+            if (expected != null) {
+                return consumerTemplate.receiveBody(endpoint, timeout, expected);
+            }
+            return consumerTemplate.receiveBody(endpoint, timeout);
+        } finally {
+            locatorInstance.release();
+        }
+    }
+
+    private static BeanLocator.LocatorInstance<CamelTemplateLocator> locator(final String locator) {
+        if (locator == null) {
+            return new BeanLocator.LocatorInstance<CamelTemplateLocator>(DefaultCamelTemplateLocator.INSTANCE, null);
+        }
+        return BeanLocator.Finder.get(locator).newInstance(CamelTemplateLocator.class, locator);
+    }
+
+    public static class DefaultCamelTemplateLocator implements CamelTemplateLocator {
+        public static final CamelTemplateLocator INSTANCE = new DefaultCamelTemplateLocator();
+
+
+        @Override
+        public ProducerTemplate findProducerTemplate() {
+            return PRODUCER_TEMPLATE;
         }
 
-        if (expected != null) {
-            return CONSUMER_TEMPLATE.receiveBody(endpoint, timeout, expected);
+        @Override
+        public ConsumerTemplate findConsumerTemplate() {
+            return CONSUMER_TEMPLATE;
         }
-        return CONSUMER_TEMPLATE.receiveBody(endpoint, timeout);
     }
 }
 

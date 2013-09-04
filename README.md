@@ -472,6 +472,7 @@ Configuration:
 * configuration: the beanio xml configuration file (from the classloader)
 * encoding: the output file encoding
 * line.separator: the line separator to use to separate items (default is no line separator)
+* templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ProducerTemplate` to use
 
 ### `org.apache.batchee.camel.CamelItemProcessor`
 
@@ -494,6 +495,7 @@ Sample:
 Configuration:
 
 * endpoint: the endpoint to use
+* templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ProducerTemplate` to use
 
 ### `org.apache.batchee.camel.CamelChainItemProcessor`
 
@@ -536,6 +538,7 @@ Sample:
 Configuration:
 
 * endpoint: the input camel endpoint URI
+* templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ConsumerTemplate` to use
 
 ### `org.apache.batchee.camel.CamelItemWriter`
 
@@ -558,4 +561,5 @@ Sample:
 Configuration:
 
 * endpoint: the input camel endpoint URI
+* templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ProducerTemplate` to use
 
