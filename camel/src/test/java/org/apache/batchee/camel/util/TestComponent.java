@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.camel.component;
+package org.apache.batchee.camel.util;
 
 import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;

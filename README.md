@@ -563,3 +563,11 @@ Configuration:
 * endpoint: the input camel endpoint URI
 * templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ProducerTemplate` to use
 
+### Camel component
+
+batchee-camel includes a Camel component. Here is its format:
+
+    jbatch:name[?synchronous=xxx]
+
+with name the batch name. By default it is not intended to be synchronous but it can be forced (by polling) using synchronous attribute.
+Synchronous attribute is the polling period and needs to be > 0 to be active.
