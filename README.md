@@ -1,12 +1,12 @@
 [![Build Status](https://secure.travis-ci.org/rmannibucau/batchee.png)](http://travis-ci.org/rmannibucau/batchee)
 
 ## Modules
-### impl (aka batchee-impl)
+### jbatch (aka batchee-jbatch)
 #### Dependency
 
     <dependency>
       <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-impl</artifactId>
+      <artifactId>batchee-jbatch</artifactId>
       <version>${batchee.version}</version>
     </dependency>
 

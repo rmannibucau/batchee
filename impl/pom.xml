@@ -26,8 +26,8 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>batchee-impl</artifactId>
-  <name>BatchEE :: Implementation</name>
+  <artifactId>batchee-jbatch</artifactId>
+  <name>BatchEE :: JBatch</name>
 
   <dependencies>
     <dependency>

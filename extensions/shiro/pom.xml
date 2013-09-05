@@ -21,33 +21,24 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>batchee-parent</artifactId>
+    <artifactId>batchee-extensions</artifactId>
     <groupId>org.apache.batchee</groupId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>batchee-camel</artifactId>
-  <name>BatchEE :: Camel</name>
+  <artifactId>batchee-shiro</artifactId>
+  <name>BatchEE :: Extensions :: Shiro</name>
 
   <dependencies>
     <dependency>
-      <groupId>javax.batch</groupId>
-      <artifactId>javax.batch-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-atinject_1.0_spec</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-extras</artifactId>
+      <artifactId>batchee-jbatch</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-core</artifactId>
-      <version>${camel.version}</version>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-core</artifactId>
+      <version>1.2.2</version>
     </dependency>
 
     <dependency>
@@ -56,29 +47,6 @@
       <version>1.7.5</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-impl</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-test</artifactId>
-      <version>${camel.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
-    </dependency>
   </dependencies>
 
-  <properties>
-    <camel.version>2.11.1</camel.version>
-  </properties>
 </project>

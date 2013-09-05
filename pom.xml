@@ -28,10 +28,7 @@
 
   <modules>
     <module>impl</module>
-    <module>shiro</module>
-    <module>extras</module>
-    <module>beanio</module>
-    <module>camel</module>
+    <module>extensions</module>
   </modules>
 
   <dependencyManagement>
