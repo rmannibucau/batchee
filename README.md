@@ -641,17 +641,17 @@ A reader delegating to a groovy script.
 
 Sample:
 
-   <step id="step1">
-     <chunk>
-       <reader ref="groovyReader">
-         <properties>
-           <property name="scriptPath" value="target/work/reader.groovy"/>
-         </properties>
-       </reader>
-       <processor ref="..." />
-       <writer ref="..." />
-     </chunk>
-   </step>
+     <step id="step1">
+       <chunk>
+         <reader ref="groovyReader">
+           <properties>
+             <property name="scriptPath" value="target/work/reader.groovy"/>
+           </properties>
+         </reader>
+         <processor ref="..." />
+         <writer ref="..." />
+       </chunk>
+     </step>
 
 Configuration:
 
@@ -665,17 +665,17 @@ A processor delegating to a groovy script.
 
 Sample:
 
-   <step id="step1">
-     <chunk>
-       <reader ref="..." />
-       <processor ref="groovyProcessor">
-         <properties>
-           <property name="scriptPath" value="/groovy/processor.groovy"/>
-         </properties>
-       </processor>
-       <writer ref="..." />
-     </chunk>
-   </step>
+     <step id="step1">
+       <chunk>
+         <reader ref="..." />
+         <processor ref="groovyProcessor">
+           <properties>
+             <property name="scriptPath" value="/groovy/processor.groovy"/>
+           </properties>
+         </processor>
+         <writer ref="..." />
+       </chunk>
+     </step>
 
 Configuration:
 
@@ -689,17 +689,17 @@ A writer delegating to a groovy script.
 
 Sample:
 
-   <step id="step1">
-     <chunk>
-       <reader ref="..." />
-       <processor ref="..." />
-       <writer ref="groovyWriter">
-         <properties>
-           <property name="scriptPath" value="/groovy/writer.groovy"/>
-         </properties>
-       </writer>
-     </chunk>
-   </step>
+     <step id="step1">
+       <chunk>
+         <reader ref="..." />
+         <processor ref="..." />
+         <writer ref="groovyWriter">
+           <properties>
+             <property name="scriptPath" value="/groovy/writer.groovy"/>
+           </properties>
+         </writer>
+       </chunk>
+     </step>
 
 Configuration:
 
@@ -713,13 +713,13 @@ A batchlet delegating to a groovy script.
 
 Sample:
 
-   <step id="step1">
-     <batchlet ref="groovyBatchlet">
-       <properties>
-         <property name="scriptPath" value="/groovy/batchlet.groovy"/>
-       </properties>
-     </batchlet>
-   </step>
+     <step id="step1">
+       <batchlet ref="groovyBatchlet">
+         <properties>
+           <property name="scriptPath" value="/groovy/batchlet.groovy"/>
+         </properties>
+       </batchlet>
+     </step>
 
 Configuration:
 
