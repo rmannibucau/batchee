@@ -53,6 +53,21 @@ Basic implementations for Readers/Writers/Processors/.... More on it in extensio
 
 Basic implementations of a reader and a writer using BeanIO library. Details in extensions part.
 
+### Groovy
+#### Dependency
+
+    <dependency>
+      <groupId>org.apache.batchee</groupId>
+      <artifactId>batchee-groovy</artifactId>
+      <version>${batchee.version}</version>
+    </dependency>
+
+#### Goal
+
+Basic implementations of a reader/processor/writer/batchlet delegating to a groovy script the processing. It allows
+to add some dynamicity to batches.
+
+
 ### Camel
 #### Dependency
 
@@ -619,3 +634,59 @@ After this endpoint (even in asynchrnous mode) the exchange will get the headers
 
 Note: if you set JBatchExecutionId in the headers before this endpoint you can use ?restart=true or ?stop=true or ?abandon=true
 to restart/stop/abandon the job instead of starting it.
+
+### `org.apache.batchee.groovy.GroovyItemReader`
+
+A reader delegating to a groovy script.
+
+Sample:
+
+   TODO
+
+Configuration:
+
+TODO
+
+Shortname: `groovyReader`
+
+### `org.apache.batchee.groovy.GroovyItemProcessor`
+
+A processor delegating to a groovy script.
+
+Sample:
+
+   TODO
+
+Configuration:
+
+TODO
+
+Shortname: `groovyProcessor`
+
+### `org.apache.batchee.groovy.GroovyItemWriter`
+
+A writer delegating to a groovy script.
+
+Sample:
+
+   TODO
+
+Configuration:
+
+TODO
+
+Shortname: `groovyWriter`
+
+### `org.apache.batchee.groovy.GroovyBatchlet`
+
+A batchlet delegating to a groovy script.
+
+Sample:
+
+   TODO
+
+Configuration:
+
+TODO
+
+Shortname: `groovyBatchlet`
