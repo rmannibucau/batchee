@@ -641,11 +641,21 @@ A reader delegating to a groovy script.
 
 Sample:
 
-   TODO
+   <step id="step1">
+     <chunk>
+       <reader ref="groovyReader">
+         <properties>
+           <property name="scriptPath" value="target/work/reader.groovy"/>
+         </properties>
+       </reader>
+       <processor ref="..." />
+       <writer ref="..." />
+     </chunk>
+   </step>
 
 Configuration:
 
-TODO
+* scriptPath: path to the groovy file
 
 Shortname: `groovyReader`
 
@@ -655,11 +665,21 @@ A processor delegating to a groovy script.
 
 Sample:
 
-   TODO
+   <step id="step1">
+     <chunk>
+       <reader ref="..." />
+       <processor ref="groovyProcessor">
+         <properties>
+           <property name="scriptPath" value="/groovy/processor.groovy"/>
+         </properties>
+       </processor>
+       <writer ref="..." />
+     </chunk>
+   </step>
 
 Configuration:
 
-TODO
+* scriptPath: path to the groovy file
 
 Shortname: `groovyProcessor`
 
@@ -669,11 +689,21 @@ A writer delegating to a groovy script.
 
 Sample:
 
-   TODO
+   <step id="step1">
+     <chunk>
+       <reader ref="..." />
+       <processor ref="..." />
+       <writer ref="groovyWriter">
+         <properties>
+           <property name="scriptPath" value="/groovy/writer.groovy"/>
+         </properties>
+       </writer>
+     </chunk>
+   </step>
 
 Configuration:
 
-TODO
+* scriptPath: path to the groovy file
 
 Shortname: `groovyWriter`
 
@@ -683,10 +713,16 @@ A batchlet delegating to a groovy script.
 
 Sample:
 
-   TODO
+   <step id="step1">
+     <batchlet ref="groovyBatchlet">
+       <properties>
+         <property name="scriptPath" value="/groovy/batchlet.groovy"/>
+       </properties>
+     </batchlet>
+   </step>
 
 Configuration:
 
-TODO
+* scriptPath: path to the groovy file
 
 Shortname: `groovyBatchlet`
