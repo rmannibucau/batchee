@@ -40,18 +40,16 @@ import java.util.Properties;
 
 public class DefaultBatchArtifactFactory implements BatchArtifactFactory, XMLStreamConstants {
     private final static String BATCH_XML = "META-INF/batch.xml";
+    private final static String BATCHEE_XML = "META-INF/batchee.xml"; // used for out extensions to get short names, spec doesn't impose to read multiple batch.xml so using it as a workaround
     private final static QName BATCH_ROOT_ELEM = new QName("http://xmlns.jcp.org/xml/ns/javaee", "batch-artifacts");
 
     // Uses TCCL
     @Override
     public Instance load(final String batchId) {
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-        final ArtifactMap artifactMap = initArtifactMapFromClassLoader(tccl);
-        Object loadedArtifact = null;
-        if (artifactMap != null) {
-            loadedArtifact = artifactMap.getArtifactById(batchId);
-        }
+        final ArtifactMap artifactMap = createArtifactsMap(tccl);
 
+        Object loadedArtifact = artifactMap.getArtifactById(batchId);
         if (loadedArtifact == null) {
             try {
                 final Class<?> artifactClass = tccl.loadClass(batchId);
@@ -74,14 +72,20 @@ public class DefaultBatchArtifactFactory implements BatchArtifactFactory, XMLStr
         return new Instance(loadedArtifact, null);
     }
 
-    private ArtifactMap initArtifactMapFromClassLoader(final ClassLoader loader) {
-        final ArtifactMap map = new ArtifactMap();
+    private ArtifactMap createArtifactsMap(final ClassLoader tccl) {
+        final ArtifactMap artifactMap = new ArtifactMap();
+        initArtifactMapFromClassLoader(artifactMap, tccl, BATCH_XML);
+        initArtifactMapFromClassLoader(artifactMap, tccl, BATCHEE_XML);
+        return artifactMap;
+    }
+
+    private ArtifactMap initArtifactMapFromClassLoader(final ArtifactMap map, final ClassLoader loader, final String name) {
         final Enumeration<URL> urls;
         try {
-            urls = loader.getResources(BATCH_XML);
+            urls = loader.getResources(name);
         } catch (final IOException e) {
             // try it as fallback
-            final InputStream is = loader.getResourceAsStream(BATCH_XML);
+            final InputStream is = loader.getResourceAsStream(name);
             if (is == null) {
                 return null;
             }

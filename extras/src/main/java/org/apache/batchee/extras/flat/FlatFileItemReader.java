@@ -16,6 +16,7 @@
  */
 package org.apache.batchee.extras.flat;
 
+import org.apache.batchee.extras.locator.BeanLocator;
 import org.apache.batchee.extras.transaction.CountedReader;
 
 import javax.batch.api.BatchProperty;
@@ -30,6 +31,14 @@ import java.io.Serializable;
 public class FlatFileItemReader extends CountedReader implements ItemReader {
     @Inject
     @BatchProperty
+    private String locator;
+
+    @Inject
+    @BatchProperty
+    private String lineMapper;
+
+    @Inject
+    @BatchProperty
     private String input;
 
     @Inject
@@ -38,6 +47,7 @@ public class FlatFileItemReader extends CountedReader implements ItemReader {
 
     private BufferedReader reader = null;
     private String[] comments = new String[0];
+    private BeanLocator.LocatorInstance<LineMapper> mapper;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
@@ -47,6 +57,11 @@ public class FlatFileItemReader extends CountedReader implements ItemReader {
         final File file = new File(input);
         if (!file.exists()) {
             throw new BatchRuntimeException("'" + input + "' doesn't exist");
+        }
+        if (lineMapper != null) {
+            mapper = BeanLocator.Finder.get(locator).newInstance(LineMapper.class, lineMapper);
+        } else {
+            mapper = null;
         }
 
         if (commentStr == null) {
@@ -63,6 +78,7 @@ public class FlatFileItemReader extends CountedReader implements ItemReader {
         if (reader != null) {
             reader.close();
         }
+        mapper.release();
     }
 
     @Override
@@ -88,6 +104,9 @@ public class FlatFileItemReader extends CountedReader implements ItemReader {
     }
 
     protected Object preReturn(final String rawLine, final long lineNumber) {
+        if (mapper != null) {
+            return mapper.getValue().map(rawLine, lineNumber);
+        }
         return rawLine;
     }
 }

@@ -16,13 +16,13 @@
 <job id="flat-reader" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
   <step id="step1">
     <chunk>
-      <reader ref="org.apache.batchee.extras.flat.FlatFileItemReader">
+      <reader ref="flatReader">
         <properties>
           <property name="input" value="#{jobParameters['input']}" />
         </properties>
       </reader>
       <processor ref="org.apache.batchee.extras.FlatFileItemReaderTest$StoreItems" />
-      <writer ref="org.apache.batchee.extras.noop.NoopItemWriter" />
+      <writer ref="noopWriter" />
     </chunk>
   </step>
 </job>

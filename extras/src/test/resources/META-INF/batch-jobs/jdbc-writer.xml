@@ -17,7 +17,7 @@
   <step id="step1">
     <chunk>
       <reader ref="org.apache.batchee.extras.JdbcWriterTest$TwoItemsReader" />
-      <writer ref="org.apache.batchee.extras.jdbc.JdbcWriter">
+      <writer ref="jdbcWriter">
         <properties>
           <property name="mapper" value="org.apache.batchee.extras.JdbcWriterTest$SimpleMapper" />
           <property name="sql" value="insert into FOO (name) values(?)" />

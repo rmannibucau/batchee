@@ -102,6 +102,11 @@ Each time an implementation/reference needs to be resolved this API is used. The
 rules as the implementation used to resolve ref attributes of the batch xml file (it means you can use qualified names,
 CDI names if you are in a CDI container...).
 
+### A word on extensions
+
+Readers, writers, processors have always a shortname which will only work with batchee implementation.
+To use it with other JBatch implementation use the full qualified name.
+
 ### `org.apache.batchee.extras.chain.ChainProcessor`
 
 Allow to set multiple `javax.batch.api.chunk.ItemProcessor` through a single processor. The n+1 processor processes the
@@ -122,6 +127,8 @@ Sample:
   </step>
 
 Note: `org.apache.batchee.extras.chain.ChainBatchlet` does the same for `javax.batch.api.Batchlet`.
+
+Shortname: `chainProcessor`
 
 ### `org.apache.batchee.extras.flat.FlatFileItemReader`
 
@@ -153,6 +160,10 @@ Configuration:
 
 * comments: a comma separated list of prefixes marking comment lines
 * input: the input file path
+* locator: the `BeanLocator` used to find the lineMapper
+* lineMapper: an implementation of `org.apache.batchee.extras.flat.LineMapper`. If noone is provided the read object will be the line (as a `String`)
+
+Shortname: `flatReader`
 
 ### `org.apache.batchee.extras.flat.FlatFileItemWriter`
 
@@ -186,6 +197,8 @@ Configuration:
 * encoding: the output file encoding
 * output: the output file path
 * line.separator: the separator to use, the "line.separator" system property by default
+
+Shortname: `flatWriter`
 
 ### `org.apache.batchee.extras.jdbc.JdbcReader`
 
@@ -232,6 +245,8 @@ Here is a sample record mapper deleting items once read (Note: you probably don'
         }
     }
 
+Shortname: `jdbcReader`
+
 ### `org.apache.batchee.extras.jdbc.JdbcWriter`
 
 A writer storing items in a database.
@@ -275,6 +290,8 @@ Here is a sample object mapper:
         }
     }
 
+Shortname: `jdbcWriter`
+
 ### `org.apache.batchee.extras.jpa.JpaItemReader`
 
 Reads items from a JPA query.
@@ -305,6 +322,8 @@ Configuration:
 * detachEntities: a boolean to ask the reader to detach entities
 * jpaTransaction: should em.getTransaction() be used or not
 
+Shortname: `jpaReader`
+
 ### `org.apache.batchee.extras.jpa.JpaItemWriter`
 
 Write items through JPA API.
@@ -331,6 +350,8 @@ Configuration:
 * useMerge: a boolean to force using merge instead of persist
 * jpaTransaction: should em.getTransaction() be used or not
 
+Shortname: `jpaWriter`
+
 ### `org.apache.batchee.extras.noop.NoopItemWriter`
 
 A writer doing nothing (in <chunk/> a writer is mandatory so it can mock one if you don't need one).
@@ -344,6 +365,8 @@ Sample:
         <writer ref="org.apache.batchee.extras.noop.NoopItemWriter" />
       </chunk>
     </step>
+
+Shortname: `noopWriter`
 
 ### `org.apache.batchee.extras.typed.Typed[Reader|Processor|Writer]`
 
@@ -376,6 +399,8 @@ Configuration:
 * marshallingClasses: the comma separated list of JAXB classes to use to create the JAXBContext
 * marshallingPackage: if no marshallingClasses are provided this package is used to create the JAXBContext
 
+Shortname: `staxReader`
+
 ### `org.apache.batchee.extras.stax.StaxItemWriter`
 
 A writer using StAX API to write a XML file.
@@ -403,6 +428,8 @@ Configuration:
 * rootTag: the output rootTag (default "root")
 * marshallingClasses: the comma separated list of JAXB classes to use to create the JAXBContext
 * marshallingPackage: if no marshallingClasses are provided this package is used to create the JAXBContext
+
+Shortname: `staxWriter`
 
 ### `org.apache.batchee.beanio.BeanIOReader`
 
@@ -445,6 +472,8 @@ Configuration:
 * locale: the locale to use
 * errorHandler: the BeanIO error handler to use
 
+Shortname: `beanIOReader`
+
 ### `org.apache.batchee.beanio.BeanIOWriter`
 
 A writer using BeanIO.
@@ -474,6 +503,8 @@ Configuration:
 * line.separator: the line separator to use to separate items (default is no line separator)
 * templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ProducerTemplate` to use
 
+Shortname: `beanIOWriter`
+
 ### `org.apache.batchee.camel.CamelItemProcessor`
 
 A processor reusing Camel logic.
@@ -497,6 +528,8 @@ Configuration:
 * endpoint: the endpoint to use
 * templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ProducerTemplate` to use
 
+Shortname: `camelProcessor`
+
 ### `org.apache.batchee.camel.CamelChainItemProcessor`
 
 Same as previous one but with a chain
@@ -516,6 +549,8 @@ Sample:
     </step>
 
 Configuration: mainly the chain configuration excepted "chain" value is a list of endpoints.
+
+Shortname: `camelChainProcessor`
 
 ### `org.apache.batchee.camel.CamelItemReader`
 
@@ -540,6 +575,8 @@ Configuration:
 * endpoint: the input camel endpoint URI
 * templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ConsumerTemplate` to use
 
+Shortname: `camelReader`
+
 ### `org.apache.batchee.camel.CamelItemWriter`
 
 A writer using camel producer.
@@ -562,6 +599,8 @@ Configuration:
 
 * endpoint: the input camel endpoint URI
 * templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ProducerTemplate` to use
+
+Shortname: `camelWriter`
 
 ### Camel component
 

@@ -17,12 +17,12 @@
   <step id="step1">
     <chunk>
       <reader ref="org.apache.batchee.extras.ChainProcessorTest$TwoItemsReader" />
-      <processor ref="org.apache.batchee.extras.chain.ChainProcessor">
+      <processor ref="chainProcessor">
         <properties>
           <property name="chain" value="org.apache.batchee.extras.ChainProcessorTest$P1,org.apache.batchee.extras.ChainProcessorTest$P2"/>
         </properties>
       </processor>
-      <writer ref="org.apache.batchee.extras.noop.NoopItemWriter" />
+      <writer ref="noopWriter" />
     </chunk>
   </step>
 </job>

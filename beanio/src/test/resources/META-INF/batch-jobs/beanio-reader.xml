@@ -16,7 +16,7 @@
 <job id="flat-writer" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
   <step id="step1">
     <chunk>
-      <reader ref="org.apache.batchee.beanio.BeanIOReader">
+      <reader ref="beanIOReader">
         <properties>
           <property name="file" value="#{jobParameters['input']}"/>
           <property name="streamName" value="readerCSV"/>

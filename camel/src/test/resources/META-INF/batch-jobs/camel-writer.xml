@@ -17,7 +17,7 @@
   <step id="step1">
     <chunk>
       <reader ref="org.apache.batchee.camel.CamelWriterTest$Reader" />
-      <writer ref="org.apache.batchee.camel.CamelItemWriter">
+      <writer ref="camelWriter">
         <properties>
           <property name="endpoint" value="direct:writer"/>
         </properties>

@@ -17,7 +17,7 @@
   <step id="step1">
     <chunk>
       <reader ref="org.apache.batchee.camel.CamelChainProcessorTest$TwoItemsReader" />
-      <processor ref="org.apache.batchee.camel.CamelChainItemProcessor">
+      <processor ref="camelChainProcessor">
         <properties>
           <property name="chain" value="test:useless?value=first,test:useless?value=second"/>
         </properties>

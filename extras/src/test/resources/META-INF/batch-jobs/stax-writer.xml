@@ -17,7 +17,7 @@
   <step id="step1">
     <chunk>
       <reader ref="org.apache.batchee.extras.StaxItemWriterTest$TwoItemsReader" />
-      <writer ref="org.apache.batchee.extras.stax.StaxItemWriter">
+      <writer ref="staxWriter">
         <properties>
           <property name="output" value="#{jobParameters['output']}"/>
           <property name="marshallingClasses" value="org.apache.batchee.extras.StaxItemWriterTest$Foo"/>

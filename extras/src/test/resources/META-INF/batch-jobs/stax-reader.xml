@@ -16,7 +16,7 @@
 <job id="stax-reader" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
   <step id="step1">
     <chunk>
-      <reader ref="org.apache.batchee.extras.stax.StaxItemReader">
+      <reader ref="staxReader">
         <properties>
           <property name="input" value="#{jobParameters['input']}"/>
           <property name="marshallingClasses" value="org.apache.batchee.extras.StaxItemReaderTest$Bar"/>

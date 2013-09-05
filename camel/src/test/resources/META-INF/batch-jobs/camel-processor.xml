@@ -17,7 +17,7 @@
   <step id="step1">
     <chunk>
       <reader ref="org.apache.batchee.camel.CamelProcessorTest$TwoItemsReader" />
-      <processor ref="org.apache.batchee.camel.CamelItemProcessor">
+      <processor ref="camelProcessor">
         <properties>
           <property name="endpoint" value="direct:processor"/>
         </properties>
