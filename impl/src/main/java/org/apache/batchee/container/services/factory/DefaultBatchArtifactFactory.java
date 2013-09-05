@@ -26,9 +26,14 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -70,21 +75,41 @@ public class DefaultBatchArtifactFactory implements BatchArtifactFactory, XMLStr
     }
 
     private ArtifactMap initArtifactMapFromClassLoader(final ClassLoader loader) {
-        final InputStream is = getBatchXMLStreamFromClassLoader(loader);
-        ArtifactMap artifactMap = new ArtifactMap();
-        if (is == null) {
-            return null;
-        } else {
-            artifactMap = populateArtifactMapFromStream(artifactMap, is);
+        final ArtifactMap map = new ArtifactMap();
+        final Enumeration<URL> urls;
+        try {
+            urls = loader.getResources(BATCH_XML);
+        } catch (final IOException e) {
+            // try it as fallback
+            final InputStream is = loader.getResourceAsStream(BATCH_XML);
+            if (is == null) {
+                return null;
+            }
+            populateArtifactMapFromStream(map, is);
+            return map;
         }
-        return artifactMap;
+
+        final Collection<URL> parsedUrls = new LinkedList<URL>();
+        while (urls.hasMoreElements()) {
+            final URL url = urls.nextElement();
+            if (parsedUrls.contains(url)) { // can happen in weird classloaders graphs
+                continue;
+            }
+            parsedUrls.add(url);
+
+            final InputStream is;
+            try {
+                is = url.openStream();
+            } catch (final IOException e) {
+                throw new BatchContainerRuntimeException(e);
+            }
+
+            populateArtifactMapFromStream(map, is);
+        }
+        return map;
     }
 
-    protected InputStream getBatchXMLStreamFromClassLoader(final ClassLoader loader) {
-        return loader.getResourceAsStream(BATCH_XML);
-    }
-
-    protected ArtifactMap populateArtifactMapFromStream(final ArtifactMap tempMap, final InputStream is) {
+    protected void populateArtifactMapFromStream(final ArtifactMap tempMap, final InputStream is) {
         final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
         try {
             final XMLStreamReader xmlStreamReader = xmlInputFactory.createXMLStreamReader(is);
@@ -143,11 +168,14 @@ public class DefaultBatchArtifactFactory implements BatchArtifactFactory, XMLStr
                 }
             }
             xmlStreamReader.close();
-            is.close();
-            return tempMap;
-
         } catch (final Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            try {
+                is.close();
+            } catch (final IOException e) {
+                // no-op
+            }
         }
     }
 
