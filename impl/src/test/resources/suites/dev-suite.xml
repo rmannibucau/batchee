@@ -25,9 +25,9 @@
 
   <test name="dev">
     <classes>
-      <class name="com.ibm.jbatch.tck.tests.jslxml.StartLimitTests">
+      <class name="com.ibm.jbatch.tck.tests.jslxml.JobOperatorTests">
         <methods>
-          <include name="testStartLimitVariation1" />
+
         </methods>
       </class>
     </classes>
