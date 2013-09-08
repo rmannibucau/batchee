@@ -115,14 +115,13 @@ public class JobOperatorImpl implements JobOperator {
         final InternalJobExecution jobEx = PERSISTENCE_SERVICE.jobOperatorGetJobExecution(executionId);
 
         // if it is not in STARTED or STARTING state, mark it as ABANDONED
+        System.out.println(jobEx.getBatchStatus());
         if (jobEx.getBatchStatus().equals(BatchStatus.STARTED) || jobEx.getBatchStatus().equals(BatchStatus.STARTING)) {
             throw new JobExecutionIsRunningException("Job Execution: " + executionId + " is still running");
         }
 
         // update table to reflect ABANDONED state
-        final long time = System.currentTimeMillis();
-        final Timestamp timestamp = new Timestamp(time);
-        PERSISTENCE_SERVICE.updateBatchStatusOnly(jobEx.getExecutionId(), BatchStatus.ABANDONED, timestamp);
+        PERSISTENCE_SERVICE.updateBatchStatusOnly(jobEx.getExecutionId(), BatchStatus.ABANDONED, new Timestamp(System.currentTimeMillis()));
 
         // Don't forget to update JOBSTATUS table
         STATUS_MANAGER_SERVICE.updateJobBatchStatus(jobEx.getInstanceId(), BatchStatus.ABANDONED);

@@ -23,6 +23,7 @@ import org.apache.batchee.container.services.executor.DefaultThreadPoolService;
 import org.apache.batchee.container.services.factory.DefaultBatchArtifactFactory;
 import org.apache.batchee.container.services.kernel.DefaultBatchKernel;
 import org.apache.batchee.container.services.loader.DefaultJobXMLLoaderService;
+import org.apache.batchee.container.services.locator.SingletonLocator;
 import org.apache.batchee.container.services.persistence.MemoryPersistenceManager;
 import org.apache.batchee.container.services.security.DefaultSecurityService;
 import org.apache.batchee.container.services.status.DefaultJobStatusManager;
@@ -52,7 +53,7 @@ public class ServicesManager implements BatchContainerConstants {
     private static final Map<String, String> SERVICE_IMPL_CLASS_NAMES = new ConcurrentHashMap<String, String>();
     static {
         SERVICE_IMPL_CLASS_NAMES.put(TransactionManagementService.class.getName(), DefaultBatchTransactionService.class.getName());
-        // SERVICE_IMPL_CLASS_NAMES.put(PersistenceManagerService.class.getName(), JDBCPersistenceManager.class.getName());
+        // SERVICE_IMPL_CLASS_NAMES.put(PersistenceManagerService.class.getName(), JDBCPersistenceManager.class.getName()); // too slow in embedded mode to be usable
         SERVICE_IMPL_CLASS_NAMES.put(PersistenceManagerService.class.getName(), MemoryPersistenceManager.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(JobStatusManagerService.class.getName(), DefaultJobStatusManager.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(BatchThreadPoolService.class.getName(), DefaultThreadPoolService.class.getName());
@@ -62,13 +63,11 @@ public class ServicesManager implements BatchContainerConstants {
         SERVICE_IMPL_CLASS_NAMES.put(SecurityService.class.getName(), DefaultSecurityService.class.getName());
     }
 
-    private ServicesManager() {
-        // no-op
-    }
+    private static ServicesManagerLocator servicesManagerLocator = SingletonLocator.INSTANCE;
 
-    // Lazily-loaded singleton.
-    private static class Holder {
-        private static final ServicesManager INSTANCE = new ServicesManager();
+    // designed to be used from app or a server
+    public static void setServicesManagerLocator(final ServicesManagerLocator locator) {
+        servicesManagerLocator = locator;
     }
 
     // Declared 'volatile' to allow use in double-checked locking.  This 'isInited'
@@ -120,16 +119,16 @@ public class ServicesManager implements BatchContainerConstants {
      * configurable, (e.g. via MBeans).  Things like the database config used by the batch runtime's
      * persistent store are hardened then, as are the names of the service impls to use.
      */
-    private void initIfNecessary() {
+    public void init(final Properties props) {
         // Use double-checked locking with volatile.
         if (!isInited) {
             synchronized (isInitedLock) {
                 if (!isInited) {
                     batchRuntimeConfig = new Properties();
 
-                    batchRuntimeConfig.putAll(SERVICE_IMPL_CLASS_NAMES);
-                    batchRuntimeConfig.putAll(System.getProperties());
+                    batchRuntimeConfig.putAll(SERVICE_IMPL_CLASS_NAMES); // defaults
 
+                    // file in the classloader
                     final InputStream batchServicesListInputStream = getClass().getResourceAsStream(SERVICES_CONFIGURATION_FILE);
                     if (batchServicesListInputStream != null) {
                         try {
@@ -145,6 +144,14 @@ public class ServicesManager implements BatchContainerConstants {
                         }
                     }
 
+                    // API overriding
+                    if (props != null) {
+                        batchRuntimeConfig.putAll(props);
+                    }
+
+                    // JVM instance overriding
+                    batchRuntimeConfig.putAll(System.getProperties());
+
                     isInited = Boolean.TRUE;
                 }
             }
@@ -152,16 +159,16 @@ public class ServicesManager implements BatchContainerConstants {
     }
 
     private static <T extends BatchService> T getService(final Class<T> clazz) throws BatchContainerServiceException {
-        Holder.INSTANCE.initIfNecessary();
-        T service = clazz.cast(Holder.INSTANCE.serviceRegistry.get(clazz.getName()));
+        final ServicesManager servicesManager = servicesManagerLocator.find();
+        T service = clazz.cast(servicesManager.serviceRegistry.get(clazz.getName()));
         if (service == null) {
             // Probably don't want to be loading two on two different threads so lock the whole table.
-            synchronized (Holder.INSTANCE.serviceRegistry) {
-                service = clazz.cast(Holder.INSTANCE.serviceRegistry.get(clazz.getName()));
+            synchronized (servicesManager.serviceRegistry) {
+                service = clazz.cast(servicesManager.serviceRegistry.get(clazz.getName()));
                 if (service == null) {
                     service = loadServiceHelper(clazz);
-                    service.init(Holder.INSTANCE.batchRuntimeConfig);
-                    Holder.INSTANCE.serviceRegistry.putIfAbsent(clazz.getName(), service);
+                    service.init(servicesManager.batchRuntimeConfig);
+                    servicesManager.serviceRegistry.putIfAbsent(clazz.getName(), service);
                 }
             }
         }
@@ -169,13 +176,15 @@ public class ServicesManager implements BatchContainerConstants {
     }
 
     private static <T extends BatchService> T loadServiceHelper(final Class<T> serviceType) {
+        final ServicesManager servicesManager = servicesManagerLocator.find();
+
         T service = null;
-        String className = Holder.INSTANCE.batchRuntimeConfig.getProperty(serviceType.getSimpleName());
+        String className = servicesManager.batchRuntimeConfig.getProperty(serviceType.getSimpleName());
         try {
             if (className != null) {
                 service = load(serviceType, className);
             } else {
-                className = Holder.INSTANCE.batchRuntimeConfig.getProperty(serviceType.getName());
+                className = servicesManager.batchRuntimeConfig.getProperty(serviceType.getName());
                 if (className != null) {
                     service = load(serviceType, className);
                 }

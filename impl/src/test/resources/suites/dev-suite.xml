@@ -27,7 +27,7 @@
     <classes>
       <class name="com.ibm.jbatch.tck.tests.jslxml.JobOperatorTests">
         <methods>
-
+          <include name="testJobOperatorAbandonJobDuringARestart" />
         </methods>
       </class>
     </classes>

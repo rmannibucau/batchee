@@ -71,6 +71,7 @@
     1) mvn process-test-classes
     2) cp -r target/tck/jsr352-tck-1.0/artifacts/ /tmp
     3) activate the following dependencies
+    -->
     <dependency>
       <groupId>tck</groupId>
       <artifactId>tck-impl</artifactId>
@@ -85,7 +86,7 @@
       <systemPath>/tmp/artifacts/jsr352-tck-SPI.jar</systemPath>
       <scope>system</scope>
     </dependency>
-    -->
+
 
   </dependencies>
 

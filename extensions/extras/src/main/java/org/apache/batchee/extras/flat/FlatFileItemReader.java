@@ -78,7 +78,9 @@ public class FlatFileItemReader extends CountedReader implements ItemReader {
         if (reader != null) {
             reader.close();
         }
-        mapper.release();
+        if (mapper != null) {
+            mapper.release();
+        }
     }
 
     @Override

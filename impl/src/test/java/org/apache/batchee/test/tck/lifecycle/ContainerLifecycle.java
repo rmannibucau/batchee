@@ -17,39 +17,40 @@
 package org.apache.batchee.test.tck.lifecycle;
 
 import org.apache.derby.jdbc.EmbeddedDriver;
+import org.apache.openejb.testng.PropertiesBuilder;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
 import javax.batch.operations.BatchRuntimeException;
 import javax.ejb.embeddable.EJBContainer;
-import java.util.Properties;
+import java.util.logging.Logger;
 
 // forces the execution in embedded container
 public class ContainerLifecycle implements ITestListener {
     private EJBContainer container;
+    private Logger logger = null;
 
     @Override
     public void onTestStart(final ITestResult iTestResult) {
-        System.out.println("====================================================================================================");
-        System.out.println(iTestResult.getMethod().getRealClass().getName() + "#" + iTestResult.getMethod().getMethodName());
-        System.out.println("----------------------------------------------------------------------------------------------------");
-        System.out.println("");
+        logger.info("====================================================================================================");
+        logger.info(iTestResult.getMethod().getRealClass().getName() + "#" + iTestResult.getMethod().getMethodName());
+        logger.info("----------------------------------------------------------------------------------------------------");
     }
 
     @Override
     public void onTestSuccess(final ITestResult iTestResult) {
-        System.out.println(">>> SUCCESS");
+        logger.info(">>> SUCCESS");
     }
 
     @Override
     public void onTestFailure(final ITestResult iTestResult) {
-        System.out.println(">>> FAILURE");
+        logger.severe(">>> FAILURE");
     }
 
     @Override
     public void onTestSkipped(final ITestResult iTestResult) {
-        System.out.println(">>> SKIPPED");
+        logger.warning(">>> SKIPPED");
     }
 
     @Override
@@ -59,7 +60,22 @@ public class ContainerLifecycle implements ITestListener {
 
     @Override
     public void onStart(final ITestContext iTestContext) {
-        container = EJBContainer.createEJBContainer(defineDS(defineDS(new Properties(), "orderDB", true), "batch", false));
+        final String loggerName = "test-lifecycle";
+
+        container = EJBContainer.createEJBContainer(new PropertiesBuilder()
+            .p("openejb.jul.forceReload", Boolean.TRUE.toString())
+            .p("openejb.log.color", Boolean.toString(!System.getProperty("os.name").toLowerCase().contains("win")))
+            .p(loggerName + ".level", "INFO")
+
+            .p("jdbc/orderDB", "new://Resource?type=DataSource")
+            .p("jdbc/orderDB" + ".JdbcDriver", EmbeddedDriver.class.getName())
+            .p("jdbc/orderDB" + ".JdbcUrl", "jdbc:derby:memory:orderDB" + ";create=true")
+            .p("jdbc/orderDB" + ".UserName", "app")
+            .p("jdbc/orderDB" + ".Password", "app")
+            .p("jdbc/orderDB" + ".JtaManaged", Boolean.TRUE.toString())
+            .build());
+
+        logger = Logger.getLogger(loggerName);
     }
 
     @Override
@@ -71,15 +87,5 @@ public class ContainerLifecycle implements ITestListener {
                 throw new BatchRuntimeException(e);
             }
         }
-    }
-
-    private static Properties defineDS(final Properties p, final String name, final boolean jta) {
-        p.setProperty("jdbc/" + name, "new://Resource?type=DataSource");
-        p.setProperty("jdbc/" + name + ".JdbcDriver", EmbeddedDriver.class.getName());
-        p.setProperty("jdbc/" + name + ".JdbcUrl", "jdbc:derby:memory:" + name + ";create=true");
-        p.setProperty("jdbc/" + name + ".UserName", "app");
-        p.setProperty("jdbc/" + name + ".Password", "app");
-        p.setProperty("jdbc/" + name + ".JtaManaged", Boolean.toString(jta));
-        return p;
     }
 }
