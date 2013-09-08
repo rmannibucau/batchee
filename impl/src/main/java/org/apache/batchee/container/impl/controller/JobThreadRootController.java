@@ -38,8 +38,12 @@ import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public abstract class JobThreadRootController implements ThreadRootController {
+    private static final Logger LOGGER = Logger.getLogger(JobThreadRootController.class.getName());
+
     protected final RuntimeJobExecution jobExecution;
     protected final JobContextImpl jobContext;
     protected final long rootJobExecutionId;
@@ -111,6 +115,7 @@ public abstract class JobThreadRootController implements ThreadRootController {
             // We still want to try to call the afterJob() listener and persist the batch and exit
             // status for the failure in an orderly fashion.  So catch and continue.
             batchStatusFailedFromException();
+            LOGGER.log(Level.SEVERE, t.getMessage(), t);
         }
 
         endOfJob();

@@ -57,22 +57,21 @@ public class JobExecutionImpl implements InternalJobExecution {
 
     @Override
     public BatchStatus getBatchStatus() {
-
-        BatchStatus batchStatus;
-
+        final BatchStatus batchStatus;
         if (this.jobContext != null) {
             batchStatus = this.jobContext.getBatchStatus();
-        } else {
+        } else if (this.batchStatus == null) {
             // old job, retrieve from the backend
             batchStatus = BatchStatus.valueOf(PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionBatchStatus(executionID));
+        } else {
+            batchStatus = BatchStatus.valueOf(this.batchStatus);
         }
         return batchStatus;
     }
 
     @Override
     public Date getCreateTime() {
-
-        if (this.jobContext == null) {
+        if (createTime == null && this.jobContext == null) {
             createTime = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.CREATE);
         }
 
@@ -84,7 +83,7 @@ public class JobExecutionImpl implements InternalJobExecution {
 
     @Override
     public Date getEndTime() {
-        if (this.jobContext == null) {
+        if (endTime == null && this.jobContext == null) {
             endTime = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.END);
         }
 
@@ -104,14 +103,17 @@ public class JobExecutionImpl implements InternalJobExecution {
         if (this.jobContext != null) {
             return this.jobContext.getExitStatus();
         }
+        if (this.exitStatus != null) {
+            return this.exitStatus;
+        }
+
         exitStatus = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionExitStatus(executionID);
         return exitStatus;
     }
 
     @Override
     public Date getLastUpdatedTime() {
-
-        if (this.jobContext == null) {
+        if (updateTime == null && this.jobContext == null) {
             this.updateTime = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.LAST_UPDATED);
         }
 
@@ -123,8 +125,7 @@ public class JobExecutionImpl implements InternalJobExecution {
 
     @Override
     public Date getStartTime() {
-
-        if (this.jobContext == null) {
+        if (startTime == null && this.jobContext == null) {
             startTime = PERSISTENCE_MANAGER_SERVICE.jobOperatorQueryJobExecutionTimestamp(executionID, TimestampType.STARTED);
         }
 

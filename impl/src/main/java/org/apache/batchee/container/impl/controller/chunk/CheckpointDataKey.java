@@ -54,4 +54,27 @@ public class CheckpointDataKey {
     private String stringify() {
         return _jobInstanceId + "," + _stepName + "," + _batchDataStreamName;
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final CheckpointDataKey that = CheckpointDataKey.class.cast(o);
+        return _jobInstanceId == that._jobInstanceId
+            && _batchDataStreamName.equals(that._batchDataStreamName)
+            && _stepName.equals(that._stepName);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (_jobInstanceId ^ (_jobInstanceId >>> 32));
+        result = 31 * result + _batchDataStreamName.hashCode();
+        result = 31 * result + _stepName.hashCode();
+        return result;
+    }
 }

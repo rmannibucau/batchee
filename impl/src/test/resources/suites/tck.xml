@@ -22,10 +22,8 @@
 
   <test name="JSR352 TCK">
     <packages>
-      <package name="com.ibm.jbatch.tck.tests.ee"/>
-      <!-- EE -->
-      <package name="com.ibm.jbatch.tck.tests.jslxml"/>
-      <!-- JSE -->
+      <package name="com.ibm.jbatch.tck.tests.ee"/> <!-- EE -->
+      <package name="com.ibm.jbatch.tck.tests.jslxml"/> <!-- JSE -->
     </packages>
   </test>
 </suite>

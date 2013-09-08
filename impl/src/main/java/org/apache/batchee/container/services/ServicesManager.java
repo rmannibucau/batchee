@@ -23,7 +23,7 @@ import org.apache.batchee.container.services.executor.DefaultThreadPoolService;
 import org.apache.batchee.container.services.factory.DefaultBatchArtifactFactory;
 import org.apache.batchee.container.services.kernel.DefaultBatchKernel;
 import org.apache.batchee.container.services.loader.DefaultJobXMLLoaderService;
-import org.apache.batchee.container.services.persistence.JDBCPersistenceManager;
+import org.apache.batchee.container.services.persistence.MemoryPersistenceManager;
 import org.apache.batchee.container.services.security.DefaultSecurityService;
 import org.apache.batchee.container.services.status.DefaultJobStatusManager;
 import org.apache.batchee.container.services.transaction.DefaultBatchTransactionService;
@@ -52,7 +52,8 @@ public class ServicesManager implements BatchContainerConstants {
     private static final Map<String, String> SERVICE_IMPL_CLASS_NAMES = new ConcurrentHashMap<String, String>();
     static {
         SERVICE_IMPL_CLASS_NAMES.put(TransactionManagementService.class.getName(), DefaultBatchTransactionService.class.getName());
-        SERVICE_IMPL_CLASS_NAMES.put(PersistenceManagerService.class.getName(), JDBCPersistenceManager.class.getName());
+        // SERVICE_IMPL_CLASS_NAMES.put(PersistenceManagerService.class.getName(), JDBCPersistenceManager.class.getName());
+        SERVICE_IMPL_CLASS_NAMES.put(PersistenceManagerService.class.getName(), MemoryPersistenceManager.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(JobStatusManagerService.class.getName(), DefaultJobStatusManager.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(BatchThreadPoolService.class.getName(), DefaultThreadPoolService.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(BatchKernelService.class.getName(), DefaultBatchKernel.class.getName());

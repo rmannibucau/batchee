@@ -368,7 +368,7 @@ public class PartitionedStepController extends BaseStepController {
         //If rollback is false we never issued a rollback so we can issue a logicalTXSynchronizationBeforeCompletion
         //NOTE: this will get issued even in a subjob fails or stops if no logicalTXSynchronizationRollback method is provied
         //We are assuming that not providing a rollback was intentional
-        if (rollback == true) {
+        if (rollback) {
             if (this.partitionReducerProxy != null) {
                 this.partitionReducerProxy.rollbackPartitionedStep();
             }

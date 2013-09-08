@@ -97,6 +97,8 @@ Here are the available configurable services:
     * persistence.database.url: jdbc url to use for persistence when using JDBC default implementation if no jndi name is provided
     * persistence.database.user: jdbc user to use for persistence when using JDBC default implementation if no jndi name is provided
     * persistence.database.password: jdbc password to use for persistence when using JDBC default implementation if no jndi name is provided
+    * persistence.memory.global: storing statically data when using in memory persistence
+    * persistence.memory.max-jobs-instances: number of job instance data to store, default to 1000, -1 means keep all in memory
 * JobStatusManagerService
 * BatchThreadPoolService
 * BatchKernelService

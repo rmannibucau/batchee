@@ -18,16 +18,16 @@ package org.apache.batchee.container.services.persistence;
 
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.exception.PersistenceException;
-import org.apache.batchee.container.impl.MetricImpl;
-import org.apache.batchee.container.impl.controller.PartitionedStepBuilder;
-import org.apache.batchee.container.impl.StepContextImpl;
 import org.apache.batchee.container.impl.JobExecutionImpl;
 import org.apache.batchee.container.impl.JobInstanceImpl;
-import org.apache.batchee.container.impl.jobinstance.RuntimeFlowInSplitExecution;
-import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
+import org.apache.batchee.container.impl.MetricImpl;
+import org.apache.batchee.container.impl.StepContextImpl;
 import org.apache.batchee.container.impl.StepExecutionImpl;
+import org.apache.batchee.container.impl.controller.PartitionedStepBuilder;
 import org.apache.batchee.container.impl.controller.chunk.CheckpointData;
 import org.apache.batchee.container.impl.controller.chunk.CheckpointDataKey;
+import org.apache.batchee.container.impl.jobinstance.RuntimeFlowInSplitExecution;
+import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.services.InternalJobExecution;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.container.status.StepStatus;
@@ -67,12 +67,80 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPersistenceManagerSQLConstants {
-    private static final String DEFAULT_JDBC_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
-    private static final String DEFAULT_JDBC_URL = "jdbc:derby:memory:jbatch;create=true";
-    private static final String DEFAULT_DB_SCHEMA = "JBATCH";
-    private static final String DEFAULT_JDBC_USER = "app";
-    private static final String DEFAULT_JDBC_PASSWORD = "app";
+public class JDBCPersistenceManager implements PersistenceManagerService {
+    static interface SQLConstants {
+        final String JOBSTATUS_TABLE = "JOBSTATUS";
+        final String STEPSTATUS_TABLE = "STEPSTATUS";
+        final String CHECKPOINTDATA_TABLE = "CHECKPOINTDATA";
+        final String JOBINSTANCEDATA_TABLE = "JOBINSTANCEDATA";
+        final String EXECUTIONINSTANCEDATA_TABLE = "EXECUTIONINSTANCEDATA";
+        final String STEPEXECUTIONINSTANCEDATA_TABLE = "STEPEXECUTIONINSTANCEDATA";
+
+        final String CREATE_TAB_JOBSTATUS = "CREATE TABLE JOBSTATUS("
+            + "id BIGINT CONSTRAINT JOBSTATUS_PK PRIMARY KEY,"
+            + "obj BLOB,"
+            + "CONSTRAINT JOBSTATUS_JOBINST_FK FOREIGN KEY (id) REFERENCES JOBINSTANCEDATA (jobinstanceid) ON DELETE CASCADE)";
+        final String CREATE_TAB_STEPSTATUS = "CREATE TABLE STEPSTATUS("
+            + "id BIGINT CONSTRAINT STEPSTATUS_PK PRIMARY KEY,"
+            + "obj BLOB,"
+            + "CONSTRAINT STEPSTATUS_STEPEXEC_FK FOREIGN KEY (id) REFERENCES STEPEXECUTIONINSTANCEDATA (stepexecid) ON DELETE CASCADE)";
+        final String CREATE_TAB_CHECKPOINTDATA = "CREATE TABLE CHECKPOINTDATA("
+            + "id VARCHAR(512),obj BLOB)";
+        final String CREATE_TAB_JOBINSTANCEDATA = "CREATE TABLE JOBINSTANCEDATA("
+            + "jobinstanceid BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1) CONSTRAINT JOBINSTANCE_PK PRIMARY KEY,"
+            + "name VARCHAR(512),"
+            + "apptag VARCHAR(512))";
+        final String CREATE_TAB_EXECUTIONINSTANCEDATA = "CREATE TABLE EXECUTIONINSTANCEDATA("
+            + "jobexecid BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1) CONSTRAINT JOBEXECUTION_PK PRIMARY KEY,"
+            + "jobinstanceid BIGINT,"
+            + "createtime TIMESTAMP,"
+            + "starttime TIMESTAMP,"
+            + "endtime TIMESTAMP,"
+            + "updatetime TIMESTAMP,"
+            + "parameters BLOB,"
+            + "batchstatus VARCHAR(512),"
+            + "exitstatus VARCHAR(512),"
+            + "CONSTRAINT JOBINST_JOBEXEC_FK FOREIGN KEY (jobinstanceid) REFERENCES JOBINSTANCEDATA (jobinstanceid))";
+        final String CREATE_TAB_STEPEXECUTIONINSTANCEDATA = "CREATE TABLE STEPEXECUTIONINSTANCEDATA("
+            + "stepexecid BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1) CONSTRAINT STEPEXECUTION_PK PRIMARY KEY,"
+            + "jobexecid BIGINT,"
+            + "batchstatus VARCHAR(512),"
+            + "exitstatus VARCHAR(512),"
+            + "stepname VARCHAR(512),"
+            + "readcount INTEGER,"
+            + "writecount INTEGER,"
+            + "commitcount INTEGER,"
+            + "rollbackcount INTEGER,"
+            + "readskipcount INTEGER,"
+            + "processskipcount INTEGER,"
+            + "filtercount INTEGER,"
+            + "writeskipcount INTEGER,"
+            + "startTime TIMESTAMP,"
+            + "endTime TIMESTAMP,"
+            + "persistentData BLOB,"
+            + "CONSTRAINT JOBEXEC_STEPEXEC_FK FOREIGN KEY (jobexecid) REFERENCES EXECUTIONINSTANCEDATA (jobexecid))";
+
+        final String INSERT_CHECKPOINTDATA = "insert into checkpointdata values(?, ?)";
+
+        final String UPDATE_CHECKPOINTDATA = "update checkpointdata set obj = ? where id = ?";
+
+        final String SELECT_CHECKPOINTDATA = "select id, obj from checkpointdata where id = ?";
+
+        final String CREATE_CHECKPOINTDATA_INDEX = "create index chk_index on checkpointdata(id)";
+
+        // JOB OPERATOR QUERIES
+        final String SELECT_JOBINSTANCEDATA_COUNT = "select count(jobinstanceid) as jobinstancecount from jobinstancedata where name = ?";
+
+        final String SELECT_JOBINSTANCEDATA_IDS = "select jobinstanceid from jobinstancedata where name = ? order by jobinstanceid desc";
+    }
+
+    static interface Defaults {
+        final String JDBC_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
+        final String JDBC_URL = "jdbc:derby:memory:jbatch;create=true";
+        final String JDBC_USER = "app";
+        final String JDBC_PASSWORD = "app";
+        final String SCHEMA = "JBATCH";
+    }
 
     protected DataSource dataSource = null;
     protected String jndiName = null;
@@ -85,7 +153,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
 
     @Override
     public void init(final Properties batchConfig) throws BatchContainerServiceException {
-        schema = batchConfig.getProperty("persistence.database.schema", DEFAULT_DB_SCHEMA);
+        schema = batchConfig.getProperty("persistence.database.schema", Defaults.SCHEMA);
 
         if (batchConfig.containsKey("persistence.database.jndi")) {
             jndiName = batchConfig.getProperty("persistence.database.jndi", "");
@@ -101,15 +169,15 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
             }
 
         } else {
-            driver = batchConfig.getProperty("persistence.database.driver", DEFAULT_JDBC_DRIVER);
-            url = batchConfig.getProperty("persistence.database.url", DEFAULT_JDBC_URL);
-            user = batchConfig.getProperty("persistence.database.user", DEFAULT_JDBC_USER);
-            pwd = batchConfig.getProperty("persistence.database.password", DEFAULT_JDBC_PASSWORD);
+            driver = batchConfig.getProperty("persistence.database.driver", Defaults.JDBC_DRIVER);
+            url = batchConfig.getProperty("persistence.database.url", Defaults.JDBC_URL);
+            user = batchConfig.getProperty("persistence.database.user", Defaults.JDBC_USER);
+            pwd = batchConfig.getProperty("persistence.database.password", Defaults.JDBC_PASSWORD);
         }
 
         try {
             // only auto-create on Derby
-            if (isDerby()) {
+            if ("create".equalsIgnoreCase(batchConfig.getProperty("persistence.database.ddl", "create")) && isDerby()) {
                 if (!isSchemaValid()) {
                     createSchema();
                 }
@@ -164,13 +232,13 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
      * @throws SQLException
      */
     private void checkAllTables() throws SQLException {
-        createIfNotExists(CHECKPOINTDATA_TABLE, CREATE_TAB_CHECKPOINTDATA);
-        executeStatement(CREATE_CHECKPOINTDATA_INDEX);
-        createIfNotExists(JOBINSTANCEDATA_TABLE, CREATE_TAB_JOBINSTANCEDATA);
-        createIfNotExists(EXECUTIONINSTANCEDATA_TABLE, CREATE_TAB_EXECUTIONINSTANCEDATA);
-        createIfNotExists(STEPEXECUTIONINSTANCEDATA_TABLE, CREATE_TAB_STEPEXECUTIONINSTANCEDATA);
-        createIfNotExists(JOBSTATUS_TABLE, CREATE_TAB_JOBSTATUS);
-        createIfNotExists(STEPSTATUS_TABLE, CREATE_TAB_STEPSTATUS);
+        createIfNotExists(SQLConstants.CHECKPOINTDATA_TABLE, SQLConstants.CREATE_TAB_CHECKPOINTDATA);
+        executeStatement(SQLConstants.CREATE_CHECKPOINTDATA_INDEX);
+        createIfNotExists(SQLConstants.JOBINSTANCEDATA_TABLE, SQLConstants.CREATE_TAB_JOBINSTANCEDATA);
+        createIfNotExists(SQLConstants.EXECUTIONINSTANCEDATA_TABLE, SQLConstants.CREATE_TAB_EXECUTIONINSTANCEDATA);
+        createIfNotExists(SQLConstants.STEPEXECUTIONINSTANCEDATA_TABLE, SQLConstants.CREATE_TAB_STEPEXECUTIONINSTANCEDATA);
+        createIfNotExists(SQLConstants.JOBSTATUS_TABLE, SQLConstants.CREATE_TAB_JOBSTATUS);
+        createIfNotExists(SQLConstants.STEPSTATUS_TABLE, SQLConstants.CREATE_TAB_STEPSTATUS);
     }
 
     /**
@@ -211,7 +279,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
     /* (non-Javadoc)
      * @see org.apache.batchee.container.services.impl.AbstractPersistenceManagerImpl#createCheckpointData(com.ibm.ws.batch.container.checkpoint.CheckpointDataKey, com.ibm.ws.batch.container.checkpoint.CheckpointData)
      */
-    @Override
     public void createCheckpointData(final CheckpointDataKey key, final CheckpointData value) {
         insertCheckpointData(key.getCommaSeparatedKey(), value);
     }
@@ -225,10 +292,10 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
     }
 
     /* (non-Javadoc)
-     * @see org.apache.batchee.container.services.impl.AbstractPersistenceManagerImpl#updateCheckpointData(com.ibm.ws.batch.container.checkpoint.CheckpointDataKey, com.ibm.ws.batch.container.checkpoint.CheckpointData)
+     * @see org.apache.batchee.container.services.impl.AbstractPersistenceManagerImpl#setCheckpointData(com.ibm.ws.batch.container.checkpoint.CheckpointDataKey, com.ibm.ws.batch.container.checkpoint.CheckpointData)
      */
     @Override
-    public void updateCheckpointData(final CheckpointDataKey key, final CheckpointData value) {
+    public void setCheckpointData(final CheckpointDataKey key, final CheckpointData value) {
         CheckpointData data = queryCheckpointData(key.getCommaSeparatedKey());
         if (data != null) {
             updateCheckpointData(key.getCommaSeparatedKey(), value);
@@ -317,7 +384,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
         CheckpointData data = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SELECT_CHECKPOINTDATA);
+            statement = conn.prepareStatement(SQLConstants.SELECT_CHECKPOINTDATA);
             statement.setObject(1, key);
             rs = statement.executeQuery();
             if (rs.next()) {
@@ -353,7 +420,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
         byte[] b;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(INSERT_CHECKPOINTDATA);
+            statement = conn.prepareStatement(SQLConstants.INSERT_CHECKPOINTDATA);
             baos = new ByteArrayOutputStream();
             oout = new ObjectOutputStream(baos);
             oout.writeObject(value);
@@ -402,7 +469,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
         byte[] b;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(UPDATE_CHECKPOINTDATA);
+            statement = conn.prepareStatement(SQLConstants.UPDATE_CHECKPOINTDATA);
             baos = new ByteArrayOutputStream();
             oout = new ObjectOutputStream(baos);
             oout.writeObject(value);
@@ -540,7 +607,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SELECT_JOBINSTANCEDATA_COUNT);
+            statement = conn.prepareStatement(SQLConstants.SELECT_JOBINSTANCEDATA_COUNT);
             statement.setString(1, jobName);
             rs = statement.executeQuery();
             rs.next();
@@ -597,7 +664,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SELECT_JOBINSTANCEDATA_IDS);
+            statement = conn.prepareStatement(SQLConstants.SELECT_JOBINSTANCEDATA_IDS);
             statement.setObject(1, jobName);
             rs = statement.executeQuery();
             while (rs.next()) {
@@ -1537,7 +1604,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService, JDBCPe
      */
     @Override
     public StepExecutionImpl createStepExecution(final long rootJobExecId, final StepContextImpl stepContext) {
-        final StepExecutionImpl stepExecution;
         final String batchStatus = stepContext.getBatchStatus() == null ? BatchStatus.STARTING.name() : stepContext.getBatchStatus().name();
         final String exitStatus = stepContext.getExitStatus();
         final String stepName = stepContext.getStepName();

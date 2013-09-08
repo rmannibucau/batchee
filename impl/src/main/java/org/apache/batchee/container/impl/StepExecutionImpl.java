@@ -16,7 +16,6 @@
 */
 package org.apache.batchee.container.impl;
 
-import javax.batch.api.partition.PartitionPlan;
 import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.Metric;
 import javax.batch.runtime.StepExecution;
@@ -33,7 +32,6 @@ public class StepExecutionImpl implements StepExecution, Serializable {
 
     private long filterCount = 0;
     private long jobExecutionId = 0;
-    private Timestamp lastUpdateTime = null;
     private long processSkipCount = 0;
     private long readCount = 0;
     private long readSkipCount = 0;
@@ -44,8 +42,6 @@ public class StepExecutionImpl implements StepExecution, Serializable {
 
     private long writeCount = 0;
     private long writeSkipCount = 0;
-
-    private PartitionPlan plan = null;
 
     private Serializable persistentUserData = null;
 
@@ -79,11 +75,6 @@ public class StepExecutionImpl implements StepExecution, Serializable {
         }
     }
 
-    // Not a spec API but for internal use.
-    public long getJobExecutionId() {
-        return this.jobExecutionId;
-    }
-
     @Override
     public String getExitStatus() {
         if (stepContext != null) {
@@ -108,11 +99,6 @@ public class StepExecutionImpl implements StepExecution, Serializable {
 
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("---------------------------------------------------------------------------------");
-        buf.append("getStepName(): " + this.getStepName() + "\n");
-        buf.append("getStepExecutionId(): " + this.stepExecutionId + "\n");
-        buf.append("getJobExecutionId(): " + this.jobExecutionId + "\n");
         //buf.append("getCommitCount(): " + this.getCommitCount() + "\n");
         //buf.append("getFilterCount(): " + this.getFilterCount() + "\n");
         //buf.append("getProcessSkipCount(): " + this.getProcessSkipCount() + "\n");
@@ -121,13 +107,16 @@ public class StepExecutionImpl implements StepExecution, Serializable {
         //buf.append("getRollbackCount(): " + this.getRollbackCount() + "\n");
         //buf.append("getWriteCount(): " + this.getWriteCount() + "\n");
         //buf.append("getWriteSkipCount(): " + this.getWriteSkipCount() + "\n");
-        buf.append("getStartTime(): " + this.getStartTime() + "\n");
-        buf.append("getEndTime(): " + this.getEndTime() + "\n");
         //buf.append("getLastUpdateTime(): " + this.getLastUpdateTime() + "\n");
-        buf.append("getBatchStatus(): " + this.getBatchStatus().name() + "\n");
-        buf.append("getExitStatus(): " + this.getExitStatus());
-        buf.append("---------------------------------------------------------------------------------");
-        return buf.toString();
+        return "---------------------------------------------------------------------------------\n"
+            + "getStepName(): " + this.getStepName() + "\n"
+            + "getStepExecutionId(): " + this.stepExecutionId + "\n"
+            + "getJobExecutionId(): " + this.jobExecutionId + "\n"
+            + "getStartTime(): " + this.getStartTime() + "\n"
+            + "getEndTime(): " + this.getEndTime() + "\n"
+            + "getBatchStatus(): " + this.getBatchStatus().name() + "\n"
+            + "getExitStatus(): " + this.getExitStatus() + "\n"
+            + "---------------------------------------------------------------------------------\n";
     }
 
     @Override
@@ -176,10 +165,6 @@ public class StepExecutionImpl implements StepExecution, Serializable {
         this.filterCount = filterCnt;
     }
 
-    public void setLastUpdateTime(Timestamp lastUpdateTime) {
-        this.lastUpdateTime = lastUpdateTime;
-    }
-
     public void setProcessSkipCount(long processSkipCnt) {
         this.processSkipCount = processSkipCnt;
     }
@@ -195,15 +180,6 @@ public class StepExecutionImpl implements StepExecution, Serializable {
     public void setRollbackCount(long rollbackCnt) {
         this.rollbackCount = rollbackCnt;
     }
-
-    public void setJobExecutionId(long jobexecID) {
-        this.jobExecutionId = jobexecID;
-    }
-
-    public void setStepExecutionId(long stepexecID) {
-        this.stepExecutionId = stepexecID;
-    }
-
 
     public void setStepName(String stepName) {
         this.stepName = stepName;
@@ -253,13 +229,4 @@ public class StepExecutionImpl implements StepExecution, Serializable {
             return stepName;
         }
     }
-
-    public void setPlan(PartitionPlan plan) {
-        this.plan = plan;
-    }
-
-    public PartitionPlan getPlan() {
-        return plan;
-    }
-
 }

@@ -69,7 +69,7 @@ public class CheckpointManager {
             readerChkptData.setRestartToken(readerChkptBA.toByteArray());
             readerChkptDK = new CheckpointDataKey(jobInstanceID, stepId, "READER");
 
-            persistenceManagerService.updateCheckpointData(readerChkptDK, readerChkptData);
+            persistenceManagerService.setCheckpointData(readerChkptDK, readerChkptData);
 
             writerOOS = new ObjectOutputStream(writerChkptBA);
             writerOOS.writeObject(writerProxy.checkpointInfo());
@@ -78,7 +78,7 @@ public class CheckpointManager {
             writerChkptData.setRestartToken(writerChkptBA.toByteArray());
             writerChkptDK = new CheckpointDataKey(jobInstanceID, stepId, "WRITER");
 
-            persistenceManagerService.updateCheckpointData(writerChkptDK, writerChkptData);
+            persistenceManagerService.setCheckpointData(writerChkptDK, writerChkptData);
 
         } catch (final Exception ex) {
             // is this what I should be throwing here?

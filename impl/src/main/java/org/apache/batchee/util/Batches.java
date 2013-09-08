@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 public class Batches {
-    private static final Collection<BatchStatus> BATCH_END_STATUSES = Arrays.asList(BatchStatus.COMPLETED, BatchStatus.FAILED);
+    private static final Collection<BatchStatus> BATCH_END_STATUSES = Arrays.asList(BatchStatus.COMPLETED, BatchStatus.FAILED, BatchStatus.STOPPED);
 
     private Batches() {
         // no-op

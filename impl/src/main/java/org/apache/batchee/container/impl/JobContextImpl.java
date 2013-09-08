@@ -78,11 +78,9 @@ public class JobContextImpl implements JobContext {
         return batchStatus;
     }
 
-
     public void setBatchStatus(BatchStatus batchStatus) {
         this.batchStatus = batchStatus;
     }
-
 
     public Object getTransientUserData() {
         return transientUserData;

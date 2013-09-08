@@ -180,11 +180,9 @@ public interface PersistenceManagerService extends BatchService {
      */
     void updateStepStatus(long stepExecutionId, StepStatus stepStatus);
 
-    void updateCheckpointData(CheckpointDataKey key, CheckpointData value);
+    void setCheckpointData(CheckpointDataKey key, CheckpointData value);
 
     CheckpointData getCheckpointData(CheckpointDataKey key);
-
-    void createCheckpointData(CheckpointDataKey key, CheckpointData value);
 
     long getMostRecentExecutionId(long jobInstanceId);
 

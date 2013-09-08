@@ -125,6 +125,7 @@ public abstract class BaseStepController implements ExecutionElementController {
         } catch (final Throwable t) {
             // Treat an error at this point as unrecoverable, so fail job too.
             markJobAndStepFailed();
+            LOGGER.log(Level.SEVERE, t.getMessage(), t);
             rethrowWithMsg("Caught throwable while determining if step should be executed.  Failing job.", t);
         }
 
@@ -134,6 +135,7 @@ public abstract class BaseStepController implements ExecutionElementController {
         } catch (final Throwable t) {
             // Treat an error at this point as unrecoverable, so fail job too.
             markJobAndStepFailed();
+            LOGGER.log(Level.SEVERE, t.getMessage(), t);
             rethrowWithMsg("Caught throwable while starting step.  Failing job.", t);
         }
 
