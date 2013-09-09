@@ -37,7 +37,7 @@ public class DefaultBatchTransactionService implements TransactionManagementServ
     protected TransactionManagerAdapter getTransactionManager() {
         try {
             DefaultBatchTransactionService.class.getClassLoader().loadClass("javax.transaction.UserTransaction");
-            return new JTAUserTransactionAdapter(batchConfig.getProperty("transaction.user-transaction.jndi", "java:comp/UserTransaction"));
+            return new JTAUserTransactionAdapter();
         } catch (final Throwable ncdfe) {
             return new DefaultNonTransactionalManager();
         }

@@ -20,29 +20,67 @@ import org.apache.batchee.container.exception.TransactionManagementException;
 import org.apache.batchee.spi.TransactionManagerAdapter;
 
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
-import javax.transaction.UserTransaction;
+import javax.transaction.TransactionManager;
 
 public class JTAUserTransactionAdapter implements TransactionManagerAdapter {
-    protected UserTransaction userTran = null;
+    private static final String [] JNDI_LOCS = new String[] { // taken from OpenJPA ManagedRuntime
+        "java:comp/TransactionManager", // generic, TomEE
+        "javax.transaction.TransactionManager", // weblogic
+        "java:/TransactionManager", // jboss, jrun, Geronimo
+        "java:/DefaultDomain/TransactionManager", // jrun too
+        "java:comp/pm/TransactionManager", // orion & oracle
+        "java:appserver/TransactionManager", // GlassFish
+        "java:pm/TransactionManager", // borland
+        "aries:services/javax.transaction.TransactionManager", // Apache Aries
+    };
+    private static final String [] METHODS = new String[] {  // taken from OpenJPA ManagedRuntime
+        "org.openejb.OpenEJB.getTransactionManager",
+        "com.arjuna.jta.JTA_TransactionManager.transactionManager", // hp
+        "com.bluestone.jta.SaTransactionManagerFactory.SaGetTransactionManager",
+        "com.sun.jts.jta.TransactionManagerImpl.getTransactionManagerImpl",
+        "com.inprise.visitransact.jta.TransactionManagerImpl."
+            + "getTransactionManagerImpl", // borland
+    };
 
-    public JTAUserTransactionAdapter(final String jndiLookup) {
-        try {
-            userTran = UserTransaction.class.cast(new InitialContext().lookup(jndiLookup));
-        } catch (final NamingException ne) {
-            throw new TransactionManagementException(ne);
+    protected TransactionManager mgr = null;
+
+    public JTAUserTransactionAdapter() {
+        for (final String JNDI_LOC : JNDI_LOCS) {
+            try {
+                mgr = TransactionManager.class.cast(new InitialContext().lookup(JNDI_LOC));
+            } catch (final Throwable t) {
+                // no-op
+            }
+            if (mgr != null) {
+                break;
+            }
+        }
+        if (mgr == null) {
+            for (final String METHOD : METHODS) {
+                final String clazz = METHOD.substring(0, METHOD.lastIndexOf('.'));
+                final String methodName = METHOD.substring(METHOD.lastIndexOf('.') + 1);
+                try {
+                    mgr = TransactionManager.class.cast(
+                        Thread.currentThread().getContextClassLoader().loadClass(clazz).getMethod(methodName).invoke(null));
+                } catch (final Throwable e) {
+                    // no-op
+                }
+            }
+        }
+        if (mgr == null) {
+            throw new TransactionManagementException("no transaction manager found");
         }
     }
 
     @Override
     public void begin() throws TransactionManagementException {
         try {
-            userTran.begin();
+            mgr.begin();
         } catch (final NotSupportedException e) {
             throw new TransactionManagementException(e);
         } catch (final SystemException e) {
@@ -53,7 +91,7 @@ public class JTAUserTransactionAdapter implements TransactionManagerAdapter {
     @Override
     public void commit() throws TransactionManagementException {
         try {
-            userTran.commit();
+            mgr.commit();
         } catch (final SecurityException e) {
             throw new TransactionManagementException(e);
         } catch (final IllegalStateException e) {
@@ -72,7 +110,7 @@ public class JTAUserTransactionAdapter implements TransactionManagerAdapter {
     @Override
     public void rollback() throws TransactionManagementException {
         try {
-            userTran.rollback();
+            mgr.rollback();
         } catch (final IllegalStateException e) {
             throw new TransactionManagementException(e);
         } catch (final SecurityException e) {
@@ -85,7 +123,7 @@ public class JTAUserTransactionAdapter implements TransactionManagerAdapter {
     @Override
     public int getStatus() throws TransactionManagementException {
         try {
-            return userTran.getStatus();
+            return mgr.getStatus();
         } catch (final SystemException e) {
             throw new TransactionManagementException(e);
         }
@@ -94,7 +132,7 @@ public class JTAUserTransactionAdapter implements TransactionManagerAdapter {
     @Override
     public void setRollbackOnly() throws TransactionManagementException {
         try {
-            userTran.setRollbackOnly();
+            mgr.setRollbackOnly();
         } catch (final IllegalStateException e) {
             throw new TransactionManagementException(e);
         } catch (final SystemException e) {
@@ -105,7 +143,7 @@ public class JTAUserTransactionAdapter implements TransactionManagerAdapter {
     @Override
     public void setTransactionTimeout(final int seconds) throws TransactionManagementException {
         try {
-            userTran.setTransactionTimeout(seconds);
+            mgr.setTransactionTimeout(seconds);
         } catch (final SystemException e) {
             throw new TransactionManagementException(e);
         }
