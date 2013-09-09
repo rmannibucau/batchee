@@ -64,7 +64,7 @@ public class ChunkStepController extends SingleThreadedStepController {
     private final static String sourceClass = ChunkStepController.class.getName();
     private final static Logger logger = Logger.getLogger(sourceClass);
 
-    private final PersistenceManagerService persistenceManagerService = ServicesManager.getPersistenceManagerService();
+    private final PersistenceManagerService persistenceManagerService = ServicesManager.service(PersistenceManagerService.class);
 
     private Chunk chunk = null;
     private ItemReaderProxy readerProxy = null;

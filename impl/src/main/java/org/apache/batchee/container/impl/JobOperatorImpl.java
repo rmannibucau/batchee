@@ -64,11 +64,11 @@ public class JobOperatorImpl implements JobOperator {
 
     public static final String JBATCH_ADMIN = "admin";
 
-    private static final BatchKernelService KERNEL_SERVICE = ServicesManager.getBatchKernelService();
-    private static final PersistenceManagerService PERSISTENCE_SERVICE = ServicesManager.getPersistenceManagerService();
-    private static final JobXMLLoaderService XML_LOADER_SERVICE = ServicesManager.getJobXMLLoaderService();
-    private static final JobStatusManagerService STATUS_MANAGER_SERVICE = ServicesManager.getJobStatusManagerService();
-    private static final SecurityService SECURITY_SERVICE= ServicesManager.getSecurityService();
+    private static final BatchKernelService KERNEL_SERVICE = ServicesManager.service(BatchKernelService.class);
+    private static final PersistenceManagerService PERSISTENCE_SERVICE = ServicesManager.service(PersistenceManagerService.class);
+    private static final JobXMLLoaderService XML_LOADER_SERVICE = ServicesManager.service(JobXMLLoaderService.class);
+    private static final JobStatusManagerService STATUS_MANAGER_SERVICE = ServicesManager.service(JobStatusManagerService.class);
+    private static final SecurityService SECURITY_SERVICE= ServicesManager.service(SecurityService.class);
 
     @Override
     public long start(final String jobXMLName, final Properties jobParameters) throws JobStartException, JobSecurityException {

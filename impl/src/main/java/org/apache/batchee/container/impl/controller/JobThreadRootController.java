@@ -61,8 +61,8 @@ public abstract class JobThreadRootController implements ThreadRootController {
         this.jobContext = jobExecution.getJobContext();
         this.rootJobExecutionId = rootJobExecutionId;
         this.jobInstanceId = jobExecution.getInstanceId();
-        this.jobStatusService = ServicesManager.getJobStatusManagerService();
-        this.persistenceService = ServicesManager.getPersistenceManagerService();
+        this.jobStatusService = ServicesManager.service(JobStatusManagerService.class);
+        this.persistenceService = ServicesManager.service(PersistenceManagerService.class);
         this.jobNavigator = jobExecution.getJobNavigator();
 
         final JSLJob jobModel = jobExecution.getJobNavigator().getRootModelElement();

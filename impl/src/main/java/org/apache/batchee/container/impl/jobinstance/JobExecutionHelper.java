@@ -30,6 +30,7 @@ import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.jaxb.JSLJob;
 import org.apache.batchee.jaxb.JSLProperties;
 import org.apache.batchee.spi.PersistenceManagerService;
+import org.apache.batchee.spi.SecurityService;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
 import javax.batch.operations.JobExecutionNotMostRecentException;
@@ -41,8 +42,9 @@ import javax.batch.runtime.JobInstance;
 import java.util.Properties;
 
 public class JobExecutionHelper {
-    private static final JobStatusManagerService JOB_STATUS_MANAGER_SERVICE = ServicesManager.getJobStatusManagerService();
-    private static final PersistenceManagerService PERSISTENCE_MANAGER_SERVICE = ServicesManager.getPersistenceManagerService();
+    private static final JobStatusManagerService JOB_STATUS_MANAGER_SERVICE = ServicesManager.service(JobStatusManagerService.class);
+    private static final PersistenceManagerService PERSISTENCE_MANAGER_SERVICE = ServicesManager.service(PersistenceManagerService.class);
+    private static final SecurityService SECURITY_SERVICE = ServicesManager.service(SecurityService.class);
 
     private static ModelNavigator<JSLJob> getResolvedJobNavigator(final String jobXml, final Properties jobParameters, final boolean parallelExecution) {
         final JSLJob jobModel = new JobModelResolver().resolveModel(jobXml);
@@ -68,11 +70,11 @@ public class JobExecutionHelper {
     }
 
     private static JobInstance getNewJobInstance(final String name, final String jobXml) {
-        return PERSISTENCE_MANAGER_SERVICE.createJobInstance(name, ServicesManager.getSecurityService().getLoggedUser(), jobXml);
+        return PERSISTENCE_MANAGER_SERVICE.createJobInstance(name, SECURITY_SERVICE.getLoggedUser(), jobXml);
     }
 
     private static JobInstance getNewSubJobInstance(final String name) {
-        return PERSISTENCE_MANAGER_SERVICE.createSubJobInstance(name, ServicesManager.getSecurityService().getLoggedUser());
+        return PERSISTENCE_MANAGER_SERVICE.createSubJobInstance(name, SECURITY_SERVICE.getLoggedUser());
     }
 
     private static JobStatus createNewJobStatus(final JobInstance jobInstance) {

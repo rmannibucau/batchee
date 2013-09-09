@@ -58,8 +58,8 @@ public class DefaultBatchKernel implements BatchKernelService {
     private final PersistenceManagerService persistenceService;
 
     public DefaultBatchKernel() {
-        executorService = ServicesManager.getThreadPoolService();
-        persistenceService = ServicesManager.getPersistenceManagerService();
+        executorService = ServicesManager.service(BatchThreadPoolService.class);
+        persistenceService = ServicesManager.service(PersistenceManagerService.class);
     }
 
     @Override

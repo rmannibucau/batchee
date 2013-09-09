@@ -27,7 +27,7 @@ import java.util.Date;
 import java.util.Properties;
 
 public class JobExecutionImpl implements InternalJobExecution {
-    private static final PersistenceManagerService PERSISTENCE_MANAGER_SERVICE = ServicesManager.getPersistenceManagerService();
+    private static final PersistenceManagerService PERSISTENCE_MANAGER_SERVICE = ServicesManager.service(PersistenceManagerService.class);
 
     private long executionID = 0L;
     private long instanceID = 0L;

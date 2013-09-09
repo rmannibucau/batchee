@@ -25,9 +25,9 @@
 
   <test name="dev">
     <classes>
-      <class name="com.ibm.jbatch.tck.tests.jslxml.JobOperatorTests">
+      <class name="com.ibm.jbatch.tck.tests.jslxml.RestartNotMostRecentTests">
         <methods>
-          <include name="testJobOperatorAbandonJobDuringARestart" />
+
         </methods>
       </class>
     </classes>

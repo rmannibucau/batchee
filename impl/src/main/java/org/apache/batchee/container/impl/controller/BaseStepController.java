@@ -35,6 +35,7 @@ import org.apache.batchee.jaxb.JSLProperties;
 import org.apache.batchee.jaxb.Property;
 import org.apache.batchee.jaxb.Step;
 import org.apache.batchee.spi.PersistenceManagerService;
+import org.apache.batchee.spi.TransactionManagementService;
 import org.apache.batchee.spi.TransactionManagerAdapter;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
@@ -72,13 +73,11 @@ public abstract class BaseStepController implements ExecutionElementController {
 
     protected long rootJobExecutionId;
 
-    protected static final BatchKernelService BATCH_KERNEL = ServicesManager.getBatchKernelService();
+    protected static final BatchKernelService BATCH_KERNEL = ServicesManager.service(BatchKernelService.class);
+    private static final PersistenceManagerService PERSISTENCE_MANAGER_SERVICE = ServicesManager.service(PersistenceManagerService.class);
+    private static final JobStatusManagerService JOB_STATUS_MANAGER_SERVICE = ServicesManager.service(JobStatusManagerService.class);
 
     protected TransactionManagerAdapter transactionManager = null;
-
-    private static final PersistenceManagerService PERSISTENCE_MANAGER_SERVICE = ServicesManager.getPersistenceManagerService();
-
-    private static final JobStatusManagerService JOB_STATUS_MANAGER_SERVICE = ServicesManager.getJobStatusManagerService();
 
     protected BaseStepController(final RuntimeJobExecution jobExecution, final Step step, final StepContextImpl stepContext, final long rootJobExecutionId) {
         this.jobExecutionImpl = jobExecution;
@@ -392,7 +391,7 @@ public abstract class BaseStepController implements ExecutionElementController {
         stepContext.addMetric(MetricImpl.MetricType.COMMIT_COUNT, 0);
         stepContext.addMetric(MetricImpl.MetricType.ROLLBACK_COUNT, 0);
 
-        transactionManager = ServicesManager.getTransactionManagementService().getTransactionManager(stepContext);
+        transactionManager = ServicesManager.service(TransactionManagementService.class).getTransactionManager(stepContext);
     }
 
     public void setStepContext(final StepContextImpl stepContext) {

@@ -39,6 +39,10 @@ import org.apache.batchee.spi.TransactionManagementService;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,57 +65,31 @@ public class ServicesManager implements BatchContainerConstants {
         SERVICE_IMPL_CLASS_NAMES.put(JobXMLLoaderService.class.getName(), DefaultJobXMLLoaderService.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(BatchArtifactFactory.class.getName(), DefaultBatchArtifactFactory.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(SecurityService.class.getName(), DefaultSecurityService.class.getName());
+
+        setServicesManagerLocator(SingletonLocator.INSTANCE); // default init
     }
 
-    private static ServicesManagerLocator servicesManagerLocator = SingletonLocator.INSTANCE;
+    private static ServicesManagerLocator servicesManagerLocator;
 
     // designed to be used from app or a server
     public static void setServicesManagerLocator(final ServicesManagerLocator locator) {
         servicesManagerLocator = locator;
     }
 
+    public static <T extends BatchService> T service(final Class<T> api) {
+        return api.cast(Proxy.newProxyInstance(ServicesManager.class.getClassLoader(), new Class<?>[]{ api }, new ServiceHandler<T>(api)));
+    }
+
     // Declared 'volatile' to allow use in double-checked locking.  This 'isInited'
     // refers to whether the configuration has been hardened and possibly the
     // first service impl loaded, not whether the instance has merely been instantiated.
     private final byte[] isInitedLock = new byte[0];
-    private volatile Boolean isInited = Boolean.FALSE;
+    private volatile boolean isInited = false;
 
     private Properties batchRuntimeConfig;
 
     // Registry of all current services
     private final ConcurrentHashMap<String, BatchService> serviceRegistry = new ConcurrentHashMap<String, BatchService>();
-
-    public static TransactionManagementService getTransactionManagementService() {
-        return getService(TransactionManagementService.class);
-    }
-
-    public static SecurityService getSecurityService() {
-        return getService(SecurityService.class);
-    }
-
-    public static BatchArtifactFactory getArtifactFactory() {
-        return getService(BatchArtifactFactory.class);
-    }
-
-    public static PersistenceManagerService getPersistenceManagerService() {
-        return getService(PersistenceManagerService.class);
-    }
-
-    public static JobStatusManagerService getJobStatusManagerService() {
-        return getService(JobStatusManagerService.class);
-    }
-
-    public static BatchThreadPoolService getThreadPoolService() {
-        return getService(BatchThreadPoolService.class);
-    }
-
-    public static BatchKernelService getBatchKernelService() {
-        return getService(BatchKernelService.class);
-    }
-
-    public static JobXMLLoaderService getJobXMLLoaderService() {
-        return getService(JobXMLLoaderService.class);
-    }
 
     /**
      * Init doesn't actually load the service impls, which are still loaded lazily.   What it does is it
@@ -158,33 +136,30 @@ public class ServicesManager implements BatchContainerConstants {
         }
     }
 
-    private static <T extends BatchService> T getService(final Class<T> clazz) throws BatchContainerServiceException {
-        final ServicesManager servicesManager = servicesManagerLocator.find();
-        T service = clazz.cast(servicesManager.serviceRegistry.get(clazz.getName()));
+    private <T extends BatchService> T getService(final Class<T> clazz) throws BatchContainerServiceException {
+        T service = clazz.cast(serviceRegistry.get(clazz.getName()));
         if (service == null) {
             // Probably don't want to be loading two on two different threads so lock the whole table.
-            synchronized (servicesManager.serviceRegistry) {
-                service = clazz.cast(servicesManager.serviceRegistry.get(clazz.getName()));
+            synchronized (serviceRegistry) {
+                service = clazz.cast(serviceRegistry.get(clazz.getName()));
                 if (service == null) {
-                    service = loadServiceHelper(clazz);
-                    service.init(servicesManager.batchRuntimeConfig);
-                    servicesManager.serviceRegistry.putIfAbsent(clazz.getName(), service);
+                    service = loadService(clazz);
+                    service.init(batchRuntimeConfig);
+                    serviceRegistry.putIfAbsent(clazz.getName(), service);
                 }
             }
         }
         return service;
     }
 
-    private static <T extends BatchService> T loadServiceHelper(final Class<T> serviceType) {
-        final ServicesManager servicesManager = servicesManagerLocator.find();
-
+    private <T extends BatchService> T loadService(final Class<T> serviceType) {
         T service = null;
-        String className = servicesManager.batchRuntimeConfig.getProperty(serviceType.getSimpleName());
+        String className = batchRuntimeConfig.getProperty(serviceType.getSimpleName());
         try {
             if (className != null) {
                 service = load(serviceType, className);
             } else {
-                className = servicesManager.batchRuntimeConfig.getProperty(serviceType.getName());
+                className = batchRuntimeConfig.getProperty(serviceType.getName());
                 if (className != null) {
                     service = load(serviceType, className);
                 }
@@ -209,6 +184,25 @@ public class ServicesManager implements BatchContainerConstants {
             throw new BatchContainerRuntimeException("Service class " + className + " should  have a default constructor defined");
         }
         throw new Exception("Exception loading Service class " + className + " make sure it exists");
+    }
+
+    // just an handler getting the right service instance using the ServicesManagerLocator
+    private static class ServiceHandler<T extends BatchService> implements InvocationHandler {
+        private final Class<T> service;
+
+        public ServiceHandler(final Class<T> api) {
+            this.service = api;
+        }
+
+        @Override
+        public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+            final T instance = servicesManagerLocator.find().getService(service);
+            try {
+                return method.invoke(instance, args);
+            } catch (final InvocationTargetException ite) {
+                throw ite.getCause();
+            }
+        }
     }
 }
 

@@ -66,7 +66,7 @@ public class SplitController implements ExecutionElementController {
         this.rootJobExecutionId = rootJobExecutionId;
         this.split = split;
 
-        batchKernel = ServicesManager.getBatchKernelService();
+        batchKernel = ServicesManager.service(BatchKernelService.class);
     }
 
     @Override

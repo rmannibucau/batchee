@@ -117,7 +117,7 @@ public class DefaultJobStatusManager implements JobStatusManagerService {
 
     @Override
     public void init(final Properties batchConfig) throws BatchContainerServiceException {
-        persistenceManager = ServicesManager.getPersistenceManagerService();
+        persistenceManager = ServicesManager.service(PersistenceManagerService.class);
     }
 
     /*

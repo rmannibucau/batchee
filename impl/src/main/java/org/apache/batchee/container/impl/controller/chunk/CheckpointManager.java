@@ -45,7 +45,7 @@ public class CheckpointManager {
         this.stepId = stepId;
         this.jobInstanceID = jobInstanceID;
 
-        this.persistenceManagerService = ServicesManager.getPersistenceManagerService();
+        this.persistenceManagerService = ServicesManager.service(PersistenceManagerService.class);
     }
 
     public boolean applyCheckPointPolicy() {

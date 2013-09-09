@@ -36,7 +36,7 @@ import javax.batch.api.partition.PartitionReducer;
  * Introduce a level of indirection so proxies are not instantiated directly by newing them up.
  */
 public class ProxyFactory {
-    private static final BatchArtifactFactory ARTIFACT_FACTORY = ServicesManager.getArtifactFactory();
+    private static final BatchArtifactFactory ARTIFACT_FACTORY = ServicesManager.service(BatchArtifactFactory.class);
     private static final ThreadLocal<InjectionReferences> INJECTION_CONTEXT = new ThreadLocal<InjectionReferences>();
 
     protected static Object loadArtifact(final String id, final InjectionReferences injectionReferences, final RuntimeJobExecution execution) {

@@ -42,10 +42,10 @@ public class DecisionController implements ExecutionElementController {
 
     private final PersistenceManagerService persistenceService;
 
-    public DecisionController(RuntimeJobExecution jobExecution, Decision decision) {
+    public DecisionController(final RuntimeJobExecution jobExecution, final Decision decision) {
         this.jobExecution = jobExecution;
         this.decision = decision;
-        this.persistenceService = ServicesManager.getPersistenceManagerService();
+        this.persistenceService = ServicesManager.service(PersistenceManagerService.class);
     }
 
     @Override
