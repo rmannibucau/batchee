@@ -26,4 +26,5 @@
   <ref id="noopWriter" class="org.apache.batchee.extras.noop.NoopItemWriter" />
   <ref id="staxReader" class="org.apache.batchee.extras.stax.StaxItemReader" />
   <ref id="staxWriter" class="org.apache.batchee.extras.stax.StaxItemWriter" />
+  <ref id="beanValidationProcessor" class="org.apache.batchee.extras.validation.BeanValidationItemProcessor" />
 </batch-artifacts>

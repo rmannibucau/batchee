@@ -729,3 +729,23 @@ Configuration:
 * scriptPath: path to the groovy file
 
 Shortname: `groovyBatchlet`
+
+### `org.apache.batchee.extras.validation.BeanValidationItemProcessor` (JSR 330/349)
+
+A simple processor validating an item using bean validation.
+
+Sample:
+
+     <step id="step1">
+       <chunk>
+        <reader ref="..." />
+        <processor ref="beanValidationProcessor" />
+        <writer ref="..." />
+      </chunk>
+     </step>
+
+Configuration:
+
+* group: the group to use to validate the item
+
+Shortname: `beanValidationProcessor`
