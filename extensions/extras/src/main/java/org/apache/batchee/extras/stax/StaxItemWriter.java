@@ -113,9 +113,11 @@ public class StaxItemWriter implements ItemWriter {
 
     @Override
     public void close() throws Exception {
-        writer.add(xmlEventFactory.createEndElement("", "", rootTag));
-        writer.add(xmlEventFactory.createEndDocument());
-        writer.close();
+        if (writer != null) {
+            writer.add(xmlEventFactory.createEndElement("", "", rootTag));
+            writer.add(xmlEventFactory.createEndDocument());
+            writer.close();
+        }
     }
 
     @Override
