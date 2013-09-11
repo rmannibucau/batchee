@@ -16,8 +16,6 @@
  */
 package org.apache.batchee.extras.jpa;
 
-import org.apache.batchee.extras.locator.BeanLocator;
-
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemWriter;
 import javax.inject.Inject;
@@ -25,15 +23,7 @@ import javax.persistence.EntityManager;
 import java.io.Serializable;
 import java.util.List;
 
-public class JpaItemWriter implements ItemWriter {
-    @Inject
-    @BatchProperty
-    private String locator;
-
-    @Inject
-    @BatchProperty
-    private String entityManagerProvider;
-
+public class JpaItemWriter  extends EntityManagerLocator implements ItemWriter {
     @Inject
     @BatchProperty
     private String useMerge;
@@ -42,13 +32,12 @@ public class JpaItemWriter implements ItemWriter {
     @BatchProperty
     private String jpaTransaction;
 
-    private BeanLocator.LocatorInstance<EntityManagerProvider> emProvider;
     private boolean merge;
     private boolean transaction;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
-        emProvider = BeanLocator.Finder.get(locator).newInstance(EntityManagerProvider.class, entityManagerProvider);
+        emProvider = findEntityManager();
         merge = Boolean.parseBoolean(useMerge);
         transaction = Boolean.parseBoolean(jpaTransaction);
     }

@@ -331,7 +331,7 @@ Sample:
 
 Configuration:
 
-* entityManagerProvider: the `org.apache.batchee.extras.jpa.EntityManagerProvider` (`BeanLocator` semantic)
+* entityManagerProvider: the `org.apache.batchee.extras.jpa.EntityManagerProvider` (`BeanLocator` semantic), note you can set a jndi name if the value starts with jndi (for instance jndi:java:comp/env/em).
 * parameterProvider: the `org.apache.batchee.extras.jpa.ParameterProvider` (`BeanLocator` semantic)
 * locator: the `org.apache.batchee.extras.locator.BeanLocator` used to create `org.apache.batchee.extras.jpa.EntityManagerProvider` and `org.apache.batchee.extras.jpa.ParameterProvider`
 * namedQuery: the named query to use
@@ -363,7 +363,7 @@ Sample:
 
 Configuration:
 
-* entityManagerProvider: the `org.apache.batchee.extras.jpa.EntityManagerProvider` (`BeanLocator` semantic)
+* entityManagerProvider: the `org.apache.batchee.extras.jpa.EntityManagerProvider` (`BeanLocator` semantic), note you can set a jndi name if the value starts with jndi (for instance jndi:java:comp/env/em).
 * locator: the `org.apache.batchee.extras.locator.BeanLocator` used to create `org.apache.batchee.extras.jpa.EntityManagerProvider`
 * useMerge: a boolean to force using merge instead of persist
 * jpaTransaction: should em.getTransaction() be used or not

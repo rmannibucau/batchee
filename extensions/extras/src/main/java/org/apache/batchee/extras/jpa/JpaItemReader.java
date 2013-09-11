@@ -29,15 +29,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-public class JpaItemReader implements ItemReader {
-    @Inject
-    @BatchProperty
-    private String locator;
-
-    @Inject
-    @BatchProperty
-    private String entityManagerProvider;
-
+public class JpaItemReader extends EntityManagerLocator implements ItemReader {
     @Inject
     @BatchProperty
     private String parameterProvider;
@@ -74,7 +66,7 @@ public class JpaItemReader implements ItemReader {
     public void open(final Serializable checkpoint) throws Exception {
         final BeanLocator beanLocator = BeanLocator.Finder.get(locator);
 
-        emProvider = beanLocator.newInstance(EntityManagerProvider.class, entityManagerProvider);
+        emProvider = findEntityManager();
         if (parameterProvider != null) {
             paramProvider = beanLocator.newInstance(ParameterProvider.class, parameterProvider);
         }
