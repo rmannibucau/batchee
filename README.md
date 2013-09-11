@@ -749,7 +749,6 @@ Configuration:
 
 Shortname: `beanValidationProcessor`
 
-
 ###  `org.apache.batchee.jsefa.JSefaCsvReader`
 
 Use JSefa to read a CSV file.
@@ -788,6 +787,8 @@ Configuration (excepted for file see org.jsefa.csv.config.CsvConfiguration for d
 * fieldDelimiter
 * quoteCharacter
 * useDelimiterAfterLastField
+
+Shortname: `jsefaCsvReader`
 
 ###  `org.apache.batchee.jsefa.JSefaCsvWriter`
 
@@ -829,6 +830,8 @@ Configuration (excepted for file and encoding see org.jsefa.csv.config.CsvConfig
 * quoteCharacter
 * useDelimiterAfterLastField
 
+Shortname: `jsefaCsvWriter`
+
 ###  `org.apache.batchee.jsefa.JSefaFlrReader`
 
 Use JSefa to read a FLR file.
@@ -862,6 +865,8 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 * specialRecordDelimiter
 * lineBreak
 * defaultPadCharacter
+
+Shortname: `jsefaFlrReader`
 
 ###  `org.apache.batchee.jsefa.JSefaFlrWriter`
 
@@ -898,6 +903,8 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 * lineBreak
 * defaultPadCharacter
 
+Shortname: `jsefaFlrWriter`
+
 ###  `org.apache.batchee.jsefa.JSefaXmlReader`
 
 Use JSefa to read a XML file.
@@ -933,6 +940,8 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 * lineBreak
 * lineIndentation
 
+Shortname: `jsefaXmlReader`
+
 ###  `org.apache.batchee.jsefa.JSefaXmlWriter`
 
 Use JSefa to write a XML file.
@@ -967,3 +976,5 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 * dataTypeAttributeName: QName with the format {uri}localName
 * lineBreak
 * lineIndentation
+
+Shortname: `jsefaXmlWriter`
