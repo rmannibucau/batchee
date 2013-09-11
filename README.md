@@ -518,7 +518,6 @@ Configuration:
 * streamName: the stream name (from beanio xml file)
 * configuration: the beanio xml configuration file (from the classloader)
 * encoding: the output file encoding
-* line.separator: the line separator to use to separate items (default is no line separator)
 * templateLocator: the `org.apache.batchee.camel.CamelTemplateLocator` to find the `org.apache.camel.ProducerTemplate` to use
 
 Shortname: `beanIOWriter`
@@ -749,3 +748,222 @@ Configuration:
 * group: the group to use to validate the item
 
 Shortname: `beanValidationProcessor`
+
+
+###  `org.apache.batchee.jsefa.JSefaCsvReader`
+
+Use JSefa to read a CSV file.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="jsefaCsvReader">
+          <properties>
+            <property name="file" value="#{jobParameters['input']}"/>
+            <property name="objectTypes" value="org.superbiz.Record"/>
+          </properties>
+        </reader>
+        <writer ref="..." />
+      </chunk>
+    </step>
+
+Configuration (excepted for file see org.jsefa.csv.config.CsvConfiguration for detail):
+
+* file: the file to read
+* objectTypes: type to take into account in the unmarshalling
+* validationMode: see `org.jsefa.common.config.ValidationMode`
+* lineFilter: `org.jsefa.common.lowlevel.filter.LineFilter`
+* lowLevelConfiguration; `org.jsefa.csv.lowlevel.config.CsvLowLevelConfiguration`
+* objectAccessorProvider: `org.jsefa.common.accessor.ObjectAccessorProvider`
+* simpleTypeProvider: `org.jsefa.common.converter.provider.SimpleTypeConverterProvider`
+* typeMappingRegistry; `org.jsefa.common.mapping.TypeMappingRegistry`
+* validationProvider; `org.jsefa.common.validator.provider.ValidatorProvider`
+* quoteCharacterEscapeMode: `org.jsefa.csv.lowlevel.config.EscapeMode`
+* lineFilterLimit
+* specialRecordDelimiter
+* lineBreak
+* defaultNoValueString
+* defaultQuoteMode
+* fieldDelimiter
+* quoteCharacter
+* useDelimiterAfterLastField
+
+###  `org.apache.batchee.jsefa.JSefaCsvWriter`
+
+Use JSefa to write a CSV file.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="..." />
+        <writer ref="jsefaCsvWriter">
+          <properties>
+            <property name="file" value="#{jobParameters['output']}"/>
+            <property name="objectTypes" value="org.superbiz.Record"/>
+          </properties>
+        </writer>
+      </chunk>
+    </step>
+
+Configuration (excepted for file and encoding see org.jsefa.csv.config.CsvConfiguration for detail):
+
+* file: the file to write
+* encoding: the output file encoding
+* objectTypes: type to take into account in the marshalling
+* validationMode: see `org.jsefa.common.config.ValidationMode`
+* lineFilter: `org.jsefa.common.lowlevel.filter.LineFilter`
+* lowLevelConfiguration; `org.jsefa.csv.lowlevel.config.CsvLowLevelConfiguration`
+* objectAccessorProvider: `org.jsefa.common.accessor.ObjectAccessorProvider`
+* simpleTypeProvider: `org.jsefa.common.converter.provider.SimpleTypeConverterProvider`
+* typeMappingRegistry; `org.jsefa.common.mapping.TypeMappingRegistry`
+* validationProvider; `org.jsefa.common.validator.provider.ValidatorProvider`
+* quoteCharacterEscapeMode: `org.jsefa.csv.lowlevel.config.EscapeMode`
+* lineFilterLimit
+* specialRecordDelimiter
+* lineBreak
+* defaultNoValueString
+* defaultQuoteMode
+* fieldDelimiter
+* quoteCharacter
+* useDelimiterAfterLastField
+
+###  `org.apache.batchee.jsefa.JSefaFlrReader`
+
+Use JSefa to read a FLR file.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="jsefaFlrReader">
+          <properties>
+            <property name="file" value="#{jobParameters['input']}"/>
+            <property name="objectTypes" value="org.superbiz.Record"/>
+          </properties>
+        </reader>
+        <writer ref="..." />
+      </chunk>
+    </step>
+
+Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
+
+* file: the file to read
+* objectTypes: type to take into account in the unmarshalling
+* validationMode: see `org.jsefa.common.config.ValidationMode`
+* lineFilter: `org.jsefa.common.lowlevel.filter.LineFilter`
+* lowLevelConfiguration; `org.jsefa.flr.lowlevel.config.FlrLowLevelConfiguration`
+* objectAccessorProvider: `org.jsefa.common.accessor.ObjectAccessorProvider`
+* simpleTypeProvider: `org.jsefa.common.converter.provider.SimpleTypeConverterProvider`
+* typeMappingRegistry; `org.jsefa.common.mapping.TypeMappingRegistry`
+* validationProvider; `org.jsefa.common.validator.provider.ValidatorProvider`
+* lineFilterLimit
+* specialRecordDelimiter
+* lineBreak
+* defaultPadCharacter
+
+###  `org.apache.batchee.jsefa.JSefaFlrWriter`
+
+Use JSefa to write a FLR file.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="..." />
+        <writer ref="jsefaFlrWriter">
+          <properties>
+            <property name="file" value="#{jobParameters['output']}"/>
+            <property name="objectTypes" value="org.superbiz.Record"/>
+          </properties>
+        </writer>
+      </chunk>
+    </step>
+
+Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
+
+* file: the file to write
+* encoding: output file encoding
+* objectTypes: type to take into account in the marshalling
+* validationMode: see `org.jsefa.common.config.ValidationMode`
+* lineFilter: `org.jsefa.common.lowlevel.filter.LineFilter`
+* lowLevelConfiguration; `org.jsefa.flr.lowlevel.config.FlrLowLevelConfiguration`
+* objectAccessorProvider: `org.jsefa.common.accessor.ObjectAccessorProvider`
+* simpleTypeProvider: `org.jsefa.common.converter.provider.SimpleTypeConverterProvider`
+* typeMappingRegistry; `org.jsefa.common.mapping.TypeMappingRegistry`
+* validationProvider; `org.jsefa.common.validator.provider.ValidatorProvider`
+* lineFilterLimit
+* specialRecordDelimiter
+* lineBreak
+* defaultPadCharacter
+
+###  `org.apache.batchee.jsefa.JSefaXmlReader`
+
+Use JSefa to read a XML file.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="jsefaXmlReader">
+          <properties>
+            <property name="file" value="#{jobParameters['input']}"/>
+            <property name="objectTypes" value="org.apache.batchee.jsefa.bean.Record"/>
+          </properties>
+        </reader>
+        <processor ref="org.apache.batchee.jsefa.JSefaXmlReaderTest$StoreItems" />
+        <writer ref="noopWriter" />
+      </chunk>
+    </step>
+
+Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
+
+* file: the file to read
+* objectTypes: type to take into account in the unmarshalling
+* validationMode: see `org.jsefa.common.config.ValidationMode`
+* objectAccessorProvider: `org.jsefa.common.accessor.ObjectAccessorProvider`
+* simpleTypeProvider: `org.jsefa.common.converter.provider.SimpleTypeConverterProvider`
+* typeMappingRegistry; `org.jsefa.common.mapping.TypeMappingRegistry`
+* validationProvider; `org.jsefa.common.validator.provider.ValidatorProvider`
+* lowLevelConfiguration: `org.jsefa.xml.lowlevel.config.XmlLowLevelConfiguration`
+* dataTypeDefaultNameRegistry: `org.jsefa.xml.mapping.support.XmlDataTypeDefaultNameRegistry`
+* namespaceManager: `org.jsefa.xml.namespace.NamespaceManager`
+* dataTypeAttributeName: QName with the format {uri}localName
+* lineBreak
+* lineIndentation
+
+###  `org.apache.batchee.jsefa.JSefaXmlWriter`
+
+Use JSefa to write a XML file.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="org.apache.batchee.jsefa.JSefaXmlWriterTest$TwoItemsReader" />
+        <writer ref="jsefaXmlWriter">
+          <properties>
+            <property name="file" value="#{jobParameters['output']}"/>
+            <property name="objectTypes" value="org.apache.batchee.jsefa.bean.Record"/>
+          </properties>
+        </writer>
+      </chunk>
+    </step>
+
+Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
+
+* file: the file to write
+* encoding: the output file encoding
+* objectTypes: type to take into account in the marshalling
+* validationMode: see `org.jsefa.common.config.ValidationMode`
+* objectAccessorProvider: `org.jsefa.common.accessor.ObjectAccessorProvider`
+* simpleTypeProvider: `org.jsefa.common.converter.provider.SimpleTypeConverterProvider`
+* typeMappingRegistry; `org.jsefa.common.mapping.TypeMappingRegistry`
+* validationProvider; `org.jsefa.common.validator.provider.ValidatorProvider`
+* lowLevelConfiguration: `org.jsefa.xml.lowlevel.config.XmlLowLevelConfiguration`
+* dataTypeDefaultNameRegistry: `org.jsefa.xml.mapping.support.XmlDataTypeDefaultNameRegistry`
+* namespaceManager: `org.jsefa.xml.namespace.NamespaceManager`
+* dataTypeAttributeName: QName with the format {uri}localName
+* lineBreak
+* lineIndentation

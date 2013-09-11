@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.beanio;
+package org.apache.batchee.jsefa;
 
 import org.apache.batchee.extras.transaction.TransactionalWriter;
-import org.beanio.BeanWriter;
+import org.jsefa.Serializer;
 
 import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemWriter;
@@ -27,50 +27,67 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 
-public class BeanIOWriter implements ItemWriter {
+public abstract class JSefaWriter implements ItemWriter {
     @Inject
-    @BatchProperty(name = "file")
-    protected String filePath;
+    @BatchProperty
+    protected String objectTypes;
 
     @Inject
     @BatchProperty
-    protected String streamName;
+    protected String validationMode;
 
     @Inject
     @BatchProperty
-    protected String configuration;
+    protected String objectAccessorProvider;
+
+    @Inject
+    @BatchProperty
+    protected String validationProvider;
+
+    @Inject
+    @BatchProperty
+    protected String simpleTypeProvider;
+
+    @Inject
+    @BatchProperty
+    protected String typeMappingRegistry;
+
+    @Inject
+    @BatchProperty
+    protected String file;
 
     @Inject
     @BatchProperty
     protected String encoding;
 
-    private BeanWriter writer;
-    private TransactionalWriter transactionalWriter;
+    protected Serializer serializer;
+    protected TransactionalWriter transactionalWriter;
 
     @Override
     public void open(final Serializable checkpoint) throws Exception {
-        if (encoding == null) {
-            encoding = "UTF-8";
+        final File f = new File(file);
+        if (!f.getParentFile().exists() && !f.getParentFile().mkdirs()) {
+            throw new BatchRuntimeException(f.getParentFile().getAbsolutePath());
         }
 
-        final File file = new File(filePath);
-        if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
-            throw new BatchRuntimeException(file.getParentFile().getAbsolutePath());
-        }
-
-        transactionalWriter = new TransactionalWriter(file, encoding, checkpoint);
-        writer = BeanIOs.open(filePath, streamName, configuration).createWriter(streamName, transactionalWriter);
+        serializer = createSerializer();
+        transactionalWriter = new TransactionalWriter(f, encoding, checkpoint);
+        serializer.open(transactionalWriter);
     }
+
+    protected abstract Serializer createSerializer() throws Exception;
 
     @Override
     public void close() throws Exception {
-        writer.close();
+        if (serializer != null) {
+            serializer.close(true);
+        }
     }
 
     @Override
     public void writeItems(final List<Object> items) throws Exception {
         for (final Object item : items) {
-            writer.write(item);
+            serializer.write(item);
         }
         transactionalWriter.flush();
     }

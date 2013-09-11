@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.beanio.util;
+package org.apache.batchee.jsefa.util;
 
 import java.io.BufferedReader;
 import java.io.File;
