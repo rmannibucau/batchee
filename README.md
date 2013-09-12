@@ -1030,7 +1030,7 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 * encoding: output file encoding
 * configuration: the ObjectMapper configuration (comma separated list with for each config the syntax name=value. Name can be in DeserializationFeature, SerializationFeature and MapperFeature values and value is a boolean (true/false))
 * skipRoot: should root be written. If fieldNameGeneratorClass is not null it will use a root object and if not set root will be an array.
-* fieldNameGeneratorClass: if skipRoot is not true or null it will be used to generate the field name (and force the root to be an object). "default" means use "item1", "item2", ...
+* fieldNameGeneratorClass: if skipRoot is not true or null it will be used to generate the field name (and force the root to be an object). "default" means use "item1", "item2", .... Otherwise set a qualified name `org.apache.batchee.jackson.FieldNameGenerator`.
 
 Shortname: `jacksonJSonWriter`
 
