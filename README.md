@@ -978,3 +978,59 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 * lineIndentation
 
 Shortname: `jsefaXmlWriter`
+
+###  `org.apache.batchee.jackson.JacksonJsonReader`
+
+Use JSefa to read a XML file.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="jacksonJSonReader">
+          <properties>
+            <property name="type" value="..."/>
+            <property name="file" value="work/jackson-input.json"/>
+          </properties>
+        </reader>
+        <writer ref="org.apache.batchee.jackson.JacksonJsonReaderTest$Writer" />
+      </chunk>
+    </step>
+
+Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
+
+* file: the file to read
+* type: the type to use to unmarshall objects, note: without it readValueAsTree will be used
+* configuration: the ObjectMapper configuration (comma separated list with for each config the syntax name=value. Name can be in DeserializationFeature, SerializationFeature and MapperFeature values and value is a boolean (true/false))
+* skipRoot: should root be read as an item or not
+
+Shortname: `jacksonJSonReader`
+
+###  `org.apache.batchee.jackson.JacksonJSonWriter`
+
+Use JSefa to write a XML file.
+
+Sample:
+
+    <step id="step1">
+      <chunk>
+        <reader ref="org.apache.batchee.jackson.JacksonJSonWriterTest$Reader" />
+        <writer ref="jacksonJSonWriter">
+          <properties>
+            <property name="file" value="target/work/jackson-field-output.json"/>
+            <property name="fieldNameGeneratorClass" value="default"/> <!-- item1, item2, ... -->
+          </properties>
+        </writer>
+      </chunk>
+    </step>
+
+Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
+
+* file: the file to write
+* encoding: output file encoding
+* configuration: the ObjectMapper configuration (comma separated list with for each config the syntax name=value. Name can be in DeserializationFeature, SerializationFeature and MapperFeature values and value is a boolean (true/false))
+* skipRoot: should root be written. If fieldNameGeneratorClass is not null it will use a root object and if not set root will be an array.
+* fieldNameGeneratorClass: if skipRoot is not true or null it will be used to generate the field name (and force the root to be an object). "default" means use "item1", "item2", ...
+
+Shortname: `jacksonJSonWriter`
+

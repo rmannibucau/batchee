@@ -21,48 +21,28 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>batchee-parent</artifactId>
+    <artifactId>batchee-extensions</artifactId>
     <groupId>org.apache.batchee</groupId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>batchee-extensions</artifactId>
-  <name>BatchEE :: Extensions</name>
-  <packaging>pom</packaging>
-
-  <modules>
-    <module>shiro</module>
-    <module>extras</module>
-    <module>beanio</module>
-    <module>camel</module>
-    <module>groovy</module>
-    <module>jsefa</module>
-    <module>jackson</module>
-  </modules>
+  <artifactId>batchee-jackson</artifactId>
+  <name>BatchEE :: Extensions :: Jackson</name>
 
   <dependencies>
     <dependency>
-      <groupId>javax.batch</groupId>
-      <artifactId>javax.batch-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-atinject_1.0_spec</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-jbatch</artifactId>
+      <artifactId>batchee-extras</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
     </dependency>
   </dependencies>
+
+  <properties>
+    <jackson.version>2.2.3</jackson.version>
+  </properties>
 </project>

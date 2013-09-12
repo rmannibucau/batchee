@@ -36,6 +36,7 @@ public class TransactionalWriter extends Writer {
     private final String bufferKey;
     private final FileChannel delegate;
     private long position = 0;
+    private boolean closed = false;
 
     public TransactionalWriter(final File file, final String encoding, final Serializable checkpoint) throws FileNotFoundException {
         this.delegate = new RandomAccessFile(file, "rw").getChannel();
@@ -92,7 +93,11 @@ public class TransactionalWriter extends Writer {
 
     @Override
     public void close() throws IOException {
-        delegate.close();
+        if (!Synchronizations.hasTransaction() && delegate.isOpen()) {
+            delegate.close();
+        } else {
+            closed = true;
+        }
     }
 
     public long position() {
@@ -117,6 +122,22 @@ public class TransactionalWriter extends Writer {
                             delegate.force(false);
                         } catch (final IOException ioe) {
                             throw new BatchRuntimeException(ioe);
+                        }
+                    }
+                    close();
+                }
+
+                @Override
+                public void afterRollback() {
+                    close();
+                }
+
+                private void close() {
+                    if (closed && delegate.isOpen()) {
+                        try {
+                            delegate.close();
+                        } catch (final IOException e) {
+                            throw new BatchRuntimeException(e);
                         }
                     }
                 }
