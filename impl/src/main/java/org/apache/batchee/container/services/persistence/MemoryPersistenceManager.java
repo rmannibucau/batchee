@@ -605,7 +605,8 @@ public class MemoryPersistenceManager implements PersistenceManagerService {
         return data.stepExecutionInstanceData.get(stepExecId).execution;
     }
 
-    protected void cleanUp(final long instanceId) {
+    @Override
+    public void cleanUp(final long instanceId) {
         final Structures.JobInstanceData jobInstanceData = data.jobInstanceData.remove(instanceId);
         if (jobInstanceData == null) {
             return;

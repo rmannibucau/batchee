@@ -1962,7 +1962,8 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         return mostRecentId;
     }
 
-    public void cleanUp(final long instanceId) {
+    @Override
+    public void cleanUp(final long instanceId) { // TODO: valid this method
         Connection conn = null;
         try {
             conn = getConnection();

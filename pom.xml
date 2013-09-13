@@ -29,6 +29,7 @@
   <modules>
     <module>impl</module>
     <module>extensions</module>
+    <module>gui</module>
   </modules>
 
   <dependencyManagement>

@@ -57,14 +57,13 @@ public class StepStatus implements Serializable {
 
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("stepExecutionId: " + stepExecutionId);
-        buf.append(",batchStatus: " + batchStatus);
-        buf.append(",exitStatus: " + exitStatus);
-        buf.append(",startCount: " + startCount);
-        buf.append(",persistentUserData: " + persistentUserData);
-        buf.append(",numPartitions: " + numPartitions);
-        return buf.toString();
+        return ("stepExecutionId: " + stepExecutionId)
+            + ",batchStatus: " + batchStatus
+            + ",exitStatus: " + exitStatus
+            + ",startCount: " + startCount
+            + ",persistentUserData: "
+            + persistentUserData
+            + ",numPartitions: " + numPartitions;
     }
 
     public long getStepExecutionId() {

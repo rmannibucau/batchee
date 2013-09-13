@@ -188,8 +188,9 @@ public interface PersistenceManagerService extends BatchService {
 
     JobInstance createSubJobInstance(String name, String apptag);
 
-    public RuntimeFlowInSplitExecution createFlowInSplitExecution(JobInstance jobInstance, BatchStatus batchStatus);
+    RuntimeFlowInSplitExecution createFlowInSplitExecution(JobInstance jobInstance, BatchStatus batchStatus);
 
-    public StepExecution getStepExecutionByStepExecutionId(long stepExecId);
+    StepExecution getStepExecutionByStepExecutionId(long stepExecId);
 
+    void cleanUp(final long instanceId);
 }
