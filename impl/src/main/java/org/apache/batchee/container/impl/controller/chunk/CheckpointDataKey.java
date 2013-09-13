@@ -44,15 +44,12 @@ public class CheckpointDataKey {
     }
 
     public String getCommaSeparatedKey() {
-        return stringify();
-    }
-
-    public String toString() {
-        return stringify();
-    }
-
-    private String stringify() {
         return _jobInstanceId + "," + _stepName + "," + _batchDataStreamName;
+    }
+
+    @Override
+    public String toString() {
+        return getCommaSeparatedKey();
     }
 
     @Override

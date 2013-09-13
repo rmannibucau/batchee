@@ -1961,4 +1961,43 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         }
         return mostRecentId;
     }
+
+    public void cleanUp(final long instanceId) {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+
+            deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.STEPSTATUS_TABLE + " A WHERE id = IN ("
+                + "SELECT B.stepexecid FROM " + SQLConstants.STEPEXECUTIONINSTANCEDATA_TABLE + " B WHERE B.jobexecid IN ("
+                + "   ("
+                + "        SELECT C.jobexecid FROM " + SQLConstants.EXECUTIONINSTANCEDATA_TABLE + " C WHERE C.jobinstanceid = ?"
+                + "     )"
+                + ")");
+
+            deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.STEPEXECUTIONINSTANCEDATA_TABLE + " A WHERE A.jobexecid IN ("
+                + "SELECT C.jobexecid FROM " + SQLConstants.EXECUTIONINSTANCEDATA_TABLE + " C WHERE C.jobinstanceid = ?)");
+
+            {
+                final PreparedStatement statement = conn.prepareStatement("DELETE FROM " + SQLConstants.CHECKPOINTDATA_TABLE + " WHERE jobinstanceid LIKE ?");
+                statement.setString(1, instanceId + ",");
+                statement.executeUpdate();
+                statement.close();
+            }
+
+            deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.EXECUTIONINSTANCEDATA_TABLE + " WHERE jobinstanceid = ?");
+            deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.JOBSTATUS_TABLE + " WHERE id = ?");
+            deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.JOBINSTANCEDATA_TABLE + " WHERE jobinstanceid = ?");
+        } catch (final SQLException e) {
+            throw new PersistenceException(e);
+        } finally {
+            cleanupConnection(conn, null, null);
+        }
+    }
+
+    private static void deleteFromInstanceId(final long instanceId, final Connection conn, final String delete) throws SQLException {
+        final PreparedStatement statement = conn.prepareStatement(delete);
+        statement.setLong(1, instanceId);
+        statement.executeUpdate();
+        statement.close();
+    }
 }
