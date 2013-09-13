@@ -102,8 +102,7 @@
     <dependency>
       <groupId>org.jboss.arquillian.junit</groupId>
       <artifactId>arquillian-junit-container</artifactId>
-      <version>1.0.3.Final</version>
-      <!-- sadly tomcat7 embedded is not compatible with later impl in v1.0.0.CR5 -->
+      <version>1.0.3.Final</version> <!-- sadly tomcat7 embedded is not compatible with later impl in v1.0.0.CR5 -->
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -166,8 +165,8 @@
         </configuration>
       </plugin>
 
+      <!--
       <plugin>
-        <!--
         mvn miredot:restdoc to generate the doc
 
         can need:
@@ -179,7 +178,7 @@
               <url>http://nexus.qmino.com/content/repositories/miredot</url>
             </pluginRepository>
           </pluginRepositories>
-        -->
+
         <groupId>com.qmino</groupId>
         <artifactId>miredot-maven-plugin</artifactId>
         <version>1.2</version>
@@ -191,6 +190,7 @@
           </execution>
         </executions>
       </plugin>
+      -->
     </plugins>
   </build>
 
