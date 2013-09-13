@@ -27,7 +27,7 @@
     <servlet-class>org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet</servlet-class>
     <init-param>
       <param-name>jaxrs.serviceClasses</param-name>
-      <param-value>org.apache.batchee.gui.service.JBatchService</param-value>
+      <param-value>org.apache.batchee.gui.service.JBatchResource</param-value>
     </init-param>
     <init-param>
       <param-name>jaxrs.providers</param-name>

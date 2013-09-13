@@ -36,7 +36,7 @@ import java.util.Set;
 
 @Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
-public class JBatchService {
+public class JBatchResource {
     private JobOperator operator;
 
     @PostConstruct
