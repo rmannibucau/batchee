@@ -21,6 +21,12 @@
          xmlns="http://java.sun.com/xml/ns/javaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+  <!-- needed for mvn tomcat7:run and test - need to be removed if packaged with it -->
+  <listener>
+    <listener-class>org.apache.batchee.test.gui.util.CreateSomeJobs</listener-class>
+  </listener>
+
+  <!-- sample using cxf + jackson -->
   <servlet>
     <display-name>REST Servlet</display-name>
     <servlet-name>CXFServlet</servlet-name>
@@ -35,10 +41,6 @@
         com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider,
         org.apache.batchee.gui.service.JBatchExceptionMapper
       </param-value>
-    </init-param>
-    <init-param>
-      <param-name>jaxrs.extensions</param-name>
-      <param-value>json=application/json</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>

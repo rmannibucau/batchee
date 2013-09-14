@@ -30,10 +30,8 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.StringAsset;
+import org.jboss.shrinkwrap.api.asset.FileAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.descriptor.api.Descriptors;
-import org.jboss.shrinkwrap.descriptor.api.webapp30.WebAppDescriptor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -138,15 +136,10 @@ public class RestTest {
         return ShrinkWrap.create(WebArchive.class, "batchee-gui.war")
             // GUI
             .addPackages(true, "org.apache.batchee.gui")
-            .addAsWebInfResource(new StringAsset(
-                Descriptors.importAs(WebAppDescriptor.class).fromFile(new File("src/main/webapp/WEB-INF/web.xml"))
-                    .createListener().listenerClass(CreateSomeJobs.class.getName()).up() // metadata=true so need to enhance the web.xml with it
-                .exportAsString()), "web.xml")
+            .addAsWebInfResource(new FileAsset(new File("src/main/webapp/WEB-INF/web.xml")), "web.xml")
             // test data to create some job things to do this test
             .addPackage(CreateSomeJobs.class.getPackage())
-            .addAsWebInfResource("META-INF/batch-jobs/init.xml", "classes/META-INF/batch-jobs/init.xml")
-            // deps
-            .addAsLibraries(Dependencies.get());
+            .addAsWebInfResource("META-INF/batch-jobs/init.xml", "classes/META-INF/batch-jobs/init.xml");
     }
 
     private WebClient newClient() {
