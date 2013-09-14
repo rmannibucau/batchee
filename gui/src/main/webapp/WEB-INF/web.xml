@@ -26,6 +26,16 @@
     <listener-class>org.apache.batchee.test.gui.util.CreateSomeJobs</listener-class>
   </listener>
 
+  <!-- the jbatch servlet -->
+  <servlet>
+    <servlet-name>JBatch</servlet-name>
+    <servlet-class>org.apache.batchee.gui.servlet.JBatchServlet</servlet-class>
+    <init-param>
+      <param-name>mapping</param-name>
+      <param-value>/batch</param-value>
+    </init-param>
+  </servlet>
+
   <!-- sample using cxf + jackson -->
   <servlet>
     <display-name>REST Servlet</display-name>
@@ -48,5 +58,9 @@
   <servlet-mapping>
     <servlet-name>CXFServlet</servlet-name>
     <url-pattern>/api/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>JBatch</servlet-name>
+    <url-pattern>/batch</url-pattern>
   </servlet-mapping>
 </web-app>
