@@ -152,6 +152,18 @@
         <configuration>
           <path>/</path>
         </configuration>
+        <dependencies>
+          <dependency> <!-- we suppose batch api is in the container and we just provide a "monitoring" webapp while we target servlet 2.5, servlet 3.0 could make it easier -->
+            <groupId>javax.batch</groupId>
+            <artifactId>javax.batch-api</artifactId>
+            <version>1.0</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.batchee</groupId>
+            <artifactId>batchee-jbatch</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
 
       <plugin>
