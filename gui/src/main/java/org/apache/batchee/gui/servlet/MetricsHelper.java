@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,27 +16,24 @@
  */
 package org.apache.batchee.gui.servlet;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.batch.runtime.Metric;
 
-class MapBuilder<A, B> {
-    private final Map<A, B> map = new HashMap<A, B>();
-
-    public MapBuilder<A, B> set(final A a, final B b) {
-        map.put(a, b);
-        return this;
+public final class MetricsHelper {
+    public MetricsHelper() {
+        // no-op
     }
 
-    public MapBuilder<A, B> set(final Map<A, B> params) {
-        map.putAll(params);
-        return this;
-    }
-
-    public Map<A, B> build() {
-        return map;
-    }
-
-    static class Simple extends MapBuilder<String, Object> {
+    public static String toString(final Metric[] metrics) {
+        final StringBuilder builder = new StringBuilder();
+        final int length = metrics.length;
+        if (metrics != null && length > 0) {
+            for (int i = 0; i < length; i++) {
+                builder.append(metrics[i].getType().name().replace("_COUNT", "")).append(" = ").append(metrics[i].getValue());
+                if (i < length - 1) {
+                    builder.append(", ");
+                }
+            }
+        }
+        return builder.toString();
     }
 }
-

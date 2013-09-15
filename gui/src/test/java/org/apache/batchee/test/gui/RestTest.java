@@ -17,6 +17,8 @@
 package org.apache.batchee.test.gui;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import org.apache.batchee.gui.service.JBatchExceptionMapper;
+import org.apache.batchee.gui.service.JBatchResource;
 import org.apache.batchee.gui.service.RestEntry;
 import org.apache.batchee.gui.service.RestJobExecution;
 import org.apache.batchee.gui.service.RestJobInstance;
@@ -30,15 +32,16 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.FileAsset;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.descriptor.api.Descriptors;
+import org.jboss.shrinkwrap.descriptor.api.webapp30.WebAppDescriptor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import javax.batch.runtime.BatchStatus;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.File;
 import java.net.URL;
 import java.util.Arrays;
 
@@ -136,7 +139,27 @@ public class RestTest {
         return ShrinkWrap.create(WebArchive.class, "batchee-gui.war")
             // GUI
             .addPackages(true, "org.apache.batchee.gui")
-            .addAsWebInfResource(new FileAsset(new File("src/main/webapp/WEB-INF/web.xml")), "web.xml")
+            .addAsWebInfResource(new StringAsset(
+                Descriptors.create(WebAppDescriptor.class)
+                    .metadataComplete(false)
+                    .createServlet()
+                        .servletName("CXF")
+                        .servletClass("org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet")
+                        .createInitParam()
+                            .paramName("jaxrs.serviceClasses")
+                            .paramValue(JBatchResource.class.getName())
+                        .up()
+                        .createInitParam()
+                            .paramName("jaxrs.providers")
+                            .paramValue("com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider," + JBatchExceptionMapper.class.getName())
+                        .up()
+                    .up()
+                    .createServletMapping()
+                        .servletName("CXF")
+                        .urlPattern("/api/*")
+                    .up()
+                .exportAsString()
+            ), "web.xml")
             // test data to create some job things to do this test
             .addPackage(CreateSomeJobs.class.getPackage())
             .addAsWebInfResource("META-INF/batch-jobs/init.xml", "classes/META-INF/batch-jobs/init.xml");

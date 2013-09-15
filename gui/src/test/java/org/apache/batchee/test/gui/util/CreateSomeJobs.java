@@ -22,8 +22,10 @@ import javax.batch.operations.JobOperator;
 import javax.batch.runtime.BatchRuntime;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 import java.util.Properties;
 
+@WebListener
 public class CreateSomeJobs implements ServletContextListener {
     @Override
     public void contextInitialized(final ServletContextEvent sce) {
