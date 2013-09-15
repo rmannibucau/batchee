@@ -4,11 +4,13 @@
 ### jbatch (aka batchee-jbatch)
 #### Dependency
 
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-jbatch</artifactId>
-      <version>${batchee.version}</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-jbatch</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
 
 #### Goal
 
@@ -17,11 +19,13 @@ Implements JBatch (aka JSR 352).
 ### Shiro
 #### Dependency
 
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-shiro</artifactId>
-      <version>${batchee.version}</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-shiro</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
 
 #### Goal
 
@@ -30,11 +34,13 @@ A simple integration with Apache Shiro to check permissions when running a batch
 ### Extras
 #### Dependency
 
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-extras</artifactId>
-      <version>${batchee.version}</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-extras</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
 
 #### Goal
 
@@ -43,11 +49,13 @@ Basic implementations for Readers/Writers/Processors/.... More on it in extensio
 ### BeanIO
 #### Dependency
 
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-beanio</artifactId>
-      <version>${batchee.version}</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-beanio</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
 
 #### Goal
 
@@ -56,11 +64,13 @@ Basic implementations of a reader and a writer using BeanIO library. Details in 
 ### Groovy
 #### Dependency
 
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-groovy</artifactId>
-      <version>${batchee.version}</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-groovy</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
 
 #### Goal
 
@@ -71,11 +81,13 @@ to add some dynamicity to batches.
 ### Camel
 #### Dependency
 
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-camel</artifactId>
-      <version>${batchee.version}</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-camel</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
 
 #### Goal
 
@@ -132,17 +144,19 @@ returned value of the n processor.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <processor ref="org.apache.batchee.extras.chain.ChainProcessor">
-          <properties>
-            <property name="chain" value="ref1,ref2,ref3"/>
-          </properties>
-        </processor>
-        <writer ref="..." />
-    </chunk>
-  </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <processor ref="org.apache.batchee.extras.chain.ChainProcessor">
+      <properties>
+        <property name="chain" value="ref1,ref2,ref3"/>
+      </properties>
+    </processor>
+    <writer ref="..." />
+</chunk>
+</step>
+```
 
 Note: `org.apache.batchee.extras.chain.ChainBatchlet` does the same for `javax.batch.api.Batchlet`.
 
@@ -153,26 +167,30 @@ Shortname: `chainProcessor`
 A reader reading line by line a file. By default the line is returned as a `java.lang.String`. To return another object
 just override `protected Object preReturn(String line, long lineNumber)` method:
 
-    public class MyFlatReader extends FlatFileItemReader {
-        @Override
-        protected Object preReturn(String line, long lineNumber) {
-            return new Person(line);
-        }
+```java
+public class MyFlatReader extends FlatFileItemReader {
+    @Override
+    protected Object preReturn(String line, long lineNumber) {
+        return new Person(line);
     }
+}
+```
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="org.apache.batchee.extras.flat.FlatFileItemReader">
-          <properties>
-            <property name="input" value="#{jobParameters['input']}" />
-          </properties>
-        </reader>
-        <processor ref="..." />
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="org.apache.batchee.extras.flat.FlatFileItemReader">
+      <properties>
+        <property name="input" value="#{jobParameters['input']}" />
+      </properties>
+    </reader>
+    <processor ref="..." />
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -188,27 +206,31 @@ Shortname: `flatReader`
 A writer writing an item by line. By default `toString()` is used on items, to change it
 just override `protected String preWrite(Object object)` method:
 
-    public class MyFlatReader extends FlatFileItemReader {
-        @Override
-        protected String preWrite(final Object object) {
-            final Person person = (Person) object;
-            return person.getName() + "," + person.getAge();
-        }
+```java
+public class MyFlatReader extends FlatFileItemReader {
+    @Override
+    protected String preWrite(final Object object) {
+        final Person person = (Person) object;
+        return person.getName() + "," + person.getAge();
     }
+}
+```
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..."/>
-        <processor ref="..." />
-        <writer ref="org.apache.batchee.extras.flat.FlatFileItemWriter">
-          <properties>
-            <property name="output" value="#{jobParameters['output']}"/>
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..."/>
+    <processor ref="..." />
+    <writer ref="org.apache.batchee.extras.flat.FlatFileItemWriter">
+      <properties>
+        <property name="output" value="#{jobParameters['output']}"/>
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -224,22 +246,24 @@ This reader execute a query while the query returns items.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="org.apache.batchee.extras.jdbc.JdbcReader">
-          <properties>
-            <property name="mapper" value="org.apache.batchee.extras.JdbcReaderTest$SimpleMapper" />
-            <property name="query" value="select * from FOO where name like 't%'" />
-            <property name="driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property name="url" value="jdbc:derby:memory:jdbcreader;create=true" />
-            <property name="user" value="app" />
-            <property name="password" value="app" />
-          </properties>
-        </reader>
-        <processor ref="..." />
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="org.apache.batchee.extras.jdbc.JdbcReader">
+      <properties>
+        <property name="mapper" value="org.apache.batchee.extras.JdbcReaderTest$SimpleMapper" />
+        <property name="query" value="select * from FOO where name like 't%'" />
+        <property name="driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
+        <property name="url" value="jdbc:derby:memory:jdbcreader;create=true" />
+        <property name="user" value="app" />
+        <property name="password" value="app" />
+      </properties>
+    </reader>
+    <processor ref="..." />
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -254,14 +278,16 @@ Configuration:
 
 Here is a sample record mapper deleting items once read (Note: you probably don't want to do so or at least not without a managed datasource):
 
-    public class SimplePersonMapper implements RecordMapper {
-        @Override
-        public Object map(final ResultSet resultSet) throws SQLException {
-            final String name = resultSet.getString("name"); // extract some fields to create an object
-            resultSet.deleteRow();
-            return new Person(name);
-        }
+```java
+public class SimplePersonMapper implements RecordMapper {
+    @Override
+    public Object map(final ResultSet resultSet) throws SQLException {
+        final String name = resultSet.getString("name"); // extract some fields to create an object
+        resultSet.deleteRow();
+        return new Person(name);
     }
+}
+```
 
 Shortname: `jdbcReader`
 
@@ -271,22 +297,24 @@ A writer storing items in a database.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..."/>
-        <processor ref="..." />
-        <writer ref="org.apache.batchee.extras.jdbc.JdbcWriter">
-          <properties>
-            <property name="mapper" value="org.apache.batchee.extras.JdbcWriterTest$SimpleMapper" />
-            <property name="sql" value="insert into FOO (name) values(?)" />
-            <property name="driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property name="url" value="jdbc:derby:memory:jdbcwriter;create=true" />
-            <property name="user" value="app" />
-            <property name="password" value="app" />
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..."/>
+    <processor ref="..." />
+    <writer ref="org.apache.batchee.extras.jdbc.JdbcWriter">
+      <properties>
+        <property name="mapper" value="org.apache.batchee.extras.JdbcWriterTest$SimpleMapper" />
+        <property name="sql" value="insert into FOO (name) values(?)" />
+        <property name="driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
+        <property name="url" value="jdbc:derby:memory:jdbcwriter;create=true" />
+        <property name="user" value="app" />
+        <property name="password" value="app" />
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -301,12 +329,14 @@ Configuration:
 
 Here is a sample object mapper:
 
-    public class SimpleMapper implements ObjectMapper {
-        @Override
-        public void map(final Object item, final PreparedStatement statement) throws SQLException {
-            statement.setString(1, item.toString()); // 1 because our insert statement uses values(?)
-        }
+```java
+public class SimpleMapper implements ObjectMapper {
+    @Override
+    public void map(final Object item, final PreparedStatement statement) throws SQLException {
+        statement.setString(1, item.toString()); // 1 because our insert statement uses values(?)
     }
+}
+```
 
 Shortname: `jdbcWriter`
 
@@ -316,18 +346,20 @@ Reads items from a JPA query.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="org.apache.batchee.extras.jpa.JpaItemReader">
-          <properties>
-            <property name="entityManagerProvider" value="org.apache.batchee.extras.util.MyProvider" />
-            <property name="query" value="select e from Person e" />
-          </properties>
-        </reader>
-        <processor ref="..." />
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="org.apache.batchee.extras.jpa.JpaItemReader">
+      <properties>
+        <property name="entityManagerProvider" value="org.apache.batchee.extras.util.MyProvider" />
+        <property name="query" value="select e from Person e" />
+      </properties>
+    </reader>
+    <processor ref="..." />
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -348,18 +380,20 @@ Write items through JPA API.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <processor ref="..." />
-        <writer ref="org.apache.batchee.extras.jpa.JpaItemWriter">
-          <properties>
-            <property name="entityManagerProvider" value="org.apache.batchee.extras.util.MyProvider" />
-            <property name="jpaTransaction" value="true" />
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <processor ref="..." />
+    <writer ref="org.apache.batchee.extras.jpa.JpaItemWriter">
+      <properties>
+        <property name="entityManagerProvider" value="org.apache.batchee.extras.util.MyProvider" />
+        <property name="jpaTransaction" value="true" />
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -376,13 +410,15 @@ A writer doing nothing (in <chunk/> a writer is mandatory so it can mock one if 
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <processor ref="..." />
-        <writer ref="org.apache.batchee.extras.noop.NoopItemWriter" />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <processor ref="..." />
+    <writer ref="org.apache.batchee.extras.noop.NoopItemWriter" />
+  </chunk>
+</step>
+```
 
 Shortname: `noopWriter`
 
@@ -396,19 +432,21 @@ A reader using StAX API to read a XML file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="org.apache.batchee.extras.stax.StaxItemReader">
-          <properties>
-            <property name="input" value="#{jobParameters['input']}"/>
-            <property name="marshallingClasses" value="org.apache.batchee.extras.StaxItemReaderTest$Bar"/>
-            <property name="tag" value="bar"/>
-          </properties>
-        </reader>
-        <processor ref="..." />
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="org.apache.batchee.extras.stax.StaxItemReader">
+      <properties>
+        <property name="input" value="#{jobParameters['input']}"/>
+        <property name="marshallingClasses" value="org.apache.batchee.extras.StaxItemReaderTest$Bar"/>
+        <property name="tag" value="bar"/>
+      </properties>
+    </reader>
+    <processor ref="..." />
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -425,18 +463,20 @@ A writer using StAX API to write a XML file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <processor ref="..." />
-        <writer ref="org.apache.batchee.extras.stax.StaxItemWriter">
-          <properties>
-            <property name="output" value="#{jobParameters['output']}"/>
-            <property name="marshallingClasses" value="org.apache.batchee.extras.StaxItemWriterTest$Foo"/>
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <processor ref="..." />
+    <writer ref="org.apache.batchee.extras.stax.StaxItemWriter">
+      <properties>
+        <property name="output" value="#{jobParameters['output']}"/>
+        <property name="marshallingClasses" value="org.apache.batchee.extras.StaxItemWriterTest$Foo"/>
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -455,32 +495,36 @@ A reader using BeanIO.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="org.apache.batchee.beanio.BeanIOReader">
-          <properties>
-            <property name="file" value="#{jobParameters['input']}"/>
-            <property name="streamName" value="readerCSV"/>
-            <property name="configuration" value="beanio.xml"/>
-          </properties>
-        </reader>
-        <processor ref="..." />
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="org.apache.batchee.beanio.BeanIOReader">
+      <properties>
+        <property name="file" value="#{jobParameters['input']}"/>
+        <property name="streamName" value="readerCSV"/>
+        <property name="configuration" value="beanio.xml"/>
+      </properties>
+    </reader>
+    <processor ref="..." />
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Here is the associated beanio.xml:
 
-      <beanio xmlns="http://www.beanio.org/2012/03"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://www.beanio.org/2012/03 http://www.beanio.org/2012/03/mapping.xsd">
-      <stream name="readerCSV" format="csv">
-        <record name="record1" class="org.apache.batchee.beanio.bean.Record">
-          <field name="field1"/>
-          <field name="field2"/>
-        </record>
-      </stream>
-    </beanio>
+```xml
+<beanio xmlns="http://www.beanio.org/2012/03"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.beanio.org/2012/03 http://www.beanio.org/2012/03/mapping.xsd">
+  <stream name="readerCSV" format="csv">
+    <record name="record1" class="org.apache.batchee.beanio.bean.Record">
+      <field name="field1"/>
+      <field name="field2"/>
+    </record>
+  </stream>
+</beanio>
+```
 
 Configuration:
 
@@ -498,19 +542,21 @@ A writer using BeanIO.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <processor ref="..." />
-        <writer ref="org.apache.batchee.beanio.BeanIOWriter">
-          <properties>
-            <property name="file" value="#{jobParameters['output']}"/>
-            <property name="streamName" value="writerCSV"/>
-            <property name="configuration" value="beanio.xml"/>
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <processor ref="..." />
+    <writer ref="org.apache.batchee.beanio.BeanIOWriter">
+      <properties>
+        <property name="file" value="#{jobParameters['output']}"/>
+        <property name="streamName" value="writerCSV"/>
+        <property name="configuration" value="beanio.xml"/>
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -528,17 +574,19 @@ A processor reusing Camel logic.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <processor ref="org.apache.batchee.camel.CamelItemProcessor">
-          <properties>
-            <property name="endpoint" value="direct:processor"/>
-          </properties>
-        </processor>
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <processor ref="org.apache.batchee.camel.CamelItemProcessor">
+      <properties>
+        <property name="endpoint" value="direct:processor"/>
+      </properties>
+    </processor>
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -553,17 +601,19 @@ Same as previous one but with a chain
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <processor ref="org.apache.batchee.camel.CamelChainItemProcessor">
-          <properties>
-            <property name="chain" value="test:foo?value=first,test:bar?value=second"/>
-          </properties>
-        </processor>
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <processor ref="org.apache.batchee.camel.CamelChainItemProcessor">
+      <properties>
+        <property name="chain" value="test:foo?value=first,test:bar?value=second"/>
+      </properties>
+    </processor>
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration: mainly the chain configuration excepted "chain" value is a list of endpoints.
 
@@ -575,17 +625,19 @@ A reader using camel consumers.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="org.apache.batchee.camel.CamelItemReader">
-          <properties>
-            <property name="endpoint" value="direct:reader"/>
-          </properties>
-        </reader>
-        <processor ref="..." />
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="org.apache.batchee.camel.CamelItemReader">
+      <properties>
+        <property name="endpoint" value="direct:reader"/>
+      </properties>
+    </reader>
+    <processor ref="..." />
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -600,17 +652,19 @@ A writer using camel producer.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <processor ref="..." />
-        <writer ref="org.apache.batchee.camel.CamelItemWriter">
-          <properties>
-            <property name="endpoint" value="direct:writer"/>
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <processor ref="..." />
+    <writer ref="org.apache.batchee.camel.CamelItemWriter">
+      <properties>
+        <property name="endpoint" value="direct:writer"/>
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -643,17 +697,19 @@ A reader delegating to a groovy script.
 
 Sample:
 
-     <step id="step1">
-       <chunk>
-         <reader ref="groovyReader">
-           <properties>
-             <property name="scriptPath" value="target/work/reader.groovy"/>
-           </properties>
-         </reader>
-         <processor ref="..." />
-         <writer ref="..." />
-       </chunk>
-     </step>
+```xml
+<step id="step1">
+  <chunk>
+   <reader ref="groovyReader">
+     <properties>
+       <property name="scriptPath" value="target/work/reader.groovy"/>
+     </properties>
+   </reader>
+   <processor ref="..." />
+   <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -667,17 +723,19 @@ A processor delegating to a groovy script.
 
 Sample:
 
-     <step id="step1">
-       <chunk>
-         <reader ref="..." />
-         <processor ref="groovyProcessor">
-           <properties>
-             <property name="scriptPath" value="/groovy/processor.groovy"/>
-           </properties>
-         </processor>
-         <writer ref="..." />
-       </chunk>
-     </step>
+```xml
+ <step id="step1">
+ <chunk>
+   <reader ref="..." />
+   <processor ref="groovyProcessor">
+     <properties>
+       <property name="scriptPath" value="/groovy/processor.groovy"/>
+     </properties>
+   </processor>
+   <writer ref="..." />
+ </chunk>
+</step>
+```
 
 Configuration:
 
@@ -691,17 +749,19 @@ A writer delegating to a groovy script.
 
 Sample:
 
-     <step id="step1">
-       <chunk>
-         <reader ref="..." />
-         <processor ref="..." />
-         <writer ref="groovyWriter">
-           <properties>
-             <property name="scriptPath" value="/groovy/writer.groovy"/>
-           </properties>
-         </writer>
-       </chunk>
-     </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <processor ref="..." />
+    <writer ref="groovyWriter">
+      <properties>
+        <property name="scriptPath" value="/groovy/writer.groovy"/>
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration:
 
@@ -715,13 +775,15 @@ A batchlet delegating to a groovy script.
 
 Sample:
 
-     <step id="step1">
-       <batchlet ref="groovyBatchlet">
-         <properties>
-           <property name="scriptPath" value="/groovy/batchlet.groovy"/>
-         </properties>
-       </batchlet>
-     </step>
+```xml
+<step id="step1">
+  <batchlet ref="groovyBatchlet">
+    <properties>
+      <property name="scriptPath" value="/groovy/batchlet.groovy"/>
+    </properties>
+  </batchlet>
+</step>
+```
 
 Configuration:
 
@@ -735,13 +797,15 @@ A simple processor validating an item using bean validation.
 
 Sample:
 
-     <step id="step1">
-       <chunk>
-        <reader ref="..." />
-        <processor ref="beanValidationProcessor" />
-        <writer ref="..." />
-      </chunk>
-     </step>
+```xml
+<step id="step1">
+  <chunk>
+   <reader ref="..." />
+   <processor ref="beanValidationProcessor" />
+   <writer ref="..." />
+ </chunk>
+</step>
+```
 
 Configuration:
 
@@ -755,17 +819,19 @@ Use JSefa to read a CSV file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="jsefaCsvReader">
-          <properties>
-            <property name="file" value="#{jobParameters['input']}"/>
-            <property name="objectTypes" value="org.superbiz.Record"/>
-          </properties>
-        </reader>
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="jsefaCsvReader">
+      <properties>
+        <property name="file" value="#{jobParameters['input']}"/>
+        <property name="objectTypes" value="org.superbiz.Record"/>
+      </properties>
+    </reader>
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration (excepted for file see org.jsefa.csv.config.CsvConfiguration for detail):
 
@@ -796,17 +862,19 @@ Use JSefa to write a CSV file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <writer ref="jsefaCsvWriter">
-          <properties>
-            <property name="file" value="#{jobParameters['output']}"/>
-            <property name="objectTypes" value="org.superbiz.Record"/>
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <writer ref="jsefaCsvWriter">
+      <properties>
+        <property name="file" value="#{jobParameters['output']}"/>
+        <property name="objectTypes" value="org.superbiz.Record"/>
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration (excepted for file and encoding see org.jsefa.csv.config.CsvConfiguration for detail):
 
@@ -838,17 +906,19 @@ Use JSefa to read a FLR file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="jsefaFlrReader">
-          <properties>
-            <property name="file" value="#{jobParameters['input']}"/>
-            <property name="objectTypes" value="org.superbiz.Record"/>
-          </properties>
-        </reader>
-        <writer ref="..." />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="jsefaFlrReader">
+      <properties>
+        <property name="file" value="#{jobParameters['input']}"/>
+        <property name="objectTypes" value="org.superbiz.Record"/>
+      </properties>
+    </reader>
+    <writer ref="..." />
+  </chunk>
+</step>
+```
 
 Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
 
@@ -874,17 +944,19 @@ Use JSefa to write a FLR file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="..." />
-        <writer ref="jsefaFlrWriter">
-          <properties>
-            <property name="file" value="#{jobParameters['output']}"/>
-            <property name="objectTypes" value="org.superbiz.Record"/>
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="..." />
+    <writer ref="jsefaFlrWriter">
+      <properties>
+        <property name="file" value="#{jobParameters['output']}"/>
+        <property name="objectTypes" value="org.superbiz.Record"/>
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
 
@@ -911,18 +983,20 @@ Use JSefa to read a XML file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="jsefaXmlReader">
-          <properties>
-            <property name="file" value="#{jobParameters['input']}"/>
-            <property name="objectTypes" value="org.apache.batchee.jsefa.bean.Record"/>
-          </properties>
-        </reader>
-        <processor ref="org.apache.batchee.jsefa.JSefaXmlReaderTest$StoreItems" />
-        <writer ref="noopWriter" />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="jsefaXmlReader">
+      <properties>
+        <property name="file" value="#{jobParameters['input']}"/>
+        <property name="objectTypes" value="org.apache.batchee.jsefa.bean.Record"/>
+      </properties>
+    </reader>
+    <processor ref="org.apache.batchee.jsefa.JSefaXmlReaderTest$StoreItems" />
+    <writer ref="noopWriter" />
+  </chunk>
+</step>
+```
 
 Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
 
@@ -948,17 +1022,19 @@ Use JSefa to write a XML file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="org.apache.batchee.jsefa.JSefaXmlWriterTest$TwoItemsReader" />
-        <writer ref="jsefaXmlWriter">
-          <properties>
-            <property name="file" value="#{jobParameters['output']}"/>
-            <property name="objectTypes" value="org.apache.batchee.jsefa.bean.Record"/>
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="org.apache.batchee.jsefa.JSefaXmlWriterTest$TwoItemsReader" />
+    <writer ref="jsefaXmlWriter">
+      <properties>
+        <property name="file" value="#{jobParameters['output']}"/>
+        <property name="objectTypes" value="org.apache.batchee.jsefa.bean.Record"/>
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
 
@@ -985,17 +1061,19 @@ Use JSefa to read a XML file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="jacksonJSonReader">
-          <properties>
-            <property name="type" value="..."/>
-            <property name="file" value="work/jackson-input.json"/>
-          </properties>
-        </reader>
-        <writer ref="org.apache.batchee.jackson.JacksonJsonReaderTest$Writer" />
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="jacksonJSonReader">
+      <properties>
+        <property name="type" value="..."/>
+        <property name="file" value="work/jackson-input.json"/>
+      </properties>
+    </reader>
+    <writer ref="org.apache.batchee.jackson.JacksonJsonReaderTest$Writer" />
+  </chunk>
+</step>
+```
 
 Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
 
@@ -1012,17 +1090,19 @@ Use JSefa to write a XML file.
 
 Sample:
 
-    <step id="step1">
-      <chunk>
-        <reader ref="org.apache.batchee.jackson.JacksonJSonWriterTest$Reader" />
-        <writer ref="jacksonJSonWriter">
-          <properties>
-            <property name="file" value="target/work/jackson-field-output.json"/>
-            <property name="fieldNameGeneratorClass" value="default"/> <!-- item1, item2, ... -->
-          </properties>
-        </writer>
-      </chunk>
-    </step>
+```xml
+<step id="step1">
+  <chunk>
+    <reader ref="org.apache.batchee.jackson.JacksonJSonWriterTest$Reader" />
+    <writer ref="jacksonJSonWriter">
+      <properties>
+        <property name="file" value="target/work/jackson-field-output.json"/>
+        <property name="fieldNameGeneratorClass" value="default"/> <!-- item1, item2, ... -->
+      </properties>
+    </writer>
+  </chunk>
+</step>
+```
 
 Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
 
@@ -1037,11 +1117,13 @@ Shortname: `jacksonJSonWriter`
 ### GUI
 #### Dependency
 
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-gui</artifactId>
-      <version>${batchee.version}</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-gui</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
 
 #### Goal
 
