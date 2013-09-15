@@ -16,10 +16,12 @@
  */
 package org.apache.batchee.test.gui;
 
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.apache.batchee.gui.servlet.JBatchController;
+import org.apache.batchee.gui.servlet.JBatchServletInitializer;
 import org.apache.batchee.test.gui.util.CreateSomeJobs;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -62,12 +64,15 @@ public class ServletTest {
         assertEquals("step1", extractContent("step-executions/0", "/table/tbody/tr/td[2]"));
     }
 
+    @Test(expected = FailingHttpStatusCodeException.class)
+    public void privateUrl() throws IOException {
+        final WebClient client = newWebClient();
+        client.getPage(base.toExternalForm() + "jbatch/internal/batchee/jobs.jsp");
+    }
+
     private String extractContent(final String endUrl, final String xpath) throws IOException {
         final String url = base.toExternalForm() + "jbatch/" + endUrl;
-        final WebClient webClient = new WebClient();
-        webClient.getOptions().setJavaScriptEnabled(false);
-        webClient.getOptions().setCssEnabled(false);
-        webClient.getOptions().setAppletEnabled(false);
+        final WebClient webClient = newWebClient();
 
         final HtmlPage page = webClient.getPage(url);
         final List<?> byXPath = page.getByXPath("//div[@id=\"content\"]" + xpath);
@@ -80,6 +85,14 @@ public class ServletTest {
         return DomNode.class.cast(next).asText();
     }
 
+    private WebClient newWebClient() {
+        final WebClient webClient = new WebClient();
+        webClient.getOptions().setJavaScriptEnabled(false);
+        webClient.getOptions().setCssEnabled(false);
+        webClient.getOptions().setAppletEnabled(false);
+        return webClient;
+    }
+
     @Deployment(testable = false)
     public static Archive<?> war() {
         final WebArchive webArchive = ShrinkWrap.create(WebArchive.class, "batchee-gui.war")
@@ -89,10 +102,18 @@ public class ServletTest {
                     .createListener()
                         .listenerClass(CreateSomeJobs.class.getName())
                     .up()
+                    .createFilter()
+                        .filterName("JBatch Private Filter")
+                        .filterClass(JBatchServletInitializer.PrivateFilter.class.getName())
+                    .up()
                     .createServlet()
                         .servletName("JBatch")
                         .servletClass(JBatchController.class.getName())
                         .loadOnStartup(1)
+                    .up()
+                    .createFilterMapping()
+                        .filterName("JBatch Private Filter")
+                        .urlPattern("/*")
                     .up()
                     .createServletMapping()
                         .servletName("JBatch")

@@ -16,17 +16,31 @@
  */
 package org.apache.batchee.gui.servlet;
 
+import javax.servlet.DispatcherType;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.EnumSet;
 import java.util.Set;
 
 public class JBatchServletInitializer implements ServletContainerInitializer {
+    public static final String CONTROLLER_MAPPING = "org.apache.batchee.servlet.mapping";
+    public static final String ACTIVE_PRIVATE_FILTER = "org.apache.batchee.servlet.filter.private";
+
     private static final String DEFAULT_MAPPING = "/jbatch/*";
 
     @Override
     public void onStartup(final Set<Class<?>> classes, final ServletContext ctx) throws ServletException {
-        String mapping = ctx.getInitParameter("org.apache.batchee.servlet.mapping");
+        String mapping = ctx.getInitParameter(CONTROLLER_MAPPING);
         if (mapping == null) {
             mapping = DEFAULT_MAPPING;
         } else if (!mapping.endsWith("/*")) { // needed for the controller
@@ -34,5 +48,35 @@ public class JBatchServletInitializer implements ServletContainerInitializer {
         }
 
         ctx.addServlet("JBatch Servlet", new JBatchController().mapping(mapping)).addMapping(mapping);
+
+        final String activePrivateFilter = ctx.getInitParameter(ACTIVE_PRIVATE_FILTER);
+        if (activePrivateFilter == null || Boolean.parseBoolean(activePrivateFilter)) {
+            ctx.addFilter("JBatch Private Filter", PrivateFilter.class)
+                .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
+        }
+    }
+
+    public static class PrivateFilter implements Filter {
+        @Override
+        public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain) throws IOException, ServletException {
+            if (HttpServletRequest.class.isInstance(request) && HttpServletResponse.class.isInstance(response)
+                && HttpServletRequest.class.cast(request).getRequestURI().contains("/internal/batchee")
+                && request.getAttribute("internal") == null) {
+                HttpServletResponse.class.cast(response).sendError(HttpURLConnection.HTTP_NOT_FOUND);
+                return;
+            }
+
+            chain.doFilter(request, response);
+        }
+
+        @Override
+        public void init(final FilterConfig filterConfig) throws ServletException {
+            //no-op
+        }
+
+        @Override
+        public void destroy() {
+            // no-op
+        }
     }
 }
