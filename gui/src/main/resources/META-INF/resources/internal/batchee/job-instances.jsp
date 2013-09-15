@@ -53,6 +53,14 @@
     </table>
 
 <%
+    final Integer previousStart = (Integer) request.getAttribute("previousStart");
+    if (previousStart >= 0) {
+%>
+    <a href="<%= request.getAttribute("mapping") %>/executions/<%= DatatypeConverter.printBase64Binary(name.getBytes()) %>?start=<%= previousStart %>">Previous executions</a>
+<%
+    }
+%>
+<%
     final Integer nextStart = (Integer) request.getAttribute("nextStart");
     if (nextStart > 0) {
 %>

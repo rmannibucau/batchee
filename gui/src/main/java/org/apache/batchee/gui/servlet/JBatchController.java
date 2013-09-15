@@ -115,6 +115,12 @@ public class JBatchController extends HttpServlet {
             nextStart = -1;
         }
         req.setAttribute("nextStart", nextStart);
+
+        int previousStart = start - EXECUTION_BY_PAGE;
+        if (previousStart < 0) {
+            previousStart = -1;
+        }
+        req.setAttribute("previousStart", nextStart);
     }
 
     private void listJobs(final HttpServletRequest req) throws ServletException, IOException {
