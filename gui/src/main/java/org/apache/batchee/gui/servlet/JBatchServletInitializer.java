@@ -33,6 +33,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public class JBatchServletInitializer implements ServletContainerInitializer {
+    public static final String ACTIVE = "org.apache.batchee.servlet.active";
     public static final String CONTROLLER_MAPPING = "org.apache.batchee.servlet.mapping";
     public static final String ACTIVE_PRIVATE_FILTER = "org.apache.batchee.servlet.filter.private";
 
@@ -40,6 +41,11 @@ public class JBatchServletInitializer implements ServletContainerInitializer {
 
     @Override
     public void onStartup(final Set<Class<?>> classes, final ServletContext ctx) throws ServletException {
+        final String active = ctx.getInitParameter(ACTIVE);
+        if (active != null && !Boolean.parseBoolean(active)) {
+            return;
+        }
+
         String mapping = ctx.getInitParameter(CONTROLLER_MAPPING);
         if (mapping == null) {
             mapping = DEFAULT_MAPPING;

@@ -1034,3 +1034,86 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 
 Shortname: `jacksonJSonWriter`
 
+### GUI
+#### Dependency
+
+    <dependency>
+      <groupId>org.apache.batchee</groupId>
+      <artifactId>batchee-gui</artifactId>
+      <version>${batchee.version}</version>
+    </dependency>
+
+#### Goal
+
+A simple web front to visualize JBatch informations.
+
+#### JAX-RS resource
+
+`org.apache.batchee.gui.service.JBatchResource` maps more or less `javax.batch.operations.JobOperator` API
+to JAXRS.
+
+To define it with CXF you can use the `CXFNonSpringServlet` in a servlet container, in a JavaEE container
+you surely already have it and just need to define a custom `javax.ws.rs.core.Application` with `JBatchResource`
+as class in `getClasses` and configure `org.apache.batchee.gui.service.JBatchExceptionMapper` if you want
+to map `javax.batch.operations.BatchRuntimeException` to status 500:
+
+```xml
+<web-app version="2.5"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+  <servlet>
+    <servlet-name>CXFServlet</servlet-name>
+    <display-name>JBatch JAXRS Servlet</display-name>
+    <servlet-class>org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet</servlet-class>
+    <init-param>
+      <param-name>jaxrs.serviceClasses</param-name>
+      <param-value>org.apache.batchee.gui.service.JBatchResource</param-value>
+    </init-param>
+    <init-param>
+      <param-name>jaxrs.providers</param-name>
+      <param-value>
+        com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider,
+        org.apache.batchee.gui.service.JBatchExceptionMapper
+      </param-value>
+    </init-param>
+    <init-param>
+      <param-name>jaxrs.extensions</param-name>
+      <param-value>json=application/json</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>CXFServlet</servlet-name>
+    <url-pattern>/api/*</url-pattern>
+  </servlet-mapping>
+</web-app>
+```
+
+Here is the mapping:
+
+* /job-names
+* /job-instance/count/{name}
+* /job-instances/{name}?start={start}&count={count}
+* /executions/running/{name}
+* /execution/parameter/{id}
+* /job-instance/{id}
+* /job-executions/{id}/{name}
+* /job-execution/{id}
+* /step-executions/{id}
+* /execution/start/{name}
+* /execution/restart/{id}
+* /execution/stop/{id}
+* /execution/abandon/{id}
+
+#### Html gui
+
+It is based in `org.apache.batchee.gui.servlet.JBatchController` but since the jar is in a webapp in a servlet 3.0 container,
+it is automatically added.
+
+The configuration through init parameters is:
+
+* org.apache.batchee.servlet.active: boolean to deactivate it
+* org.apache.batchee.servlet.mapping: mapping for the gui, default /jbatch/*
+* org.apache.batchee.servlet.filter.private: boolean saying if internal jsp should be protected, it adds a filter to check URLs on each request
