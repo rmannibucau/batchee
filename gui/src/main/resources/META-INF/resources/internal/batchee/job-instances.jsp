@@ -53,10 +53,12 @@
     </table>
 
 <%
+    final String url = request.getAttribute("mapping") + "/executions/" +DatatypeConverter.printBase64Binary(name.getBytes()) + "?start=";
+
     final Integer previousStart = (Integer) request.getAttribute("previousStart");
-    if (previousStart >= 0) {
+    if (previousStart >= 0) { // here we need to test 0 for 2nd page case
 %>
-    <a href="<%= request.getAttribute("mapping") %>/executions/<%= DatatypeConverter.printBase64Binary(name.getBytes()) %>?start=<%= previousStart %>">Previous executions</a>
+    <a href="<%= url %><%= previousStart %>">Previous executions</a>
 <%
     }
 %>
@@ -64,7 +66,15 @@
     final Integer nextStart = (Integer) request.getAttribute("nextStart");
     if (nextStart > 0) {
 %>
-    <a href="<%= request.getAttribute("mapping") %>/executions/<%= DatatypeConverter.printBase64Binary(name.getBytes()) %>?start=<%= nextStart %>">Next executions</a>
+    <a href="<%= url %><%= nextStart %>">Next executions</a>
+<%
+    }
+%>
+<%
+    final Integer lastStart = (Integer) request.getAttribute("lastStart");
+    if (lastStart > 0) {
+%>
+    <a href="<%= url %><%= lastStart %>">Jump to last executions</a>
 <%
     }
 %>
