@@ -65,18 +65,18 @@ public class CheckpointManager {
             readerOOS = new ObjectOutputStream(readerChkptBA);
             readerOOS.writeObject(readerProxy.checkpointInfo());
             readerOOS.close();
-            CheckpointData readerChkptData = new CheckpointData(jobInstanceID, stepId, "READER");
+            CheckpointData readerChkptData = new CheckpointData(jobInstanceID, stepId, CheckpointType.READER);
             readerChkptData.setRestartToken(readerChkptBA.toByteArray());
-            readerChkptDK = new CheckpointDataKey(jobInstanceID, stepId, "READER");
+            readerChkptDK = new CheckpointDataKey(jobInstanceID, stepId, CheckpointType.READER);
 
             persistenceManagerService.setCheckpointData(readerChkptDK, readerChkptData);
 
             writerOOS = new ObjectOutputStream(writerChkptBA);
             writerOOS.writeObject(writerProxy.checkpointInfo());
             writerOOS.close();
-            CheckpointData writerChkptData = new CheckpointData(jobInstanceID, stepId, "WRITER");
+            CheckpointData writerChkptData = new CheckpointData(jobInstanceID, stepId, CheckpointType.WRITER);
             writerChkptData.setRestartToken(writerChkptBA.toByteArray());
-            writerChkptDK = new CheckpointDataKey(jobInstanceID, stepId, "WRITER");
+            writerChkptDK = new CheckpointDataKey(jobInstanceID, stepId, CheckpointType.WRITER);
 
             persistenceManagerService.setCheckpointData(writerChkptDK, writerChkptData);
 

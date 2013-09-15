@@ -705,7 +705,7 @@ public class ChunkStepController extends SingleThreadedStepController {
     }
 
     private void openReaderAndWriter() {
-        readerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), "READER");
+        readerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), CheckpointType.READER);
         CheckpointData readerChkptData = persistenceManagerService.getCheckpointData(readerChkptDK);
         try {
 
@@ -731,7 +731,7 @@ public class ChunkStepController extends SingleThreadedStepController {
             throw new IllegalStateException("Expected CheckpointData but found" + readerChkptData);
         }
 
-        writerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), "WRITER");
+        writerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), CheckpointType.WRITER);
         CheckpointData writerChkptData = persistenceManagerService.getCheckpointData(writerChkptDK);
         try {
             // check for data in backing store
@@ -831,7 +831,7 @@ public class ChunkStepController extends SingleThreadedStepController {
     }
 
     private void positionReaderAtCheckpoint() {
-        readerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), "READER");
+        readerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), CheckpointType.READER);
 
         CheckpointData readerData = persistenceManagerService.getCheckpointData(readerChkptDK);
         try {
@@ -859,7 +859,7 @@ public class ChunkStepController extends SingleThreadedStepController {
     }
 
     private void positionWriterAtCheckpoint() {
-        writerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), "WRITER");
+        writerChkptDK = new CheckpointDataKey(jobExecutionImpl.getJobInstance().getInstanceId(), step.getId(), CheckpointType.WRITER);
 
         CheckpointData writerData = persistenceManagerService.getCheckpointData(writerChkptDK);
         try {

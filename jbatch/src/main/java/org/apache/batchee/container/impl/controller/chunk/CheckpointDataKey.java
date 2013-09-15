@@ -17,34 +17,30 @@
 package org.apache.batchee.container.impl.controller.chunk;
 
 public class CheckpointDataKey {
+    private long jobInstanceId;
+    private CheckpointType type;
+    private String stepName;
 
-    private long _jobInstanceId;
-
-    // OK, this comes from IBM terminology, but I can't come up with a better name so we're leaving it.
-    // "readerOrWriterName" ?
-    private String _batchDataStreamName;
-    private String _stepName;
-
-    public CheckpointDataKey(long jobId, String stepName, String bdsName) {
-        this._jobInstanceId = jobId;
-        this._stepName = stepName;
-        this._batchDataStreamName = bdsName;
+    public CheckpointDataKey(final long jobId, final String stepName, final CheckpointType bdsName) {
+        this.jobInstanceId = jobId;
+        this.stepName = stepName;
+        this.type = bdsName;
     }
 
     public long getJobInstanceId() {
-        return _jobInstanceId;
+        return jobInstanceId;
     }
 
-    public String getBatchDataStreamName() {
-        return _batchDataStreamName;
+    public CheckpointType getType() {
+        return type;
     }
 
     public String getStepName() {
-        return _stepName;
+        return stepName;
     }
 
     public String getCommaSeparatedKey() {
-        return _jobInstanceId + "," + _stepName + "," + _batchDataStreamName;
+        return jobInstanceId + "," + stepName + "," + type.name();
     }
 
     @Override
@@ -62,16 +58,16 @@ public class CheckpointDataKey {
         }
 
         final CheckpointDataKey that = CheckpointDataKey.class.cast(o);
-        return _jobInstanceId == that._jobInstanceId
-            && _batchDataStreamName.equals(that._batchDataStreamName)
-            && _stepName.equals(that._stepName);
+        return jobInstanceId == that.jobInstanceId
+            && type.equals(that.type)
+            && stepName.equals(that.stepName);
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (_jobInstanceId ^ (_jobInstanceId >>> 32));
-        result = 31 * result + _batchDataStreamName.hashCode();
-        result = 31 * result + _stepName.hashCode();
+        int result = (int) (jobInstanceId ^ (jobInstanceId >>> 32));
+        result = 31 * result + type.hashCode();
+        result = 31 * result + stepName.hashCode();
         return result;
     }
 }

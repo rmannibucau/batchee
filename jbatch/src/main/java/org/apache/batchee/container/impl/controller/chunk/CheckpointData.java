@@ -22,26 +22,23 @@ import java.io.UnsupportedEncodingException;
 public class CheckpointData implements Serializable {
     private static final long serialVersionUID = 1L;
     private long _jobInstanceId;
-    private String _batchDataStreamName;
-    private String _stepName;
-    private byte[] _restartToken;
+    private CheckpointType type;
+    private String stepName;
+    private byte[] restartToken;
 
-    public CheckpointData(
-        long jobInstanceId,
-        String stepname,
-        String batchDataStreamName) {
-        if (stepname != null && batchDataStreamName != null) {
+    public CheckpointData(final long jobInstanceId, final String stepname, final CheckpointType ckType) {
+        if (stepname != null && ckType != null) {
             _jobInstanceId = jobInstanceId;
-            _batchDataStreamName = batchDataStreamName;
-            _stepName = stepname;
+            type = ckType;
+            stepName = stepname;
             try {
-                _restartToken = "NOTSET".getBytes("UTF8");
+                restartToken = "NOTSET".getBytes("UTF8");
             } catch (final UnsupportedEncodingException e) {
                 throw new RuntimeException("Doesn't support UTF-8", e);
             }
         } else {
             throw new RuntimeException("Invalid parameters to CheckpointData jobInstanceId: " + _jobInstanceId +
-                " BDS: " + batchDataStreamName + " stepName: " + stepname);
+                " BDS: " + ckType + " stepName: " + stepname);
         }
     }
 
@@ -49,46 +46,44 @@ public class CheckpointData implements Serializable {
         return _jobInstanceId;
     }
 
-    public void setjobInstanceId(long id) {
+    public void setjobInstanceId(final long id) {
         _jobInstanceId = id;
     }
 
-    public String getBatchDataStreamName() {
-        return _batchDataStreamName;
+    public CheckpointType getType() {
+        return type;
     }
 
-    public void setBatchDataStreamName(String dataStreamName) {
-        _batchDataStreamName = dataStreamName;
+    public void setType(final CheckpointType ckType) {
+        type = ckType;
     }
 
     public String getStepName() {
-        return _stepName;
+        return stepName;
     }
 
-    public void setStepName(String name) {
-        _stepName = name;
+    public void setStepName(final String name) {
+        stepName = name;
     }
 
     public byte[] getRestartToken() {
-        return _restartToken;
+        return restartToken;
     }
 
     public void setRestartToken(byte[] token) {
-        _restartToken = token;
+        restartToken = token;
     }
 
+    @Override
     public String toString() {
         String restartString;
         try {
-            restartString = new String(this._restartToken, "UTF8");
+            restartString = new String(this.restartToken, "UTF8");
         } catch (UnsupportedEncodingException e) {
             restartString = "<bytes not UTF-8>";
         }
-        return " jobInstanceId: " + _jobInstanceId + " stepId: " + this._stepName + " bdsName: " + this._batchDataStreamName +
+        return " jobInstanceId: " + _jobInstanceId + " stepId: " + this.stepName + " bdsName: " + this.type.name() +
             " restartToken: [UTF8-bytes: " + restartString;
-
     }
-
-
 }
 
