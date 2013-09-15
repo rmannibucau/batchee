@@ -73,7 +73,6 @@ public class JBatchController extends HttpServlet {
     protected void service(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text/html");
         resp.setCharacterEncoding("UTF-8");
-        req.setAttribute("internal", Boolean.TRUE);
         req.setAttribute("context", context);
         req.setAttribute("mapping", mapping);
 

@@ -59,11 +59,13 @@ public class JBatchServletInitializer implements ServletContainerInitializer {
     public static class PrivateFilter implements Filter {
         @Override
         public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain) throws IOException, ServletException {
-            if (HttpServletRequest.class.isInstance(request) && HttpServletResponse.class.isInstance(response)
-                && HttpServletRequest.class.cast(request).getRequestURI().contains("/internal/batchee")
-                && request.getAttribute("internal") == null) {
-                HttpServletResponse.class.cast(response).sendError(HttpURLConnection.HTTP_NOT_FOUND);
-                return;
+            if (HttpServletRequest.class.isInstance(request) && HttpServletResponse.class.isInstance(response)) {
+                final HttpServletRequest httpServletRequest = HttpServletRequest.class.cast(request);
+                final String requestURI = httpServletRequest.getRequestURI();
+                if (requestURI.contains("/internal/batchee") && requestURI.endsWith("jsp")) {
+                    HttpServletResponse.class.cast(response).sendError(HttpURLConnection.HTTP_NOT_FOUND);
+                    return;
+                }
             }
 
             chain.doFilter(request, response);
