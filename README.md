@@ -31,6 +31,21 @@ Implements JBatch (aka JSR 352).
 
 A simple integration with Apache Shiro to check permissions when running a batch.
 
+### GUI/Web module
+#### Dependency
+
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-gui</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
+
+#### Goal
+
+A simple web front to visualize JBatch information and expose as JAX-RS resource JBatch `JobOperator`.
+
 ### Extras
 #### Dependency
 
@@ -1115,20 +1130,6 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 Shortname: `jacksonJSonWriter`
 
 ### GUI
-#### Dependency
-
-```xml
-<dependency>
-  <groupId>org.apache.batchee</groupId>
-  <artifactId>batchee-gui</artifactId>
-  <version>${batchee.version}</version>
-</dependency>
-```
-
-#### Goal
-
-A simple web front to visualize JBatch informations.
-
 #### JAX-RS resource
 
 `org.apache.batchee.gui.service.JBatchResource` maps more or less `javax.batch.operations.JobOperator` API
