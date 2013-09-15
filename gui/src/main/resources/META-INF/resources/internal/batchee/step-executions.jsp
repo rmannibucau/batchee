@@ -14,6 +14,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%@ page session="false" %>
 <%@ page import="org.apache.batchee.gui.servlet.MetricsHelper" %>
 <%@ page import="javax.batch.runtime.StepExecution" %>
 <%@ page import="java.util.List" %>

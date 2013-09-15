@@ -14,6 +14,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
+<%@ page session="false" %>
 <%@ page import="javax.batch.runtime.JobExecution" %>
 <%@ page import="javax.batch.runtime.JobInstance" %>
 <%@ page import="java.util.List" %>
