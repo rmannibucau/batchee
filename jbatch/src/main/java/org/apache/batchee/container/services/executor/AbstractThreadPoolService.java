@@ -19,10 +19,18 @@ package org.apache.batchee.container.services.executor;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.spi.BatchThreadPoolService;
 
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
 public abstract class AbstractThreadPoolService implements BatchThreadPoolService {
     protected ExecutorService executorService;
+
+    protected abstract ExecutorService newExecutorService(Properties batchConfig);
+
+    @Override
+    public void init(final Properties batchConfig) throws BatchContainerServiceException {
+        executorService = newExecutorService(batchConfig);
+    }
 
     @Override
     public void shutdown() throws BatchContainerServiceException {
@@ -32,6 +40,6 @@ public abstract class AbstractThreadPoolService implements BatchThreadPoolServic
 
     @Override
     public void executeTask(final Runnable work, final Object config) {
-        executorService.execute(work);
+        executorService.execute(new ClassLoaderAwareTask(work));
     }
 }

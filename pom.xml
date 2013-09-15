@@ -27,7 +27,7 @@
   <name>BatchEE</name>
 
   <modules>
-    <module>impl</module>
+    <module>jbatch</module>
     <module>extensions</module>
     <module>gui</module>
   </modules>

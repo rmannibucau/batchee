@@ -20,7 +20,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Apache JBatch GUI">
 
-    <link href="<%= request.getAttribute("context") %>/internal/batchee/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="<%= request.getAttribute("context") %>/internal/batchee/css/bootstrap.min.3.0.0.css" rel="stylesheet" media="screen">
 
     <title>Apache JBatch GUI</title>
 </head>
@@ -35,7 +35,7 @@
         <h3 class="text-muted">Apache JBatch GUI</h3>
     </div>
 
-    <div class="row">
+    <div id="content" class="row">
         <jsp:include page="/internal/batchee/${requestScope.view}.jsp" />
     </div>
 
@@ -44,6 +44,6 @@
     </div>
 </div>
 
-<script src="<%= request.getAttribute("context") %>/internal/batchee/js/bootstrap.min.js"></script>
+<script src="<%= request.getAttribute("context") %>/internal/batchee/js/bootstrap.min.3.0.0.js"></script>
 </body>
 </html>

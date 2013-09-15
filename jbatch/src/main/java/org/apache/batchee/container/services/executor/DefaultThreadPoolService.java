@@ -16,14 +16,13 @@
 */
 package org.apache.batchee.container.services.executor;
 
-import org.apache.batchee.container.exception.BatchContainerServiceException;
-
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class DefaultThreadPoolService extends AbstractThreadPoolService {
     @Override
-    public void init(final Properties pgcConfig) throws BatchContainerServiceException {
-        executorService = Executors.newCachedThreadPool();
+    protected ExecutorService newExecutorService(Properties batchConfig) {
+        return Executors.newCachedThreadPool(BatcheeThreadFactory.INSTANCE);
     }
 }

@@ -14,25 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.gui.servlet;
+package org.apache.batchee.container.services.executor;
 
-import javax.servlet.ServletContainerInitializer;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import java.util.Set;
+public class ClassLoaderAwareTask implements Runnable {
+    private final Runnable delegate;
+    private final ClassLoader loader;
 
-public class JBatchServletInitializer implements ServletContainerInitializer {
-    private static final String DEFAULT_MAPPING = "/jbatch/*";
+    public ClassLoaderAwareTask(final Runnable work) {
+        delegate = work;
+        loader = Thread.currentThread().getContextClassLoader();
+    }
 
     @Override
-    public void onStartup(final Set<Class<?>> classes, final ServletContext ctx) throws ServletException {
-        String mapping = ctx.getInitParameter("org.apache.batchee.servlet.mapping");
-        if (mapping == null) {
-            mapping = DEFAULT_MAPPING;
-        } else if (!mapping.endsWith("/*")) { // needed for the controller
-            mapping += "/*";
+    public void run() {
+        final ClassLoader old = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(loader);
+        try {
+            delegate.run();
+        } finally {
+            Thread.currentThread().setContextClassLoader(old);
         }
-
-        ctx.addServlet("JBatch Servlet", new JBatchController().mapping(mapping)).addMapping(mapping);
     }
 }

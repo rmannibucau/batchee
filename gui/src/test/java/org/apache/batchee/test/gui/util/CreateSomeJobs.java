@@ -19,6 +19,7 @@ package org.apache.batchee.test.gui.util;
 import org.apache.batchee.util.Batches;
 
 import javax.batch.operations.JobOperator;
+import javax.batch.operations.NoSuchJobException;
 import javax.batch.runtime.BatchRuntime;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -30,10 +31,15 @@ public class CreateSomeJobs implements ServletContextListener {
     @Override
     public void contextInitialized(final ServletContextEvent sce) {
         final JobOperator operator = BatchRuntime.getJobOperator();
-        final Properties jobParameters = new Properties();
-        jobParameters.setProperty("test", "jbatch");
-        final long id = operator.start("init", jobParameters);
-        Batches.waitForEnd(operator, id);
+
+        try { // initialize only once to ensure we can use in tests ids
+            operator.getJobInstances("init", 0, 10);
+        } catch (final NoSuchJobException nsje) {
+            final Properties jobParameters = new Properties();
+            jobParameters.setProperty("test", "jbatch");
+            final long id = operator.start("init", jobParameters);
+            Batches.waitForEnd(operator, id);
+        }
     }
 
     @Override

@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class JBatchController extends HttpServlet {
+    private static final String DEFAULT_MAPPING_SERVLET25 = "/jbatch";
+
     private static final int EXECUTION_BY_PAGE = 30;
 
     private JobOperator operator;
@@ -57,6 +59,9 @@ public class JBatchController extends HttpServlet {
             context = "";
         }
 
+        if (mapping == null) { // used directly with servlet 3.0
+            mapping = DEFAULT_MAPPING_SERVLET25;
+        }
         mapping = context + mapping;
 
         // prepare mappings to ease matching
