@@ -16,7 +16,9 @@
  */
 package org.apache.batchee.gui.servlet;
 
+import javax.batch.operations.JobExecutionNotRunningException;
 import javax.batch.operations.JobOperator;
+import javax.batch.operations.NoSuchJobExecutionException;
 import javax.batch.runtime.BatchRuntime;
 import javax.batch.runtime.JobExecution;
 import javax.batch.runtime.JobInstance;
@@ -41,18 +43,25 @@ import java.util.Set;
 public class JBatchController extends HttpServlet {
     private static final String DEFAULT_MAPPING_SERVLET25 = "/jbatch";
 
-    private static final int EXECUTION_BY_PAGE = 30;
+    private static final String EXECUTIONS_MAPPING = "/executions/";
+    private static final String STEP_EXECUTIONS_MAPPING = "/step-executions/";
+    private static final String START_MAPPING = "/start/";
+    private static final String DO_START_MAPPING = "/doStart/";
+    public static final int DEFAULT_PAGE_SIZE = 30;
+
+    private static int executionByPage;
 
     private JobOperator operator;
     private String mapping;
-    private String executionMapping;
     private String context;
-    private String stepExecutionMapping;
-    private String startMapping;
-    private String doStartMapping;
 
     public JBatchController mapping(final String rawMapping) {
         this.mapping = rawMapping.substring(0, rawMapping.length() - 2); // mapping pattern is /xxx/*
+        return this;
+    }
+
+    public JBatchController executionByPage(final int byPage) {
+        executionByPage = byPage;
         return this;
     }
 
@@ -68,13 +77,11 @@ public class JBatchController extends HttpServlet {
         if (mapping == null) { // used directly with servlet 3.0
             mapping = DEFAULT_MAPPING_SERVLET25;
         }
-        mapping = context + mapping;
+        if (executionByPage <= 0) {
+            executionByPage = DEFAULT_PAGE_SIZE;
+        }
 
-        // prepare mappings to ease matching
-        executionMapping = mapping + "/executions/";
-        stepExecutionMapping = mapping + "/step-executions/";
-        startMapping = mapping + "/start/";
-        doStartMapping = mapping + "/doStart/";
+        mapping = context + mapping;
     }
 
     @Override
@@ -84,19 +91,19 @@ public class JBatchController extends HttpServlet {
         req.setAttribute("context", context);
         req.setAttribute("mapping", mapping);
 
-        final String requestURI = req.getRequestURI();
-        if (requestURI.startsWith(executionMapping)) {
-            final String name = URLDecoder.decode(requestURI.substring(executionMapping.length()), "UTF-8");
+        final String requestURI = req.getPathInfo();
+        if (requestURI.startsWith(EXECUTIONS_MAPPING)) {
+            final String name = URLDecoder.decode(requestURI.substring(EXECUTIONS_MAPPING.length()), "UTF-8");
             final int start = extractInt(req, "start", -1);
-            listExecutions(req, name, EXECUTION_BY_PAGE, start);
-        } else if (requestURI.startsWith(stepExecutionMapping)) {
-            final int executionId = Integer.parseInt(requestURI.substring(stepExecutionMapping.length()));
+            listExecutions(req, name, executionByPage, start);
+        } else if (requestURI.startsWith(STEP_EXECUTIONS_MAPPING)) {
+            final int executionId = Integer.parseInt(requestURI.substring(STEP_EXECUTIONS_MAPPING.length()));
             listStepExecutions(req, executionId);
-        } else if (requestURI.startsWith(startMapping)) {
-            final String name = URLDecoder.decode(requestURI.substring(startMapping.length()), "UTF-8");
+        } else if (requestURI.startsWith(START_MAPPING)) {
+            final String name = URLDecoder.decode(requestURI.substring(START_MAPPING.length()), "UTF-8");
             start(req, name);
-        } else if (requestURI.startsWith(doStartMapping)) {
-            final String name = URLDecoder.decode(requestURI.substring(doStartMapping.length()), "UTF-8");
+        } else if (requestURI.startsWith(DO_START_MAPPING)) {
+            final String name = URLDecoder.decode(requestURI.substring(DO_START_MAPPING.length()), "UTF-8");
             final Properties properties = readProperties(req);
             doStart(req, name, properties);
         } else {
@@ -126,6 +133,19 @@ public class JBatchController extends HttpServlet {
     }
 
     private void listExecutions(final HttpServletRequest req, final String name, final int pageSize, final int inStart) {
+        { // can be an auto refresh asking for a stop
+            final String stopId = req.getParameter("stop");
+            if (stopId != null) {
+                try {
+                    operator.stop(Long.parseLong(stopId));
+                } catch (final NoSuchJobExecutionException nsje) {
+                    // no-op
+                } catch (final JobExecutionNotRunningException nsje) {
+                    // no-op
+                }
+            }
+        }
+
         final int jobInstanceCount = operator.getJobInstanceCount(name);
 
         int start = inStart;

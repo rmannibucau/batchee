@@ -16,11 +16,11 @@
  */
 package org.apache.batchee.test.gui.util;
 
-import javax.batch.api.AbstractBatchlet;
+import javax.batch.api.Batchlet;
 import javax.batch.api.BatchProperty;
 import javax.inject.Inject;
 
-public class SimpleBatchlet extends AbstractBatchlet {
+public class SimpleBatchlet implements Batchlet {
     @Inject
     @BatchProperty
     private String value;
@@ -29,14 +29,26 @@ public class SimpleBatchlet extends AbstractBatchlet {
     @BatchProperty
     private String sleep;
 
+    private volatile boolean stopped = false;
+
     @Override
     public String process() throws Exception {
         if (value == null) {
             value = "OK";
         }
         if (sleep != null) {
-            Thread.sleep(Long.parseLong(sleep));
+            long done = 0;
+            final long max = Long.parseLong(sleep);
+            while (done < max && !stopped) {
+                Thread.sleep(1000);
+                done += 1000;
+            }
         }
         return value;
+    }
+
+    @Override
+    public void stop() throws Exception {
+        stopped = true;
     }
 }

@@ -193,6 +193,11 @@
             <version>${atinject.version}</version>
           </dependency>
           <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-atinject_1.0_spec</artifactId>
+            <version>${atinject.version}</version>
+          </dependency>
+          <dependency>
             <groupId>javax.batch</groupId>
             <artifactId>javax.batch-api</artifactId>
             <version>${batch-api.version}</version>

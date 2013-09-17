@@ -36,6 +36,7 @@ public class JBatchServletInitializer implements ServletContainerInitializer {
     public static final String ACTIVE = "org.apache.batchee.servlet.active";
     public static final String CONTROLLER_MAPPING = "org.apache.batchee.servlet.mapping";
     public static final String ACTIVE_PRIVATE_FILTER = "org.apache.batchee.servlet.filter.private";
+    public static final String BY_PAGE = "org.apache.batchee.servlet.pagination";
 
     private static final String DEFAULT_MAPPING = "/jbatch/*";
 
@@ -53,7 +54,14 @@ public class JBatchServletInitializer implements ServletContainerInitializer {
             mapping += "/*";
         }
 
-        ctx.addServlet("JBatch Servlet", new JBatchController().mapping(mapping)).addMapping(mapping);
+        String byPage = ctx.getInitParameter(BY_PAGE);
+        if (byPage == null) {
+            byPage = "30";
+        } else {
+            byPage += byPage;
+        }
+
+        ctx.addServlet("JBatch Servlet", new JBatchController().mapping(mapping).executionByPage(Integer.parseInt(byPage))).addMapping(mapping);
 
         final String activePrivateFilter = ctx.getInitParameter(ACTIVE_PRIVATE_FILTER);
         if (activePrivateFilter == null || Boolean.parseBoolean(activePrivateFilter)) {

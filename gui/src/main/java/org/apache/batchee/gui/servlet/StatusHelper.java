@@ -33,7 +33,7 @@ public final class StatusHelper {
         if (BatchStatus.STARTED.equals(status) || BatchStatus.STARTING.equals(status)) {
             return "active";
         }
-        if (BatchStatus.ABANDONED.equals(status)) {
+        if (BatchStatus.STOPPED.equals(status) || BatchStatus.STOPPING.equals(status) || BatchStatus.ABANDONED.equals(status)) {
             return "warning";
         }
         return ""; // shouldn't occur

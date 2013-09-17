@@ -21,6 +21,7 @@
 <%@ page import="java.util.Map" %>
 <%@ page import="org.apache.batchee.gui.servlet.StatusHelper" %>
 <%@ page import="java.net.URLEncoder" %>
+<%@ page import="javax.batch.runtime.BatchStatus" %>
 
 <% final String name = (String) request.getAttribute("name"); %>
 <h4><%= name %></h4>
@@ -37,6 +38,7 @@
             <th>Create time</th>
             <th>Last updated time</th>
             <th>End time</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -44,10 +46,17 @@
             <tr class="<%= StatusHelper.statusClass(execution.getBatchStatus()) %>">
                 <td><a href="<%= request.getAttribute("mapping") %>/step-executions/<%= execution.getExecutionId() %>"><%= execution.getExecutionId() %></a></td>
                 <td><%= execution.getBatchStatus().name() %></td>
-                <td><%= execution.getExitStatus() %></td>
+                <td><%= execution.getExitStatus() != null ? execution.getExitStatus() : "" %></td>
                 <td><%= execution.getCreateTime() %></td>
                 <td><%= execution.getLastUpdatedTime() %></td>
-                <td><%= execution.getEndTime() %></td>
+                <td><%= execution.getEndTime() != null ? execution.getEndTime(): "" %></td>
+                <td>
+                    <% if (BatchStatus.STARTED.equals(execution.getBatchStatus())) {  %>
+                        <a href="?stop=<%= execution.getExecutionId() %>" class="stopBatch" class="btn btn-small stop" type="button">Remove</a>
+                    <% } else { %>
+                        -
+                    <% } %>
+                </td>
             </tr>
         <% } %>
         </tbody>
