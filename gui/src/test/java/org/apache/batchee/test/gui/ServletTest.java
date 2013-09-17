@@ -41,7 +41,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Arquillian.class)
@@ -51,12 +50,12 @@ public class ServletTest {
 
     @Test
     public void home() throws IOException {
-        assertEquals("init", extractContent("", "/ul/li/a/text()"));
+        assertEquals("init", extractContent("", "/ul/li/a[1]/text()"));
     }
 
     @Test
     public void instances() throws IOException {
-        assertEquals(BatchStatus.COMPLETED.name(), extractContent("executions/" + printBase64Binary("init".getBytes()), "/table/tbody/tr/td[2]"));
+        assertEquals(BatchStatus.COMPLETED.name(), extractContent("executions/init", "/table/tbody/tr/td[2]"));
     }
 
     @Test

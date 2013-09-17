@@ -15,6 +15,11 @@
 -->
 <job id="init" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
   <step id="step1">
-    <batchlet ref="org.apache.batchee.test.gui.util.SimpleBatchlet" />
+    <batchlet ref="org.apache.batchee.test.gui.util.SimpleBatchlet">
+      <properties>
+        <property name="value" value="#{jobParameters['value']}"/>
+        <property name="sleep" value="#{jobParameters['sleep']}"/>
+      </properties>
+    </batchlet>
   </step>
 </job>

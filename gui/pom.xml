@@ -46,6 +46,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-atinject_1.0_spec</artifactId>
+      <version>${atinject.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
       <artifactId>jackson-jaxrs-json-provider</artifactId>
       <version>${jackson.version}</version>
@@ -181,6 +187,11 @@
           </additionalClasspathDirs>
         </configuration>
         <dependencies>
+          <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-atinject_1.0_spec</artifactId>
+            <version>${atinject.version}</version>
+          </dependency>
           <dependency>
             <groupId>javax.batch</groupId>
             <artifactId>javax.batch-api</artifactId>

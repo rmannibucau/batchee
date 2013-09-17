@@ -1,3 +1,4 @@
+<%@ page import="java.net.URLEncoder" %>
 <%--
     Licensed to the Apache Software Foundation (ASF) under one or more
     contributor license agreements.  See the NOTICE file distributed with
@@ -15,17 +16,5 @@
     limitations under the License.
 --%>
 <%@ page session="false" %>
-<%@ page import="java.util.Set" %>
-<%@ page import="java.net.URLEncoder" %>
-<ul>
-<%
-    final Object mapping = request.getAttribute("mapping");
-    for ( final String name : (Set<String>) request.getAttribute("names") ) {
-        final String name64 = URLEncoder.encode(name, "UTF-8");
-%>
-    <li>
-        <a href="<%= mapping %>/executions/<%= name64 %>"><%= name %></a>
-        <a class="btn btn-sucess" href="<%= mapping %>/start/<%= name64 %>">Start</a>
-    </li>
-<% } %>
-</ul>
+
+<p>Started job instance <%= request.getAttribute("id") %> of batch <%= request.getAttribute("name") %></p>

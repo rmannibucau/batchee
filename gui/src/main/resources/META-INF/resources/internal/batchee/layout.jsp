@@ -45,6 +45,17 @@
     </div>
 </div>
 
+<script src="<%= request.getAttribute("context") %>/internal/batchee/js/jquery-2.0.3.min.js"></script>
 <script src="<%= request.getAttribute("context") %>/internal/batchee/js/bootstrap.min.3.0.0.js"></script>
+<%
+    final String pageJs = (String) request.getAttribute("pageJs");
+    if (pageJs != null) {
+        for (final String js : pageJs.split(",")) {
+%>
+<script src="<%= request.getAttribute("context") %>/internal/batchee/js/<%= js %>"></script>
+<%
+        }
+    }
+%>
 </body>
 </html>

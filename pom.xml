@@ -114,7 +114,8 @@
             <exclude>.gitignore</exclude>
             <exclude>derby.log</exclude>
             <exclude>**/META-INF/services/*</exclude>
-            <exclude>**/bootstrap-*/**/*</exclude>
+            <exclude>**/bootstrap-*</exclude>
+            <exclude>**/js/jquery-*</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -149,6 +150,7 @@
   </build>
 
   <properties>
+    <atinject.version>1.0</atinject.version>
     <batch-api.version>1.0</batch-api.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>

@@ -14,18 +14,24 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
-<%@ page session="false" %>
-<%@ page import="java.util.Set" %>
 <%@ page import="java.net.URLEncoder" %>
-<ul>
-<%
-    final Object mapping = request.getAttribute("mapping");
-    for ( final String name : (Set<String>) request.getAttribute("names") ) {
-        final String name64 = URLEncoder.encode(name, "UTF-8");
-%>
-    <li>
-        <a href="<%= mapping %>/executions/<%= name64 %>"><%= name %></a>
-        <a class="btn btn-sucess" href="<%= mapping %>/start/<%= name64 %>">Start</a>
-    </li>
-<% } %>
-</ul>
+<%@ page session="false" %>
+
+<% final String name = (String) request.getAttribute("name"); %>
+
+<div>
+    Add needed job parameters for job <b><%= name %>
+</b> then click on submit:
+</div>
+
+<input type="text" id="key" placeholder="type a key...">
+<input type="text" id="value" placeholder="type a value...">
+<button id="add-param" class="btn btn-small" type="button">Add</button>
+
+<form action="<%= request.getAttribute("mapping") %>/doStart/<%= URLEncoder.encode(name, "UTF-8") %>" method="POST"
+      class="form-horizontal">
+    <div id="values"></div>
+    <button type="submit" class="btn">Submit</button>
+</form>
+
+<% request.setAttribute("pageJs", "start.js"); %>

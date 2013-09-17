@@ -19,8 +19,8 @@
 <%@ page import="javax.batch.runtime.JobInstance" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
-<%@ page import="javax.xml.bind.DatatypeConverter" %>
 <%@ page import="org.apache.batchee.gui.servlet.StatusHelper" %>
+<%@ page import="java.net.URLEncoder" %>
 
 <% final String name = (String) request.getAttribute("name"); %>
 <h4><%= name %></h4>
@@ -54,7 +54,7 @@
     </table>
 
 <%
-    final String url = request.getAttribute("mapping") + "/executions/" +DatatypeConverter.printBase64Binary(name.getBytes()) + "?start=";
+    final String url = request.getAttribute("mapping") + "/executions/" + URLEncoder.encode(name, "UTF-8") + "?start=";
 
     final Integer previousStart = (Integer) request.getAttribute("previousStart");
     if (previousStart >= 0) { // here we need to test 0 for 2nd page case

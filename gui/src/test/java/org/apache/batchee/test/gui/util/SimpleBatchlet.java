@@ -17,10 +17,26 @@
 package org.apache.batchee.test.gui.util;
 
 import javax.batch.api.AbstractBatchlet;
+import javax.batch.api.BatchProperty;
+import javax.inject.Inject;
 
 public class SimpleBatchlet extends AbstractBatchlet {
+    @Inject
+    @BatchProperty
+    private String value;
+
+    @Inject
+    @BatchProperty
+    private String sleep;
+
     @Override
     public String process() throws Exception {
-        return "OK";
+        if (value == null) {
+            value = "OK";
+        }
+        if (sleep != null) {
+            Thread.sleep(Long.parseLong(sleep));
+        }
+        return value;
     }
 }
