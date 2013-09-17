@@ -52,7 +52,7 @@
                 <td><%= execution.getEndTime() != null ? execution.getEndTime(): "" %></td>
                 <td>
                     <% if (BatchStatus.STARTED.equals(execution.getBatchStatus())) {  %>
-                        <a href="?stop=<%= execution.getExecutionId() %>" class="stopBatch" class="btn btn-small stop" type="button">Remove</a>
+                        <a href="?stop=<%= execution.getExecutionId() %>" class="stopBatch" class="btn btn-small stop" type="button">Stop</a>
                     <% } else { %>
                         -
                     <% } %>
