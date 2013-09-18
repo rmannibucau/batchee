@@ -36,9 +36,20 @@ $(function () {
 
         var blockId = '#cg_' + key;
         $(blockId).on('click', function(event) {
-            $(blockId).remove();
             event.preventDefault();
-            return false;
+            $(blockId).remove();
         });
+    });
+
+    $('#set-job-name').on('click', function(event) {
+        event.preventDefault();
+        $('#job-name').val($('#job-name-input').val());
+    });
+
+    $('#start-job').submit(function (event) {
+        var jobNameInput = $('#job-name-input');
+        if (jobNameInput.length) {
+            $('#job-name').val(jobNameInput.val());
+        }
     });
 });

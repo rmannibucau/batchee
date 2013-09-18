@@ -17,9 +17,9 @@
 <%@ page session="false" %>
 <%@ page import="java.util.Set" %>
 <%@ page import="java.net.URLEncoder" %>
+<% final Object mapping = request.getAttribute("mapping"); %>
 <ul>
 <%
-    final Object mapping = request.getAttribute("mapping");
     for ( final String name : (Set<String>) request.getAttribute("names") ) {
         final String name64 = URLEncoder.encode(name, "UTF-8");
 %>

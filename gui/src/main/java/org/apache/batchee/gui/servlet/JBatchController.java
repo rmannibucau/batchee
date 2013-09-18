@@ -42,18 +42,20 @@ import java.util.Set;
 
 public class JBatchController extends HttpServlet {
     private static final String DEFAULT_MAPPING_SERVLET25 = "/jbatch";
+    private static final int DEFAULT_PAGE_SIZE = 30;
+
+    public static final String FORM_JOB_NAME = "___batchee_job_name___";
 
     private static final String EXECUTIONS_MAPPING = "/executions/";
     private static final String STEP_EXECUTIONS_MAPPING = "/step-executions/";
     private static final String START_MAPPING = "/start/";
     private static final String DO_START_MAPPING = "/doStart/";
-    public static final int DEFAULT_PAGE_SIZE = 30;
-
-    private static int executionByPage;
 
     private JobOperator operator;
-    private String mapping;
+
     private String context;
+    private String mapping = DEFAULT_MAPPING_SERVLET25;
+    private int executionByPage = DEFAULT_PAGE_SIZE;
 
     public JBatchController mapping(final String rawMapping) {
         this.mapping = rawMapping.substring(0, rawMapping.length() - 2); // mapping pattern is /xxx/*
@@ -74,13 +76,6 @@ public class JBatchController extends HttpServlet {
             context = "";
         }
 
-        if (mapping == null) { // used directly with servlet 3.0
-            mapping = DEFAULT_MAPPING_SERVLET25;
-        }
-        if (executionByPage <= 0) {
-            executionByPage = DEFAULT_PAGE_SIZE;
-        }
-
         mapping = context + mapping;
     }
 
@@ -91,21 +86,24 @@ public class JBatchController extends HttpServlet {
         req.setAttribute("context", context);
         req.setAttribute("mapping", mapping);
 
-        final String requestURI = req.getPathInfo();
-        if (requestURI.startsWith(EXECUTIONS_MAPPING)) {
-            final String name = URLDecoder.decode(requestURI.substring(EXECUTIONS_MAPPING.length()), "UTF-8");
+        final String path = req.getPathInfo();
+        if (path.startsWith(EXECUTIONS_MAPPING)) {
+            final String name = URLDecoder.decode(path.substring(EXECUTIONS_MAPPING.length()), "UTF-8");
             final int start = extractInt(req, "start", -1);
             listExecutions(req, name, executionByPage, start);
-        } else if (requestURI.startsWith(STEP_EXECUTIONS_MAPPING)) {
-            final int executionId = Integer.parseInt(requestURI.substring(STEP_EXECUTIONS_MAPPING.length()));
+        } else if (path.startsWith(STEP_EXECUTIONS_MAPPING)) {
+            final int executionId = Integer.parseInt(path.substring(STEP_EXECUTIONS_MAPPING.length()));
             listStepExecutions(req, executionId);
-        } else if (requestURI.startsWith(START_MAPPING)) {
-            final String name = URLDecoder.decode(requestURI.substring(START_MAPPING.length()), "UTF-8");
+        } else if (path.startsWith(START_MAPPING)) {
+            final String name = URLDecoder.decode(path.substring(START_MAPPING.length()), "UTF-8");
             start(req, name);
-        } else if (requestURI.startsWith(DO_START_MAPPING)) {
-            final String name = URLDecoder.decode(requestURI.substring(DO_START_MAPPING.length()), "UTF-8");
-            final Properties properties = readProperties(req);
-            doStart(req, name, properties);
+        } else if (path.startsWith(DO_START_MAPPING)) {
+            String name = URLDecoder.decode(path.substring(DO_START_MAPPING.length()), "UTF-8");
+            if (name.isEmpty()) {
+                name = req.getParameter(FORM_JOB_NAME);
+            }
+
+            doStart(req, name, readProperties(req));
         } else {
             listJobs(req);
         }
@@ -203,6 +201,10 @@ public class JBatchController extends HttpServlet {
         final Enumeration<String> names = req.getParameterNames();
         while (names.hasMoreElements()) {
             final String key = names.nextElement();
+            if (FORM_JOB_NAME.equals(key)) {
+                continue;
+            }
+
             map.put(key, req.getParameter(key));
         }
 
