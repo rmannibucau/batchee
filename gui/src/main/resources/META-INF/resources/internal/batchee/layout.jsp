@@ -32,7 +32,7 @@
 <div class="container">
     <div class="header">
         <ul class="nav nav-pills pull-right">
-            <li><a class="btn btn-sucess" href="<%= mapping %>/start/">New Batch</a></li>
+            <li><a href="<%= mapping %>/start/">New Batch</a></li>
             <li><a href="<%= mapping %>/">Home</a></li>
         </ul>
         <h3 class="text-muted">Apache JBatch GUI</h3>
