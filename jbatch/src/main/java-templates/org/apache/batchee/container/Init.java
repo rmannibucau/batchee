@@ -35,13 +35,9 @@ public final class Init {
     public static void doInit() {
         if (Boolean.parseBoolean(ServicesManager.value("org.apache.batchee.init.verbose", "true"))) {
             if (!Boolean.parseBoolean(ServicesManager.value("org.apache.batchee.init.verbose.sysout", "false"))) {
-                for (final String line : LOGO.split("\n")) {
-                    LOGGER.info(line);
-                }
+                LOGGER.info(LOGO);
             } else {
-                for (final String line : LOGO.split("\n")) {
-                    System.out.println(line);
-                }
+                System.out.println(LOGO);
             }
         }
     }

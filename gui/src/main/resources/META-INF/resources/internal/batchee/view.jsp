@@ -15,18 +15,8 @@
     limitations under the License.
 --%>
 <%@ page session="false" %>
-<%@ page import="java.util.Set" %>
-<%@ page import="java.net.URLEncoder" %>
-<% final Object mapping = request.getAttribute("mapping"); %>
-<ul>
-<%
-    for ( final String name : (Set<String>) request.getAttribute("names") ) {
-        final String name64 = URLEncoder.encode(name, "UTF-8");
-%>
-    <li>
-        <a href="<%= mapping %>/executions/<%= name64 %>"><%= name %></a>
-        <a class="btn btn-sucess" href="<%= mapping %>/start/<%= name64 %>">Start</a>
-        <a class="btn btn-sucess" href="<%= mapping %>/view/<%= name64 %>">Show batch</a>
-    </li>
-<% } %>
-</ul>
+
+<p>Batch <%= request.getAttribute("name") %></p>
+<pre>
+    <%= request.getAttribute("content") %>
+</pre>

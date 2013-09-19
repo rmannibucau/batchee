@@ -49,7 +49,6 @@ public class DefaultJobXMLLoaderService implements JobXMLLoaderService {
         }
 
         return readJobXML(stream);
-
     }
 
 

@@ -16,6 +16,7 @@
  */
 package org.apache.batchee.gui.servlet;
 
+import javax.batch.operations.BatchRuntimeException;
 import javax.batch.operations.JobExecutionNotRunningException;
 import javax.batch.operations.JobOperator;
 import javax.batch.operations.NoSuchJobExecutionException;
@@ -28,7 +29,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +54,7 @@ public class JBatchController extends HttpServlet {
     private static final String STEP_EXECUTIONS_MAPPING = "/step-executions/";
     private static final String START_MAPPING = "/start/";
     private static final String DO_START_MAPPING = "/doStart/";
+    private static final String VIEW_MAPPING = "/view/";
 
     private JobOperator operator;
 
@@ -94,6 +99,9 @@ public class JBatchController extends HttpServlet {
         } else if (path.startsWith(STEP_EXECUTIONS_MAPPING)) {
             final int executionId = Integer.parseInt(path.substring(STEP_EXECUTIONS_MAPPING.length()));
             listStepExecutions(req, executionId);
+        } else if (path.startsWith(VIEW_MAPPING)) {
+            final String name = URLDecoder.decode(path.substring(VIEW_MAPPING.length()), "UTF-8");
+            view(req, name);
         } else if (path.startsWith(START_MAPPING)) {
             final String name = URLDecoder.decode(path.substring(START_MAPPING.length()), "UTF-8");
             start(req, name);
@@ -109,6 +117,36 @@ public class JBatchController extends HttpServlet {
         }
 
         req.getRequestDispatcher("/internal/batchee/layout.jsp").forward(req, resp);
+    }
+
+    private void view(final HttpServletRequest req, final String name) {
+        req.setAttribute("name", name);
+        req.setAttribute("view", "view");
+
+        // we copy the logic from jbatch module since the GUI is not (yet?) linked to our impl
+        final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+        final String relativePath = "META-INF/batch-jobs/" + name + ".xml";
+        final InputStream stream = tccl.getResourceAsStream(relativePath);
+        if (stream == null) {
+            throw new BatchRuntimeException(new FileNotFoundException("Cannot find an XML for " + name));
+        }
+
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int r;
+        try {
+            while ((r = stream.read()) != -1) {
+                baos.write(r);
+            }
+        } catch (final IOException e) {
+            throw new BatchRuntimeException(new FileNotFoundException("Cannot find an XML for " + name));
+        }
+
+        req.setAttribute("content", new String(baos.toByteArray())
+                                    .replace("&","&amp;")
+                                    .replace("<", "&lt;")
+                                    .replace(">", "&gt;")
+                                    .replace("\"", "&quot;")
+                                    .replace("'", "&apos;"));
     }
 
     private void doStart(final HttpServletRequest req, final String name, final Properties properties) {
