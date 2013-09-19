@@ -80,6 +80,10 @@ public class ServicesManager implements BatchContainerConstants {
         return api.cast(Proxy.newProxyInstance(ServicesManager.class.getClassLoader(), new Class<?>[]{ api }, new ServiceHandler<T>(api)));
     }
 
+    public static String value(final String key, final String defaultValue) {
+        return servicesManagerLocator.find().batchRuntimeConfig.getProperty(key, defaultValue);
+    }
+
     // Declared 'volatile' to allow use in double-checked locking.  This 'isInited'
     // refers to whether the configuration has been hardened and possibly the
     // first service impl loaded, not whether the instance has merely been instantiated.

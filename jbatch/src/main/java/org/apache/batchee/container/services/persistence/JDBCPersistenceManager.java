@@ -85,7 +85,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
             + "obj BLOB,"
             + "CONSTRAINT STEPSTATUS_STEPEXEC_FK FOREIGN KEY (id) REFERENCES STEPEXECUTIONINSTANCEDATA (stepexecid) ON DELETE CASCADE)";
         final String CREATE_TAB_CHECKPOINTDATA = "CREATE TABLE CHECKPOINTDATA("
-            + "id VARCHAR(512),obj BLOB)";
+            + "jobinstanceid BIGINT, stepName VARCHAR(512), type VARCHAR(512),obj BLOB, primary key(jobInstanceId, stepName, type))";
         final String CREATE_TAB_JOBINSTANCEDATA = "CREATE TABLE JOBINSTANCEDATA("
             + "jobinstanceid BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1) CONSTRAINT JOBINSTANCE_PK PRIMARY KEY,"
             + "name VARCHAR(512),"
@@ -120,13 +120,11 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
             + "persistentData BLOB,"
             + "CONSTRAINT JOBEXEC_STEPEXEC_FK FOREIGN KEY (jobexecid) REFERENCES EXECUTIONINSTANCEDATA (jobexecid))";
 
-        final String INSERT_CHECKPOINTDATA = "insert into checkpointdata values(?, ?)";
+        final String INSERT_CHECKPOINTDATA = "insert into checkpointdata values(?, ?, ?, ?)";
 
-        final String UPDATE_CHECKPOINTDATA = "update checkpointdata set obj = ? where id = ?";
+        final String UPDATE_CHECKPOINTDATA = "update checkpointdata set obj = ? where jobinstanceid = ? and stepName = ? and type = ?";
 
-        final String SELECT_CHECKPOINTDATA = "select id, obj from checkpointdata where id = ?";
-
-        final String CREATE_CHECKPOINTDATA_INDEX = "create index chk_index on checkpointdata(id)";
+        final String SELECT_CHECKPOINTDATA = "select obj from checkpointdata where jobinstanceid = ? and stepName = ? and type = ?";
 
         // JOB OPERATOR QUERIES
         final String SELECT_JOBINSTANCEDATA_COUNT = "select count(jobinstanceid) as jobinstancecount from jobinstancedata where name = ?";
@@ -233,7 +231,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
      */
     private void checkAllTables() throws SQLException {
         createIfNotExists(SQLConstants.CHECKPOINTDATA_TABLE, SQLConstants.CREATE_TAB_CHECKPOINTDATA);
-        executeStatement(SQLConstants.CREATE_CHECKPOINTDATA_INDEX);
         createIfNotExists(SQLConstants.JOBINSTANCEDATA_TABLE, SQLConstants.CREATE_TAB_JOBINSTANCEDATA);
         createIfNotExists(SQLConstants.EXECUTIONINSTANCEDATA_TABLE, SQLConstants.CREATE_TAB_EXECUTIONINSTANCEDATA);
         createIfNotExists(SQLConstants.STEPEXECUTIONINSTANCEDATA_TABLE, SQLConstants.CREATE_TAB_STEPEXECUTIONINSTANCEDATA);
@@ -241,13 +238,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         createIfNotExists(SQLConstants.STEPSTATUS_TABLE, SQLConstants.CREATE_TAB_STEPSTATUS);
     }
 
-    /**
-     * Creates tableName using the createTableStatement DDL.
-     *
-     * @param tableName
-     * @param createTableStatement
-     * @throws SQLException
-     */
     private void createIfNotExists(final String tableName, final String createTableStatement) throws SQLException {
         final Connection conn = getConnection();
         final DatabaseMetaData dbmd = conn.getMetaData();
@@ -262,25 +252,49 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         cleanupConnection(conn, rs, ps);
     }
 
-    /**
-     * Executes the provided SQL statement
-     *
-     * @param statement
-     * @throws SQLException
-     */
-    private void executeStatement(final String statement) throws SQLException {
-        final Connection conn = getConnection();
-        final PreparedStatement ps = conn.prepareStatement(statement);
-        ps.executeUpdate();
-        cleanupConnection(conn, ps);
-    }
-
-
     /* (non-Javadoc)
      * @see org.apache.batchee.container.services.impl.AbstractPersistenceManagerImpl#createCheckpointData(com.ibm.ws.batch.container.checkpoint.CheckpointDataKey, com.ibm.ws.batch.container.checkpoint.CheckpointData)
      */
     public void createCheckpointData(final CheckpointDataKey key, final CheckpointData value) {
-        insertCheckpointData(key.getCommaSeparatedKey(), value);
+        Connection conn = null;
+        PreparedStatement statement = null;
+        ByteArrayOutputStream baos;
+        ObjectOutputStream oout = null;
+        byte[] b;
+
+        Exception thrown = null;
+        try {
+            conn = getConnection();
+            statement = conn.prepareStatement(SQLConstants.INSERT_CHECKPOINTDATA);
+            baos = new ByteArrayOutputStream();
+            oout = new ObjectOutputStream(baos);
+            oout.writeObject(value);
+
+            b = baos.toByteArray();
+
+            statement.setLong(1, key.getJobInstanceId());
+            statement.setString(2, key.getStepName());
+            statement.setString(3, key.getType().name());
+            statement.setBytes(4, b);
+            statement.executeUpdate();
+        } catch (final SQLException e) {
+            throw new PersistenceException(e);
+        } catch (final IOException e) {
+            throw new PersistenceException(e);
+        } finally {
+            if (oout != null) {
+                try {
+                    oout.close();
+                } catch (final IOException e) {
+                    thrown = e;
+                }
+            }
+            cleanupConnection(conn, null, statement);
+        }
+
+        if (thrown != null) {
+            throw new PersistenceException(thrown);
+        }
     }
 
     /* (non-Javadoc)
@@ -288,7 +302,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
      */
     @Override
     public CheckpointData getCheckpointData(final CheckpointDataKey key) {
-        return queryCheckpointData(key.getCommaSeparatedKey());
+        return queryCheckpointData(key);
     }
 
     /* (non-Javadoc)
@@ -296,9 +310,9 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
      */
     @Override
     public void setCheckpointData(final CheckpointDataKey key, final CheckpointData value) {
-        CheckpointData data = queryCheckpointData(key.getCommaSeparatedKey());
+        CheckpointData data = queryCheckpointData(key);
         if (data != null) {
-            updateCheckpointData(key.getCommaSeparatedKey(), value);
+            updateCheckpointData(key, value);
         } else {
             createCheckpointData(key, value);
         }
@@ -356,12 +370,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         return connection;
     }
 
-    /**
-     * Set the default schema JBATCH or the schema defined in batch-config on the connection object.
-     *
-     * @param connection
-     * @throws SQLException
-     */
     private void setSchemaOnConnection(final Connection connection) throws SQLException {
         final PreparedStatement ps = connection.prepareStatement("SET SCHEMA ?");
         ps.setString(1, schema);
@@ -377,7 +385,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
      * <p/>
      * Ex. select id, obj from tablename where id = ?
      */
-    private CheckpointData queryCheckpointData(final Object key) {
+    private CheckpointData queryCheckpointData(final CheckpointDataKey key) {
         Connection conn = null;
         PreparedStatement statement = null;
         ResultSet rs = null;
@@ -385,7 +393,9 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         try {
             conn = getConnection();
             statement = conn.prepareStatement(SQLConstants.SELECT_CHECKPOINTDATA);
-            statement.setObject(1, key);
+            statement.setLong(1, key.getJobInstanceId());
+            statement.setString(2, key.getStepName());
+            statement.setString(3, key.getType().name());
             rs = statement.executeQuery();
             if (rs.next()) {
                 final byte[] buf = rs.getBytes("obj");
@@ -403,56 +413,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         return data;
     }
 
-
-    /**
-     * insert data to DB table
-     *
-     * @param key   - the IPersistenceDataKey object
-     * @param value - serializable object to store
-     *              <p/>
-     *              Ex. insert into tablename values(?, ?)
-     */
-    private <T> void insertCheckpointData(final Object key, final T value) {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        ByteArrayOutputStream baos = null;
-        ObjectOutputStream oout = null;
-        byte[] b;
-        try {
-            conn = getConnection();
-            statement = conn.prepareStatement(SQLConstants.INSERT_CHECKPOINTDATA);
-            baos = new ByteArrayOutputStream();
-            oout = new ObjectOutputStream(baos);
-            oout.writeObject(value);
-
-            b = baos.toByteArray();
-
-            statement.setObject(1, key);
-            statement.setBytes(2, b);
-            statement.executeUpdate();
-        } catch (final SQLException e) {
-            throw new PersistenceException(e);
-        } catch (final IOException e) {
-            throw new PersistenceException(e);
-        } finally {
-            if (baos != null) {
-                try {
-                    baos.close();
-                } catch (final IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
-            if (oout != null) {
-                try {
-                    oout.close();
-                } catch (final IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
-            cleanupConnection(conn, null, statement);
-        }
-    }
-
     /**
      * update data in DB table
      *
@@ -461,12 +421,13 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
      *              <p/>
      *              Ex. update tablename set obj = ? where id = ?
      */
-    private void updateCheckpointData(final Object key, final CheckpointData value) {
+    private void updateCheckpointData(final CheckpointDataKey key, final CheckpointData value) {
         Connection conn = null;
         PreparedStatement statement = null;
-        ByteArrayOutputStream baos = null;
+        ByteArrayOutputStream baos;
         ObjectOutputStream oout = null;
         byte[] b;
+        Exception thrown = null;
         try {
             conn = getConnection();
             statement = conn.prepareStatement(SQLConstants.UPDATE_CHECKPOINTDATA);
@@ -477,28 +438,27 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
             b = baos.toByteArray();
 
             statement.setBytes(1, b);
-            statement.setObject(2, key);
+            statement.setLong(2, key.getJobInstanceId());
+            statement.setString(3, key.getStepName());
+            statement.setString(4, key.getType().name());
             statement.executeUpdate();
         } catch (final SQLException e) {
             throw new PersistenceException(e);
         } catch (final IOException e) {
             throw new PersistenceException(e);
         } finally {
-            if (baos != null) {
-                try {
-                    baos.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
             if (oout != null) {
                 try {
                     oout.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
+                } catch (final IOException e) {
+                    thrown = e;
                 }
             }
             cleanupConnection(conn, null, statement);
+        }
+
+        if (thrown != null) {
+            throw new PersistenceException(thrown);
         }
     }
 
@@ -514,7 +474,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         if (statement != null) {
             try {
                 statement.close();
-            } catch (SQLException e) {
+            } catch (final SQLException e) {
                 throw new PersistenceException(e);
             }
         }
@@ -522,56 +482,29 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         if (rs != null) {
             try {
                 rs.close();
-            } catch (SQLException e) {
+            } catch (final SQLException e) {
                 throw new PersistenceException(e);
             }
         }
 
         if (conn != null) {
+            Exception thrown = null;
             try {
                 conn.close();
-            } catch (SQLException e) {
+            } catch (final SQLException e) {
                 throw new PersistenceException(e);
             } finally {
                 try {
                     conn.close();
-                } catch (SQLException e) {
-                    throw new PersistenceException(e);
+                } catch (final SQLException e) {
+                    thrown = e;
                 }
+            }
+            if (thrown != null) {
+                throw new PersistenceException(thrown);
             }
         }
     }
-
-    /**
-     * closes connection and statement
-     *
-     * @param conn      - connection object to close
-     * @param statement - statement object to close
-     */
-    private void cleanupConnection(final Connection conn, final PreparedStatement statement) {
-        if (statement != null) {
-            try {
-                statement.close();
-            } catch (SQLException e) {
-                throw new PersistenceException(e);
-            }
-        }
-
-        if (conn != null) {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                throw new PersistenceException(e);
-            } finally {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    throw new PersistenceException(e);
-                }
-            }
-        }
-    }
-
 
     @Override
     public int jobOperatorGetJobInstanceCount(final String jobName, final String appTag) {
@@ -814,7 +747,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         PreparedStatement statement = null;
         ResultSet rs = null;
         Properties props = null;
-        ObjectInputStream objectIn = null;
 
         try {
             conn = getConnection();
@@ -837,109 +769,12 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         } catch (final ClassNotFoundException e) {
             throw new PersistenceException(e);
         } finally {
-            if (objectIn != null) {
-                try {
-                    objectIn.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
             cleanupConnection(conn, rs, statement);
         }
 
         return props;
 
     }
-
-
-    public Map<String, StepExecution> getMostRecentStepExecutionsForJobInstance(final long instanceId) {
-
-        final Map<String, StepExecution> data = new HashMap<String, StepExecution>();
-
-        Connection conn = null;
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-
-        long jobexecid;
-        long stepexecid = 0;
-        String stepname;
-        String batchstatus;
-        String exitstatus;
-        long readCount;
-        long writeCount;
-        long commitCount;
-        long rollbackCount;
-        long readSkipCount;
-        long processSkipCount;
-        long filterCount;
-        long writeSkipCount;
-        Timestamp startTS;
-        Timestamp endTS;
-        StepExecutionImpl stepEx;
-        ObjectInputStream objectIn;
-
-        try {
-            conn = getConnection();
-            statement = conn.prepareStatement("select A.* from stepexecutioninstancedata as A inner join executioninstancedata as B on A.jobexecid = B.jobexecid where B.jobinstanceid = ? order by A.stepexecid desc");
-            statement.setLong(1, instanceId);
-            rs = statement.executeQuery();
-            while (rs.next()) {
-                stepname = rs.getString("stepname");
-                if (!data.containsKey(stepname)) {
-                    jobexecid = rs.getLong("jobexecid");
-                    batchstatus = rs.getString("batchstatus");
-                    exitstatus = rs.getString("exitstatus");
-                    readCount = rs.getLong("readcount");
-                    writeCount = rs.getLong("writecount");
-                    commitCount = rs.getLong("commitcount");
-                    rollbackCount = rs.getLong("rollbackcount");
-                    readSkipCount = rs.getLong("readskipcount");
-                    processSkipCount = rs.getLong("processskipcount");
-                    filterCount = rs.getLong("filtercount");
-                    writeSkipCount = rs.getLong("writeSkipCount");
-                    startTS = rs.getTimestamp("startTime");
-                    endTS = rs.getTimestamp("endTime");
-                    // get the object based data
-                    Serializable persistentData = null;
-                    byte[] pDataBytes = rs.getBytes("persistentData");
-                    if (pDataBytes != null) {
-                        objectIn = new TCCLObjectInputStream(new ByteArrayInputStream(pDataBytes));
-                        persistentData = (Serializable) objectIn.readObject();
-                    }
-
-                    stepEx = new StepExecutionImpl(jobexecid, stepexecid);
-
-                    stepEx.setBatchStatus(BatchStatus.valueOf(batchstatus));
-                    stepEx.setExitStatus(exitstatus);
-                    stepEx.setStepName(stepname);
-                    stepEx.setReadCount(readCount);
-                    stepEx.setWriteCount(writeCount);
-                    stepEx.setCommitCount(commitCount);
-                    stepEx.setRollbackCount(rollbackCount);
-                    stepEx.setReadSkipCount(readSkipCount);
-                    stepEx.setProcessSkipCount(processSkipCount);
-                    stepEx.setFilterCount(filterCount);
-                    stepEx.setWriteSkipCount(writeSkipCount);
-                    stepEx.setStartTime(startTS);
-                    stepEx.setEndTime(endTS);
-                    stepEx.setPersistentUserData(persistentData);
-
-                    data.put(stepname, stepEx);
-                }
-            }
-        } catch (final SQLException e) {
-            throw new PersistenceException(e);
-        } catch (final IOException e) {
-            throw new PersistenceException(e);
-        } catch (final ClassNotFoundException e) {
-            throw new PersistenceException(e);
-        } finally {
-            cleanupConnection(conn, rs, statement);
-        }
-
-        return data;
-    }
-
 
     @Override
     public List<StepExecution> getStepExecutionsForJobExecution(final long execid) {
@@ -1035,24 +870,23 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         PreparedStatement statement = null;
         ResultSet rs = null;
 
-        long jobexecid = 0;
-        long stepexecid = 0;
-        String stepname = null;
-        String batchstatus = null;
-        String exitstatus = null;
-        Exception ex = null;
-        long readCount = 0;
-        long writeCount = 0;
-        long commitCount = 0;
-        long rollbackCount = 0;
-        long readSkipCount = 0;
-        long processSkipCount = 0;
-        long filterCount = 0;
-        long writeSkipCount = 0;
-        Timestamp startTS = null;
-        Timestamp endTS = null;
+        long jobexecid;
+        long stepexecid;
+        String stepname;
+        String batchstatus;
+        String exitstatus;
+        long readCount;
+        long writeCount;
+        long commitCount;
+        long rollbackCount;
+        long readSkipCount;
+        long processSkipCount;
+        long filterCount;
+        long writeSkipCount;
+        Timestamp startTS;
+        Timestamp endTS;
         StepExecutionImpl stepEx = null;
-        ObjectInputStream objectIn = null;
+        ObjectInputStream objectIn;
 
         try {
             conn = getConnection();
@@ -1119,10 +953,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
     public void updateBatchStatusOnly(long key, BatchStatus batchStatus, Timestamp updatets) {
         Connection conn = null;
         PreparedStatement statement = null;
-        ByteArrayOutputStream baos = null;
-        ObjectOutputStream oout = null;
-        byte[] b;
-
         try {
             conn = getConnection();
             statement = conn.prepareStatement("update executioninstancedata set batchstatus = ?, updatetime = ? where jobexecid = ?");
@@ -1130,24 +960,10 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
             statement.setTimestamp(2, updatets);
             statement.setLong(3, key);
             statement.executeUpdate();
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             e.printStackTrace();
             throw new PersistenceException(e);
         } finally {
-            if (baos != null) {
-                try {
-                    baos.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
-            if (oout != null) {
-                try {
-                    oout.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
             cleanupConnection(conn, null, statement);
         }
     }
@@ -1155,13 +971,8 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
     @Override
     public void updateWithFinalExecutionStatusesAndTimestamps(long key,
                                                               BatchStatus batchStatus, String exitStatus, Timestamp updatets) {
-        // TODO Auto-generated methddod stub
         Connection conn = null;
         PreparedStatement statement = null;
-        ByteArrayOutputStream baos = null;
-        ObjectOutputStream oout = null;
-        byte[] b;
-
         try {
             conn = getConnection();
             statement = conn.prepareStatement("update executioninstancedata set batchstatus = ?, exitstatus = ?, endtime = ?, updatetime = ? where jobexecid = ?");
@@ -1177,20 +988,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
             e.printStackTrace();
             throw new PersistenceException(e);
         } finally {
-            if (baos != null) {
-                try {
-                    baos.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
-            if (oout != null) {
-                try {
-                    oout.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
             cleanupConnection(conn, null, statement);
         }
 
@@ -1199,8 +996,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
     public void markJobStarted(long key, Timestamp startTS) {
         Connection conn = null;
         PreparedStatement statement = null;
-        ByteArrayOutputStream baos = null;
-        ObjectOutputStream oout = null;
 
         try {
             conn = getConnection();
@@ -1212,24 +1007,9 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
             statement.setLong(4, key);
 
             statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (final SQLException e) {
             throw new PersistenceException(e);
         } finally {
-            if (baos != null) {
-                try {
-                    baos.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
-            if (oout != null) {
-                try {
-                    oout.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
             cleanupConnection(conn, null, statement);
         }
     }
@@ -1248,7 +1028,6 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         String batchStatus;
         String exitStatus;
         JobExecutionImpl jobEx = null;
-        ObjectInputStream objectIn = null;
         String jobName;
 
         try {
@@ -1268,7 +1047,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
                 exitStatus = rs.getString("exitstatus");
 
                 // get the object based data
-                Properties params = null;
+                Properties params;
                 byte[] buf = rs.getBytes("parameters");
                 params = (Properties) deserializeObject(buf);
 
@@ -1284,20 +1063,13 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
                 jobEx.setExitStatus(exitStatus);
                 jobEx.setJobName(jobName);
             }
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             throw new PersistenceException(e);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new PersistenceException(e);
-        } catch (ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             throw new PersistenceException(e);
         } finally {
-            if (objectIn != null) {
-                try {
-                    objectIn.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
             cleanupConnection(conn, rs, statement);
         }
         return jobEx;
@@ -1308,18 +1080,17 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         Connection conn = null;
         PreparedStatement statement = null;
         ResultSet rs = null;
-        Timestamp createtime = null;
-        Timestamp starttime = null;
-        Timestamp endtime = null;
-        Timestamp updatetime = null;
-        long jobExecutionId = 0;
+        Timestamp createtime;
+        Timestamp starttime;
+        Timestamp endtime;
+        Timestamp updatetime;
+        long jobExecutionId;
         long instanceId = 0;
-        String batchStatus = null;
-        String exitStatus = null;
-        String jobName = null;
+        String batchStatus;
+        String exitStatus;
+        String jobName;
         List<InternalJobExecution> data = new ArrayList<InternalJobExecution>();
-        JobExecutionImpl jobEx = null;
-        ObjectInputStream objectIn = null;
+        JobExecutionImpl jobEx;
 
         try {
             conn = getConnection();
@@ -1338,7 +1109,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
                 // get the object based data
                 byte[] buf = rs.getBytes("parameters");
-                Properties params = (Properties) deserializeObject(buf);
+                deserializeObject(buf);
 
                 jobEx = new JobExecutionImpl(jobExecutionId, instanceId);
                 jobEx.setCreateTime(createtime);
@@ -1351,20 +1122,13 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
                 data.add(jobEx);
             }
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             throw new PersistenceException(e);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new PersistenceException(e);
-        } catch (ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             throw new PersistenceException(e);
         } finally {
-            if (objectIn != null) {
-                try {
-                    objectIn.close();
-                } catch (IOException e) {
-                    throw new PersistenceException(e);
-                }
-            }
             cleanupConnection(conn, rs, statement);
         }
         return data;
@@ -1963,7 +1727,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
     }
 
     @Override
-    public void cleanUp(final long instanceId) { // TODO: valid this method
+    public void cleanUp(final long instanceId) {
         Connection conn = null;
         try {
             conn = getConnection();
@@ -1978,13 +1742,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
             deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.STEPEXECUTIONINSTANCEDATA_TABLE + " A WHERE A.jobexecid IN ("
                 + "SELECT C.jobexecid FROM " + SQLConstants.EXECUTIONINSTANCEDATA_TABLE + " C WHERE C.jobinstanceid = ?)");
 
-            {
-                final PreparedStatement statement = conn.prepareStatement("DELETE FROM " + SQLConstants.CHECKPOINTDATA_TABLE + " WHERE jobinstanceid LIKE ?");
-                statement.setString(1, instanceId + ",");
-                statement.executeUpdate();
-                statement.close();
-            }
-
+            deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.CHECKPOINTDATA_TABLE + " WHERE jobinstanceid =  ?");
             deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.EXECUTIONINSTANCEDATA_TABLE + " WHERE jobinstanceid = ?");
             deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.JOBSTATUS_TABLE + " WHERE id = ?");
             deleteFromInstanceId(instanceId, conn, "DELETE FROM " + SQLConstants.JOBINSTANCEDATA_TABLE + " WHERE jobinstanceid = ?");

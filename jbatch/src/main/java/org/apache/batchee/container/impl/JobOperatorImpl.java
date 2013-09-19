@@ -16,6 +16,7 @@
  */
 package org.apache.batchee.container.impl;
 
+import org.apache.batchee.container.Init;
 import org.apache.batchee.container.services.BatchKernelService;
 import org.apache.batchee.container.services.InternalJobExecution;
 import org.apache.batchee.container.services.JobStatusManagerService;
@@ -52,6 +53,10 @@ import java.util.Set;
 
 
 public class JobOperatorImpl implements JobOperator {
+    static {
+        Init.doInit();
+    }
+
     enum Permissions {
         START("start");
 
@@ -115,7 +120,6 @@ public class JobOperatorImpl implements JobOperator {
         final InternalJobExecution jobEx = PERSISTENCE_SERVICE.jobOperatorGetJobExecution(executionId);
 
         // if it is not in STARTED or STARTING state, mark it as ABANDONED
-        System.out.println(jobEx.getBatchStatus());
         if (jobEx.getBatchStatus().equals(BatchStatus.STARTED) || jobEx.getBatchStatus().equals(BatchStatus.STARTING)) {
             throw new JobExecutionIsRunningException("Job Execution: " + executionId + " is still running");
         }

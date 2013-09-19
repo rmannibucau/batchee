@@ -73,6 +73,13 @@ public class ContainerLifecycle implements ITestListener {
             .p("jdbc/orderDB" + ".UserName", "app")
             .p("jdbc/orderDB" + ".Password", "app")
             .p("jdbc/orderDB" + ".JtaManaged", Boolean.TRUE.toString())
+
+            .p("jdbc/batch", "new://Resource?type=DataSource")
+            .p("jdbc/batch" + ".JdbcDriver", EmbeddedDriver.class.getName())
+            .p("jdbc/batch" + ".JdbcUrl", "jdbc:derby:memory:batch" + ";create=true")
+            .p("jdbc/batch" + ".UserName", "app")
+            .p("jdbc/batch" + ".Password", "app")
+            .p("jdbc/batch" + ".JtaManaged", Boolean.FALSE.toString())
             .build());
 
         logger = Logger.getLogger(loggerName);
