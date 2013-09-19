@@ -23,14 +23,12 @@ import java.util.logging.Logger;
 public final class Init {
     private final static Logger LOGGER = Logger.getLogger(Init.class.getName());
     private final static String LOGO = "\n" +
-        " _____               ______       _       _     \n" +
-        "|  ___|              | ___ \\     | |     | |    \n" +
-        "| |__  __ _ ___ _   _| |_/ / __ _| |_ ___| |__  \n" +
-        "|  __|/ _` / __| | | | ___ \\/ _` | __/ __| '_ \\ \n" +
-        "| |__| (_| \\__ \\ |_| | |_/ / (_| | || (__| | | |\n" +
-        "\\____/\\__,_|___/\\__, \\____/ \\__,_|\\__\\___|_| |_|\n" +
-        "                 __/ |                          \n" +
-        "                |___/ " + String.format("%1$26s", "${project.version}");
+        " ____        _       _     ______ ______ \n" +
+        "|  _ \\      | |     | |   |  ____|  ____|\n" +
+        "| |_) | __ _| |_ ___| |__ | |__  | |__   \n" +
+        "|  _ < / _` | __/ __| '_ \\|  __| |  __|  \n" +
+        "| |_) | (_| | || (__| | | | |____| |____ \n" +
+        "|____/ \\__,_|\\__\\___|_| |_|______|______|${project.version}";
 
     public static void doInit() {
         if (Boolean.parseBoolean(ServicesManager.value("org.apache.batchee.init.verbose", "true"))) {
