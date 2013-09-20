@@ -17,11 +17,15 @@
 package org.apache.batchee.servlet;
 
 import org.apache.batchee.container.services.ServicesManager;
+import org.apache.batchee.jmx.BatchEE;
 import org.apache.batchee.spi.BatchThreadPoolService;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
+import java.lang.management.ManagementFactory;
 
 @WebListener
 public class CleanUpWebappListener implements ServletContextListener {
@@ -33,8 +37,19 @@ public class CleanUpWebappListener implements ServletContextListener {
     @Override
     public void contextDestroyed(final ServletContextEvent sce) {
         final BatchThreadPoolService threadPoolService = ServicesManager.service(BatchThreadPoolService.class);
-        if (threadPoolService.getClass().getClassLoader() == sce.getServletContext().getClassLoader()) {
+        if (CleanUpWebappListener.class.getClassLoader() == sce.getServletContext().getClassLoader()) {
             threadPoolService.shutdown();
+
+            // unregister jmx bean if deployed in an app
+            final MBeanServer jmx = ManagementFactory.getPlatformMBeanServer();
+            try {
+                final ObjectName objectName = new ObjectName(BatchEE.DEFAULT_OBJECT_NAME);
+                if (jmx.isRegistered(objectName)) {
+                    jmx.unregisterMBean(objectName);
+                }
+            } catch (final Exception e) {
+                // no-op
+            }
         }
     }
 }

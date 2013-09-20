@@ -58,9 +58,8 @@ import java.util.Set;
 public class JobOperatorImpl implements JobOperator {
     static {
         Init.doInit();
-        final ClassLoader loader = JobOperatorImpl.class.getClassLoader();
-        final ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-        if (Boolean.parseBoolean(ServicesManager.value("org.apache.batchee.jmx", Boolean.toString(loader == systemClassLoader || loader.getParent() == systemClassLoader)))) {
+
+        if (Boolean.parseBoolean(ServicesManager.value("org.apache.batchee.jmx", "true"))) {
             try {
                 ManagementFactory.getPlatformMBeanServer().registerMBean(BatchEE.INSTANCE, new ObjectName(BatchEE.DEFAULT_OBJECT_NAME));
             } catch (final Exception e) {
