@@ -139,6 +139,12 @@ For instance to use shiro security service create a batchee.properties with:
 
     SecurityService = org.apache.batchee.shiro.ShiroSecurityService
 
+Some more configuration is available in batchee.properties:
+
+* org.apache.batchee.jmx: a boolean activating (by default) or not the JMX facade for the `JobOperator`
+* org.apache.batchee.init.verbose: boolean activating BatchEE logo print at startup
+* org.apache.batchee.init.verbose.sysout: use `System.out` to print BatchEE logo instead of JUL
+
 # Extensions
 ## Extras
 ### `org.apache.batchee.extras.locator.BeanLocator`
