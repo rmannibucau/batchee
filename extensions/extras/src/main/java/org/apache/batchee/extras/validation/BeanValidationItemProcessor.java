@@ -32,11 +32,18 @@ public class BeanValidationItemProcessor implements ItemProcessor {
     @BatchProperty
     private String group;
 
+    @Inject
+    @BatchProperty
+    private String skipNotValidated;
+
     @Override
     public Object processItem(final Object item) throws Exception {
         final Validator validator = getValidator();
         final Set<ConstraintViolation<Object>> result = validate(validator, item);
         if (result != null && !result.isEmpty()) {
+            if (Boolean.parseBoolean(skipNotValidated)) {
+                return null;
+            }
             throw new ConstraintViolationException(Set.class.cast(result));
         }
         return item;

@@ -17,6 +17,7 @@
 package org.apache.batchee.util;
 
 import javax.batch.operations.JobOperator;
+import javax.batch.runtime.BatchRuntime;
 import javax.batch.runtime.BatchStatus;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,6 +27,10 @@ public class Batches {
 
     private Batches() {
         // no-op
+    }
+
+    public static void waitForEnd(final long id) {
+        waitForEnd(BatchRuntime.getJobOperator(), id);
     }
 
     public static void waitForEnd(final JobOperator jobOperator, final long id) {

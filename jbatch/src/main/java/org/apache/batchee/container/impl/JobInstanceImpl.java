@@ -20,10 +20,6 @@ import javax.batch.runtime.JobInstance;
 import java.io.Serializable;
 
 public class JobInstanceImpl implements JobInstance, Serializable {
-
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
 
     private long jobInstanceId = 0L;
@@ -31,6 +27,7 @@ public class JobInstanceImpl implements JobInstance, Serializable {
     private String jobXML = null;
 
     private JobInstanceImpl() {
+        // no-op
     }
 
     public JobInstanceImpl(long instanceId) {

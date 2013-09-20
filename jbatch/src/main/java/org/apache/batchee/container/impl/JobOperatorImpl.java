@@ -22,6 +22,7 @@ import org.apache.batchee.container.services.InternalJobExecution;
 import org.apache.batchee.container.services.JobStatusManagerService;
 import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.container.status.JobStatus;
+import org.apache.batchee.jmx.BatchEE;
 import org.apache.batchee.spi.JobXMLLoaderService;
 import org.apache.batchee.spi.PersistenceManagerService;
 import org.apache.batchee.spi.SecurityService;
@@ -41,8 +42,10 @@ import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobExecution;
 import javax.batch.runtime.JobInstance;
 import javax.batch.runtime.StepExecution;
+import javax.management.ObjectName;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.management.ManagementFactory;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -55,6 +58,15 @@ import java.util.Set;
 public class JobOperatorImpl implements JobOperator {
     static {
         Init.doInit();
+        final ClassLoader loader = JobOperatorImpl.class.getClassLoader();
+        final ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        if (Boolean.parseBoolean(ServicesManager.value("org.apache.batchee.jmx", Boolean.toString(loader == systemClassLoader || loader.getParent() == systemClassLoader)))) {
+            try {
+                ManagementFactory.getPlatformMBeanServer().registerMBean(BatchEE.INSTANCE, new ObjectName(BatchEE.DEFAULT_OBJECT_NAME));
+            } catch (final Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
     }
 
     enum Permissions {

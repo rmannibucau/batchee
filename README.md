@@ -825,6 +825,7 @@ Sample:
 Configuration:
 
 * group: the group to use to validate the item
+* skipNotValidated: set to true not validated items are skipped (replaced by null)
 
 Shortname: `beanValidationProcessor`
 
