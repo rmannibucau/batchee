@@ -64,7 +64,7 @@ public class ItemWriterProxy extends AbstractProxy<ItemWriter> implements ItemWr
      * @see javax.batch.api.ItemReader#readItem()
      */
     @Override
-    public void writeItems(final List items) throws Exception {
+    public void writeItems(final List<Object> items) throws Exception {
         this.delegate.writeItems(items);
     }
 }

@@ -136,7 +136,7 @@ public class SkipHandler {
     /**
      * Handle exception from a write failure.
      */
-    public void handleExceptionWithRecordListWrite(final Exception e, final List<?> items) {
+    public void handleExceptionWithRecordListWrite(final Exception e, final List<Object> items) {
         if (isSkipLimitReached() || !isSkippable(e)) {
             throw new BatchContainerRuntimeException(e);
         }

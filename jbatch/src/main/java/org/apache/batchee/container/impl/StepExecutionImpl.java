@@ -114,7 +114,7 @@ public class StepExecutionImpl implements StepExecution, Serializable {
             + "getJobExecutionId(): " + this.jobExecutionId + "\n"
             + "getStartTime(): " + this.getStartTime() + "\n"
             + "getEndTime(): " + this.getEndTime() + "\n"
-            + "getBatchStatus(): " + this.getBatchStatus().name() + "\n"
+            + "getBatchStatus(): " + (getBatchStatus() != null ? this.getBatchStatus().name() : "-") + "\n"
             + "getExitStatus(): " + this.getExitStatus() + "\n"
             + "---------------------------------------------------------------------------------\n";
     }
@@ -225,8 +225,7 @@ public class StepExecutionImpl implements StepExecution, Serializable {
     public String getStepName() {
         if (stepContext != null) {
             return this.stepContext.getStepName();
-        } else {
-            return stepName;
         }
+        return stepName;
     }
 }

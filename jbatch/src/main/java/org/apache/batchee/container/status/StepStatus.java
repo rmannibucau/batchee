@@ -40,11 +40,15 @@ public class StepStatus implements Serializable {
 
     private long lastRunStepExecutionId;
 
-    public StepStatus(long stepExecutionId) {
-        this.startCount = 1;
+    public StepStatus(final long stepExecutionId, final int startCount) {
+        this.startCount = startCount;
         this.stepExecutionId = stepExecutionId;
         this.lastRunStepExecutionId = stepExecutionId;
         this.batchStatus = BatchStatus.STARTING;
+    }
+
+    public StepStatus(final long stepExecutionId) {
+        this(stepExecutionId, 1);
     }
 
     public void setBatchStatus(BatchStatus batchStatus) {
@@ -61,8 +65,7 @@ public class StepStatus implements Serializable {
             + ",batchStatus: " + batchStatus
             + ",exitStatus: " + exitStatus
             + ",startCount: " + startCount
-            + ",persistentUserData: "
-            + persistentUserData
+            + ",persistentUserData: " + persistentUserData
             + ",numPartitions: " + numPartitions;
     }
 
@@ -86,8 +89,15 @@ public class StepStatus implements Serializable {
         return exitStatus;
     }
 
-    public void setPersistentUserData(PersistentDataWrapper persistentUserData) {
+    public void setPersistentUserData(final PersistentDataWrapper persistentUserData) {
         this.persistentUserData = persistentUserData;
+    }
+
+    public byte[] getRawPersistentUserData() {
+        if (this.persistentUserData != null) {
+            return persistentUserData.getPersistentDataBytes();
+        }
+        return null;
     }
 
     public Serializable getPersistentUserData() {
@@ -98,14 +108,13 @@ public class StepStatus implements Serializable {
             Serializable persistentObject;
             try {
                 persistentOIS = new TCCLObjectInputStream(persistentByteArrayInputStream);
-                persistentObject = (Serializable) persistentOIS.readObject();
+                persistentObject = Serializable.class.cast(persistentOIS.readObject());
             } catch (final Exception e) {
                 throw new BatchContainerRuntimeException(e);
             }
             return persistentObject;
-        } else {
-            return null;
         }
+        return null;
     }
 
     public Integer getNumPartitions() {

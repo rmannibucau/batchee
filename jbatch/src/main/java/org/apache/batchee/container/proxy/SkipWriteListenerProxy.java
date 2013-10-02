@@ -28,7 +28,7 @@ public class SkipWriteListenerProxy extends AbstractProxy<SkipWriteListener> imp
     }
 
     @Override
-    public void onSkipWriteItem(final List items, final Exception ex) {
+    public void onSkipWriteItem(final List<Object> items, final Exception ex) {
         try {
             this.delegate.onSkipWriteItem(items, ex);
         } catch (final Exception e) {

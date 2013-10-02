@@ -22,6 +22,8 @@ import javax.batch.runtime.context.StepContext;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -77,6 +79,13 @@ public class StepContextImpl implements StepContext {
     public Metric[] getMetrics() {
         final Collection<Metric> values = metrics.values();
         return values.toArray(new Metric[values.size()]);
+    }
+
+    public Map<String, Metric> metricsAsMap() {
+        for (final Metric.MetricType type : Metric.MetricType.values()) {
+            metrics.putIfAbsent(type.name(), new MetricImpl(type, 0));
+        }
+        return Collections.unmodifiableMap(metrics);
     }
 
     public MetricImpl getMetric(MetricImpl.MetricType metricType) {

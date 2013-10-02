@@ -25,9 +25,9 @@
 
   <test name="dev">
     <classes>
-      <class name="com.ibm.jbatch.tck.tests.jslxml.JobOperatorTests">
+      <class name="com.ibm.jbatch.tck.tests.jslxml.ParallelExecutionTests">
         <methods>
-          <include name="testJobOperatorAbandonJobDuringARestart" />
+          <include name="testPartitionedCollectorAnalyzerReducerChunkRestartItemCount10" />
         </methods>
       </class>
     </classes>

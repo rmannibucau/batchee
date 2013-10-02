@@ -200,9 +200,8 @@ public abstract class BaseStepController implements ExecutionElementController {
 
         if (stepStatus.getBatchStatus().equals(BatchStatus.FAILED)) {
             return new ExecutionStatus(ExtendedBatchStatus.EXCEPTION_THROWN, stepStatus.getExitStatus());
-        } else {
-            return new ExecutionStatus(ExtendedBatchStatus.NORMAL_COMPLETION, stepStatus.getExitStatus());
         }
+        return new ExecutionStatus(ExtendedBatchStatus.NORMAL_COMPLETION, stepStatus.getExitStatus());
     }
 
     private void defaultExitStatusIfNecessary() {
@@ -271,7 +270,7 @@ public abstract class BaseStepController implements ExecutionElementController {
         this.stepStatus = JOB_STATUS_MANAGER_SERVICE.getStepStatus(jobInstance.getInstanceId(), step.getId());
         if (stepStatus == null) {
             // create new step execution
-            StepExecutionImpl stepExecution = getNewStepExecution(rootJobExecutionId, stepContext);
+            final StepExecutionImpl stepExecution = getNewStepExecution(rootJobExecutionId, stepContext);
             // create new step status for this run
             stepStatus = JOB_STATUS_MANAGER_SERVICE.createStepStatus(stepExecution.getStepExecutionId());
             stepContext.setStepExecutionId(stepExecution.getStepExecutionId());
@@ -289,9 +288,8 @@ public abstract class BaseStepController implements ExecutionElementController {
                 this.stepStatus.setLastRunStepExecutionId(stepExecution.getStepExecutionId());
                 stepContext.setStepExecutionId(stepExecution.getStepExecutionId());
                 return true;
-            } else {
-                return false;
             }
+            return false;
         }
     }
 
@@ -322,7 +320,7 @@ public abstract class BaseStepController implements ExecutionElementController {
         }
 
         if (startLimit > 0) {
-            int newStepStartCount = stepStatus.getStartCount() + 1;
+            final int newStepStartCount = stepStatus.getStartCount() + 1;
             if (newStepStartCount > startLimit) {
                 throw new IllegalStateException("For stepId: " + step.getId() + ", tried to start step for the " + newStepStartCount
                     + " time, but startLimit = " + startLimit);
@@ -340,14 +338,14 @@ public abstract class BaseStepController implements ExecutionElementController {
     }
 
     protected void persistUserData() {
-        ByteArrayOutputStream persistentBAOS = new ByteArrayOutputStream();
-        ObjectOutputStream persistentDataOOS;
+        final ByteArrayOutputStream persistentBAOS = new ByteArrayOutputStream();
+        final ObjectOutputStream persistentDataOOS;
 
         try {
             persistentDataOOS = new ObjectOutputStream(persistentBAOS);
             persistentDataOOS.writeObject(stepContext.getPersistentUserData());
             persistentDataOOS.close();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new BatchContainerServiceException("Cannot persist the persistent user data for the step.", e);
         }
 

@@ -114,15 +114,10 @@ public class JobStatus implements Serializable, Cloneable {
         this.restartCount = restartCount;
     }
     */
+
     @Override
     public String toString() {
-
-        StringBuffer buf = new StringBuffer();
-        buf.append(",currentStepId: " + currentStepId);
-        buf.append(",batchStatus: " + batchStatus);
-        buf.append(",latestExecutionId: " + latestExecutionId);
-        buf.append(",restartOn: " + restartOn);
-        return buf.toString();
+        return (",currentStepId: " + currentStepId) + ",batchStatus: " + batchStatus + ",latestExecutionId: " + latestExecutionId + ",restartOn: " + restartOn;
     }
 
     public void setExitStatus(String exitStatus) {

@@ -27,7 +27,7 @@ public class RetryWriteListenerProxy extends AbstractProxy<RetryWriteListener> i
     }
 
     @Override
-    public void onRetryWriteException(final List items, final Exception ex) {
+    public void onRetryWriteException(final List<Object> items, final Exception ex) {
         try {
             this.delegate.onRetryWriteException(items, ex);
         } catch (final Exception e) {

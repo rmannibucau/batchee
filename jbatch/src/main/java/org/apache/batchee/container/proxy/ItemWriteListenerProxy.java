@@ -27,7 +27,7 @@ public class ItemWriteListenerProxy extends AbstractProxy<ItemWriteListener> imp
     }
 
     @Override
-    public void afterWrite(final List items) {
+    public void afterWrite(final List<Object> items) {
         try {
             this.delegate.afterWrite(items);
         } catch (final Exception e) {
@@ -37,7 +37,7 @@ public class ItemWriteListenerProxy extends AbstractProxy<ItemWriteListener> imp
     }
 
     @Override
-    public void beforeWrite(final List items) {
+    public void beforeWrite(final List<Object> items) {
 
         try {
             this.delegate.beforeWrite(items);
@@ -48,7 +48,7 @@ public class ItemWriteListenerProxy extends AbstractProxy<ItemWriteListener> imp
     }
 
     @Override
-    public void onWriteError(final List items, final Exception ex) {
+    public void onWriteError(final List<Object> items, final Exception ex) {
         try {
             this.delegate.onWriteError(items, ex);
         } catch (Exception e) {

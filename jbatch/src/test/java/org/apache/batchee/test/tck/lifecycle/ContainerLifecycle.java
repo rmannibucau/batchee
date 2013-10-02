@@ -66,20 +66,21 @@ public class ContainerLifecycle implements ITestListener {
             .p("openejb.jul.forceReload", Boolean.TRUE.toString())
             .p("openejb.log.color", Boolean.toString(!System.getProperty("os.name").toLowerCase().contains("win")))
             .p(loggerName + ".level", "INFO")
+            .p("openejb.jdbc.log", Boolean.FALSE.toString())
 
             .p("jdbc/orderDB", "new://Resource?type=DataSource")
-            .p("jdbc/orderDB" + ".JdbcDriver", EmbeddedDriver.class.getName())
-            .p("jdbc/orderDB" + ".JdbcUrl", "jdbc:derby:memory:orderDB" + ";create=true")
-            .p("jdbc/orderDB" + ".UserName", "app")
-            .p("jdbc/orderDB" + ".Password", "app")
-            .p("jdbc/orderDB" + ".JtaManaged", Boolean.TRUE.toString())
+            .p("jdbc/orderDB.JdbcDriver", EmbeddedDriver.class.getName())
+            .p("jdbc/orderDB.JdbcUrl", "jdbc:derby:memory:orderDB" + ";create=true")
+            .p("jdbc/orderDB.UserName", "app")
+            .p("jdbc/orderDB.Password", "app")
+            .p("jdbc/orderDB.JtaManaged", Boolean.TRUE.toString())
 
-            .p("jdbc/batch", "new://Resource?type=DataSource")
-            .p("jdbc/batch" + ".JdbcDriver", EmbeddedDriver.class.getName())
-            .p("jdbc/batch" + ".JdbcUrl", "jdbc:derby:memory:batch" + ";create=true")
-            .p("jdbc/batch" + ".UserName", "app")
-            .p("jdbc/batch" + ".Password", "app")
-            .p("jdbc/batch" + ".JtaManaged", Boolean.FALSE.toString())
+            .p("jdbc/batchee", "new://Resource?type=DataSource")
+            .p("jdbc/batchee.JdbcDriver", EmbeddedDriver.class.getName())
+            .p("jdbc/batchee.JdbcUrl", "jdbc:derby:memory:batchee" + ";create=true")
+            .p("jdbc/batchee.UserName", "app")
+            .p("jdbc/batchee.Password", "app")
+            .p("jdbc/batchee.JtaManaged", Boolean.FALSE.toString())
             .build());
 
         logger = Logger.getLogger(loggerName);

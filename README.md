@@ -127,12 +127,18 @@ Here are the available configurable services:
     * persistence.database.dialect: the `org.apache.batchee.container.services.persistence.dialect.JDBCDialect` to use to create the database is asked
     * persistence.memory.global: storing statically data when using in memory persistence
     * persistence.memory.max-jobs-instances: number of job instance data to store, default to 1000, -1 means keep all in memory
+    * persistence.jpa.entity-manager-provider: in case of `org.apache.batchee.container.services.persistence.JPAPersistenceService` the `org.apache.batchee.container.services.persistence.jpa.EntityManagerProvider` qualified name
+    * persistence.jpa.transaction-provider: for JPA persistence service the `org.apache.batchee.container.services.persistence.jpa.TransactionProvider` qualified name
+    * persistence.jpa.unit-name: for JPA persistence service the unit name (default `batchee`)
+    * persistence.jpa.property..*: for JPA persistence service the persistence-unit properties
 * JobStatusManagerService
 * BatchThreadPoolService
 * BatchKernelService
 * JobXMLLoaderService
 * BatchArtifactFactory
 * SecurityService
+
+Note about JPA persistence service: to stay portable entities are not enhanced. Therefore you need to use a javaagent to do so.
 
 To override a service implementation just set the key name (from the previous list) to a qualified name.
 For instance to use shiro security service create a batchee.properties with:

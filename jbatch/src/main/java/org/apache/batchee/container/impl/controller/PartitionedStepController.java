@@ -352,13 +352,11 @@ public class PartitionedStepController extends BaseStepController {
          * start rollback if any have stopped or failed
          */
         boolean rollback = false;
-        boolean partitionFailed = false;
 
         for (final BatchWorkUnit subJob : completedWork) {
             BatchStatus batchStatus = subJob.getJobExecutionImpl().getJobContext().getBatchStatus();
             if (batchStatus.equals(BatchStatus.FAILED)) {
                 rollback = true;
-                partitionFailed = true;
 
                 //Keep track of the failing status and throw an exception to propagate after the rest of the partitions are complete
                 stepContext.setBatchStatus(BatchStatus.FAILED);
@@ -372,9 +370,7 @@ public class PartitionedStepController extends BaseStepController {
             if (this.partitionReducerProxy != null) {
                 this.partitionReducerProxy.rollbackPartitionedStep();
             }
-            if (partitionFailed) {
-                throw new BatchContainerRuntimeException("One or more partitions failed");
-            }
+            throw new BatchContainerRuntimeException("One or more partitions failed");
         } else {
             if (this.partitionReducerProxy != null) {
                 this.partitionReducerProxy.beforePartitionedStepCompletion();

@@ -54,6 +54,12 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-servlet_3.0_spec</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jpa_2.0_spec</artifactId>
+      <version>1.1</version>
+      <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.testng</groupId>
@@ -75,6 +81,7 @@
     1) mvn process-test-classes
     2) cp -r target/tck/jsr352-tck-1.0/artifacts/ /tmp
     3) activate the following dependencies
+    -->
     <dependency>
       <groupId>tck</groupId>
       <artifactId>tck-impl</artifactId>
@@ -89,7 +96,6 @@
       <systemPath>/tmp/artifacts/jsr352-tck-SPI.jar</systemPath>
       <scope>system</scope>
     </dependency>
-    -->
   </dependencies>
 
   <build>
@@ -129,7 +135,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.16</version>
         <configuration>
-          <systemProperties> <!-- replace properties file -->
+          <systemProperties>
+            <!-- replace properties file -->
             <tck.execution.waiter.timeout>900000</tck.execution.waiter.timeout>
             <ExecutionTests.testInvokeJobWithUserStop.sleep>1000</ExecutionTests.testInvokeJobWithUserStop.sleep>
             <JobOperatorTests.testInvokeJobWithUserStop.sleep>1000</JobOperatorTests.testInvokeJobWithUserStop.sleep>
