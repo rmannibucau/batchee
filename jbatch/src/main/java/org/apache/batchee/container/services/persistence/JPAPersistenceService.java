@@ -351,7 +351,7 @@ public class JPAPersistenceService implements PersistenceManagerService {
                 jobEx.setLastUpdateTime(entity.getUpdateTime());
                 jobEx.setBatchStatus(entity.getBatchStatus().name());
                 jobEx.setExitStatus(entity.getExitStatus());
-                jobEx.setJobName(entity.getInstance().getJobName());
+                jobEx.setJobName(entity.getInstance().getName());
 
                 result.add(jobEx);
             }
@@ -400,7 +400,7 @@ public class JPAPersistenceService implements PersistenceManagerService {
                 jobEx.setBatchStatus(instance.getBatchStatus().name());
             }
             jobEx.setExitStatus(instance.getExitStatus());
-            jobEx.setJobName(instance.getInstance().getJobName());
+            jobEx.setJobName(instance.getInstance().getName());
             return jobEx;
         } finally {
             emProvider.release(em);
@@ -710,7 +710,7 @@ public class JPAPersistenceService implements PersistenceManagerService {
                 entity.setExitStatus(jobStatus.getExitStatus());
                 entity.setRestartOn(jobStatus.getRestartOn());
                 if (jobStatus.getJobInstance() != null) {
-                    entity.setJobName(jobStatus.getJobInstance().getJobName());
+                    entity.setName(jobStatus.getJobInstance().getJobName());
                 }
                 em.merge(entity);
 

@@ -91,6 +91,7 @@ public class ServicesManager implements BatchContainerConstants {
     private volatile boolean isInited = false;
 
     private Properties batchRuntimeConfig;
+    private boolean logServices;
 
     // Registry of all current services
     private final ConcurrentHashMap<String, BatchService> serviceRegistry = new ConcurrentHashMap<String, BatchService>();
@@ -134,6 +135,8 @@ public class ServicesManager implements BatchContainerConstants {
                     // JVM instance overriding
                     batchRuntimeConfig.putAll(System.getProperties());
 
+                    logServices = Boolean.parseBoolean(batchRuntimeConfig.getProperty("batchee.service-manager.log", "false"));
+
                     isInited = Boolean.TRUE;
                 }
             }
@@ -174,6 +177,10 @@ public class ServicesManager implements BatchContainerConstants {
 
         if (service == null) {
             throw new BatchContainerRuntimeException("Instantiate of service=: " + className + " returned null. Aborting...");
+        }
+
+        if (logServices) {
+            LOGGER.info("Using " + service + " (" + className + ") as " + serviceType.getName());
         }
 
         return service;

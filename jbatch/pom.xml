@@ -134,8 +134,50 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.16</version>
+        <executions>
+          <execution>
+            <id>in-memory</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <skip>${maven.test.skip}</skip>
+              <systemProperties>
+                <PersistenceManagerService>org.apache.batchee.container.services.persistence.MemoryPersistenceManager</PersistenceManagerService>
+              </systemProperties>
+            </configuration>
+          </execution>
+          <execution>
+            <id>jdbc</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <skip>${maven.test.skip}</skip>
+              <systemProperties>
+                <PersistenceManagerService>org.apache.batchee.container.services.persistence.JDBCPersistenceManager</PersistenceManagerService>
+              </systemProperties>
+            </configuration>
+          </execution>
+          <execution>
+            <id>jpa</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <skip>${maven.test.skip}</skip>
+              <systemProperties>
+                <PersistenceManagerService>org.apache.batchee.container.services.persistence.JPAPersistenceService</PersistenceManagerService>
+              </systemProperties>
+            </configuration>
+          </execution>
+        </executions>
         <configuration>
+          <skip>true</skip>
+
           <systemProperties>
+            <batchee.service-manager.log>true</batchee.service-manager.log>
+
             <!-- replace properties file -->
             <tck.execution.waiter.timeout>900000</tck.execution.waiter.timeout>
             <ExecutionTests.testInvokeJobWithUserStop.sleep>1000</ExecutionTests.testInvokeJobWithUserStop.sleep>

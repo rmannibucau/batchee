@@ -117,14 +117,20 @@ Here are the available configurable services:
 
 * TransactionManagementService
     * transaction.user-transaction.jndi: when using default TransactionManagementService override the default UserTransaction jndi name
-* PersistenceManagerService (service)
-    * persistence.database.schema: schema to use for persistence when using JDBC default implementation
+* PersistenceManagerService (service) - here are referenced default implementations configuration. They are exclusive.
+    * persistence.database.has-schema: if the database needs to use a schema or not
+    * persistence.database.schema: schema to use for persistence when using JDBC
     * persistence.database.jndi: jndi name of the datasource to use for persistence when using JDBC default implementation
     * persistence.database.driver: jdbc driver to use for persistence when using JDBC default implementation if no jndi name is provided
     * persistence.database.url: jdbc url to use for persistence when using JDBC default implementation if no jndi name is provided
     * persistence.database.user: jdbc user to use for persistence when using JDBC default implementation if no jndi name is provided
     * persistence.database.password: jdbc password to use for persistence when using JDBC default implementation if no jndi name is provided
-    * persistence.database.dialect: the `org.apache.batchee.container.services.persistence.dialect.JDBCDialect` to use to create the database is asked
+    * persistence.database.tables.checkpoint: checkpoints table name
+    * persistence.database.tables.job-instance: job instances table name
+    * persistence.database.tables.job-execution: job executions table name
+    * persistence.database.tables.step-execution: step executions table name
+    * persistence.database.db-dictionary: the `org.apache.batchee.container.services.persistence.jdbc.database.Database` class to use
+    * persistence.database.ddl: `create` to create the database if it doesn't exist
     * persistence.memory.global: storing statically data when using in memory persistence
     * persistence.memory.max-jobs-instances: number of job instance data to store, default to 1000, -1 means keep all in memory
     * persistence.jpa.entity-manager-provider: in case of `org.apache.batchee.container.services.persistence.JPAPersistenceService` the `org.apache.batchee.container.services.persistence.jpa.EntityManagerProvider` qualified name

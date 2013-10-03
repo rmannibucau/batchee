@@ -23,13 +23,15 @@ import org.apache.batchee.container.impl.JobInstanceImpl;
 import org.apache.batchee.container.impl.MetricImpl;
 import org.apache.batchee.container.impl.StepContextImpl;
 import org.apache.batchee.container.impl.StepExecutionImpl;
-import org.apache.batchee.container.impl.controller.PartitionedStepBuilder;
 import org.apache.batchee.container.impl.controller.chunk.CheckpointData;
 import org.apache.batchee.container.impl.controller.chunk.CheckpointDataKey;
 import org.apache.batchee.container.impl.controller.chunk.PersistentDataWrapper;
 import org.apache.batchee.container.impl.jobinstance.RuntimeFlowInSplitExecution;
 import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.services.InternalJobExecution;
+import org.apache.batchee.container.services.persistence.jdbc.Dictionary;
+import org.apache.batchee.container.services.persistence.jdbc.database.Database;
+import org.apache.batchee.container.services.persistence.jdbc.database.DerbyDatabase;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.container.status.StepStatus;
 import org.apache.batchee.container.util.TCCLObjectInputStream;
@@ -45,10 +47,8 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -73,83 +73,7 @@ import static org.apache.batchee.container.util.Serializations.deserialize;
 import static org.apache.batchee.container.util.Serializations.serialize;
 
 public class JDBCPersistenceManager implements PersistenceManagerService {
-
-    public static final Charset UTF_8 = Charset.forName("UTF-8");
-
-    public static interface SQL { // TODO: make it configurable (at least integer/bigint/varchar(N) types) or rely on JPA? Note: XXX0 columns are 'often' reserved keywords
-        String AUTO_INCREMENT = " NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1)";
-
-        String CREATE_TABLE = "create table ";
-        String INSERT_INTO = "insert into ";
-        String SELECT = "select ";
-        String FROM = " from ";
-        String UPDATE = "update ";
-        String WHERE = " where ";
-        String DELETE = " where from ";
-
-        String CHECKPOINT = "checkpointentity";
-        String CREATE_CHECKPOINT = CREATE_TABLE + CHECKPOINT + "(id bigint " + AUTO_INCREMENT + ", data blob, stepName varchar(255), type varchar(20), INSTANCE_JOBINSTANCEID bigint, primary key(id))";
-        String INSERT_CHECKPOINT = INSERT_INTO + CHECKPOINT + "(data, stepName, type, INSTANCE_JOBINSTANCEID) values (?, ?, ?, ?)";
-        String SELECT_CHECKPOINT = SELECT + "data" + FROM + CHECKPOINT + WHERE + "INSTANCE_JOBINSTANCEID = ? and type = ? and stepName = ?";
-        String UPDATE_CHECKPOINT = UPDATE + CHECKPOINT + " set data = ?" + WHERE + "INSTANCE_JOBINSTANCEID = ? and type = ? and stepName = ?";
-        String DELETE_CHECKPOINT = DELETE + CHECKPOINT + WHERE + "INSTANCE_JOBINSTANCEID = ?";
-
-        String JOB_INSTANCE = "jobinstanceentity";
-        String CREATE_JOB_INSTANCE = CREATE_TABLE + JOB_INSTANCE + "(jobInstanceId bigint" + AUTO_INCREMENT + ", batchStatus varchar(20)," +
-            "exitStatus varchar(255), jobName varchar(255), jobXml blob, latestExecution bigint, name varchar(255)," +
-            "restartOn varchar(255), step varchar(255), tag varchar(255), PRIMARY KEY (jobInstanceId))";
-        String JOB_INSTANCE_COUNT_FROM_NAME = SELECT + "count(jobInstanceId) as jobinstancecount" + FROM + JOB_INSTANCE + WHERE + "name = ?";
-        String JOB_INSTANCE_BY_ID = SELECT + "*" + FROM + JOB_INSTANCE + WHERE + "jobInstanceId = ?";
-        String JOB_INSTANCE_UPDATE_STATUS = UPDATE + JOB_INSTANCE + " set batchStatus = ?, exitStatus = ?, latestExecution = ?, restartOn = ?, step = ?, jobName = ?" + WHERE + "jobInstanceId = ?";
-        String JOB_INSTANCE_COUNT = JOB_INSTANCE_COUNT_FROM_NAME + " and tag = ?";
-        String JOB_INSTANCE_IDS = SELECT + "jobInstanceId" + FROM + JOB_INSTANCE + WHERE + "name = ? and tag = ? order by jobInstanceId desc";
-        String JOB_INSTANCE_IDS_FROM_NAME = SELECT + "jobInstanceId" + FROM + JOB_INSTANCE + WHERE + " name = ? order by jobInstanceId desc";
-        String EXTERNAL_JOB_INSTANCE = SELECT + "distinct jobInstanceId, name" + FROM + JOB_INSTANCE + WHERE + "name not like '" + PartitionedStepBuilder.JOB_ID_SEPARATOR + "%'";
-        String JOB_INSTANCE_CREATE = INSERT_INTO + JOB_INSTANCE + "(name, tag) VALUES(?, ?)";
-        String JOB_INSTANCE_CREATE_WITH_JOB_XML = INSERT_INTO + JOB_INSTANCE + "(name, tag, jobXml) VALUES(?, ?, ?)";
-        String DELETE_JOB_INSTANCE = DELETE + JOB_INSTANCE + WHERE + "jobInstanceId = ?";
-
-        String JOB_EXECUTION = "jobexecutionentity";
-        String CREATE_JOB_EXECUTION = CREATE_TABLE + JOB_EXECUTION
-            + "(executionId bigint" + AUTO_INCREMENT + ", batchStatus varchar(20), createTime timestamp, endTime timestamp, exitStatus varchar(255)," +
-            "jobProperties blob, startTime timestamp, updateTime timestamp, INSTANCE_JOBINSTANCEID bigint)";
-        String JOB_EXECUTION_TIMESTAMPS = SELECT + " createTime, endTime, updateTime, startTime" + FROM + JOB_EXECUTION + WHERE + "executionId = ?";
-        String JOB_EXECUTION_BATCH_STATUS = SELECT + "batchStatus" + FROM + JOB_EXECUTION + WHERE + "executionId = ?";
-        String JOB_EXECUTION_EXIT_STATUS = SELECT + "exitStatus" + FROM + JOB_EXECUTION + WHERE + "executionId = ?";
-        String JOB_EXECUTION_PROPERTIES = SELECT + "jobProperties" + FROM + JOB_EXECUTION + WHERE + "executionId = ?";
-        String JOB_EXECUTION_UPDATE = UPDATE + JOB_EXECUTION + " set batchStatus = ?, updateTime = ? where executionId = ?";
-        String JOB_EXECUTION_SET_FINAL_DATA = UPDATE + JOB_EXECUTION + " set batchStatus = ?, exitStatus = ?, endTime = ?, updateTime = ? where executionId = ?";
-        String JOB_EXECUTION_START = UPDATE + JOB_EXECUTION + " set batchStatus = ?, startTime = ?, updateTime = ? where executionId = ?";
-        String JOB_EXECUTION_FIND_BY_ID = SELECT + "A.createTime, A.startTime, A.endTime, A.updateTime, A.jobProperties, A.INSTANCE_JOBINSTANCEID, A.batchStatus, A.exitStatus, B.name" + FROM + JOB_EXECUTION
-            +" as A inner join " + JOB_INSTANCE + " as B on A.INSTANCE_JOBINSTANCEID = B.jobInstanceId" + WHERE + "executionId = ?";
-        String JOB_EXECUTION_FROM_INSTANCE = SELECT + "A.executionId, A.createTime, A.startTime, A.endTime, A.updateTime, A.jobProperties," +
-            " A.batchStatus, A.exitStatus, B.name " + FROM + JOB_EXECUTION + " as A inner join " + JOB_INSTANCE + " as B ON A.INSTANCE_JOBINSTANCEID = B.jobInstanceId" + WHERE + "B.jobInstanceId = ?";
-        String JOB_EXECUTION_RUNNING = SELECT + "A.executionId" + FROM + JOB_EXECUTION + " AS A inner join " + JOB_INSTANCE + " AS B ON A.INSTANCE_JOBINSTANCEID = B.jobInstanceId WHERE A.batchStatus IN (?,?,?) AND B.name = ?";
-        String JOB_INSTANCE_STATUS = SELECT + "*" + FROM + JOB_INSTANCE + " as A inner join " + JOB_EXECUTION + " as B on A.jobInstanceId = B.INSTANCE_JOBINSTANCEID " + WHERE + "B.executionId = ?";
-        String JOB_INSTANCE_FROM_EXECUTION = SELECT + "INSTANCE_JOBINSTANCEID" + FROM + JOB_EXECUTION +  WHERE + "executionId = ?";
-        String JOB_EXECUTION_CREATE = INSERT_INTO + JOB_EXECUTION + "(INSTANCE_JOBINSTANCEID, createTime, updateTime, batchStatus, jobProperties) VALUES(?, ?, ?, ?, ?)";
-        String JOB_EXECUTION_MOST_RECENT = SELECT + "executionId" + FROM + JOB_EXECUTION + WHERE + "INSTANCE_JOBINSTANCEID = ? ORDER BY createTime DESC";
-        String DELETE_JOB_EXECUTION = DELETE + JOB_EXECUTION + WHERE + "INSTANCE_JOBINSTANCEID = ?";
-
-        String STEP_EXECUTION = "stepexecutionentity";
-        String CREATE_STEP_EXECUTION = CREATE_TABLE + STEP_EXECUTION + "(id bigint" + AUTO_INCREMENT + ", batchStatus varchar(20), COMMIT0 bigint," +
-            "endTime timestamp, exitStatus varchar(255), filter bigint, lastRunStepExecutionId bigint, numPartitions integer," +
-            "persistentData blob, processSkip bigint, READ0 bigint, readSkip bigint," +
-            "ROLLBACK0 bigint, startCount integer, startTime timestamp, stepName varchar(255), WRITE0 bigint," +
-            "writeSkip bigint, EXECUTION_EXECUTIONID bigint, PRIMARY KEY (id))";
-        String STEPS_FROM_EXECUTION = SELECT + "*" + FROM + STEP_EXECUTION + WHERE + "EXECUTION_EXECUTIONID = ?";
-        String STEP_FROM_ID = SELECT + "*" + FROM + STEP_EXECUTION + WHERE + "id = ?";
-        String STEP_EXECUTION_CREATE = INSERT_INTO + STEP_EXECUTION + "(EXECUTION_EXECUTIONID, batchStatus, exitStatus, stepName, READ0,"
-            + "WRITE0, COMMIT0, ROLLBACK0, readSkip, processSkip, filter, writeSkip, startTime,"
-            + "endTime, persistentData) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        String STEP_EXECUTION_UPDATE_STATUS = UPDATE + STEP_EXECUTION + " SET persistentData = ?, batchStatus = ?, exitStatus = ?, lastRunStepExecutionId = ?, numPartitions = ?, startCount = ? WHERE id = ?";
-        String STEP_EXECUTION_UPDATE = UPDATE + STEP_EXECUTION + " SET EXECUTION_EXECUTIONID = ?, batchStatus = ?, exitStatus = ?, stepName = ?,  READ0 = ?,"
-            + "WRITE0 = ?, COMMIT0 = ?, ROLLBACK0 = ?, readSkip = ?, processSkip = ?, filter = ?, writeSkip = ?,"
-            + " startTime = ?, endTime = ?, persistentData = ? WHERE id = ?";
-        String STEP_EXECUTION_BY_INSTANCE_AND_STEP = SELECT + "B.id, B.startCount, B.batchStatus, B.exitStatus, B.persistentData, B.lastRunStepExecutionId, B.numPartitions, B.EXECUTION_EXECUTIONID"
-            + FROM + JOB_EXECUTION + " A inner join " + STEP_EXECUTION + " B ON A.executionId = B.EXECUTION_EXECUTIONID " + WHERE + "A.INSTANCE_JOBINSTANCEID = ? and B.stepName = ?";
-        String DELETE_STEP_EXECUTION = DELETE + JOB_EXECUTION + " A inner join " + STEP_EXECUTION + " B ON A.executionId = B.EXECUTION_EXECUTIONID " + WHERE + "A.INSTANCE_JOBINSTANCEID = ?";
-    }
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     static interface Defaults {
         final String JDBC_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
@@ -158,6 +82,8 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         final String JDBC_PASSWORD = "app";
         final String SCHEMA = "BATCHEE";
     }
+
+    private Dictionary dictionary;
 
     protected DataSource dataSource = null;
     protected String jndiName = null;
@@ -170,7 +96,12 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
     @Override
     public void init(final Properties batchConfig) throws BatchContainerServiceException {
-        schema = batchConfig.getProperty("persistence.database.schema", Defaults.SCHEMA);
+        final boolean hasSchema = "true".equalsIgnoreCase(batchConfig.getProperty("persistence.database.has-schema", "true"));
+        if (hasSchema) {
+            schema = batchConfig.getProperty("persistence.database.schema", Defaults.SCHEMA);
+        } else {
+            schema = null;
+        }
 
         if (batchConfig.containsKey("persistence.database.jndi")) {
             jndiName = batchConfig.getProperty("persistence.database.jndi", "");
@@ -193,14 +124,34 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         }
 
         try {
+            initDictionary(batchConfig);
+
             if ("create".equalsIgnoreCase(batchConfig.getProperty("persistence.database.ddl", "create"))) {
-                final String databaseType = dbType(); // TODO: use it to change "dict"
-                if (!isSchemaValid()) {
+                if (hasSchema && !isSchemaValid()) {
                     createSchema();
                 }
                 checkAllTables();
             }
         } catch (final SQLException e) {
+            throw new BatchContainerServiceException(e);
+        }
+    }
+
+    private void initDictionary(final Properties batchConfig) throws BatchContainerServiceException, SQLException {
+        final String type = batchConfig.getProperty("persistence.database.db-dictionary", guessDictionary());
+        if (type == null) {
+            throw new IllegalArgumentException("You need to provide a db dictionary for this database");
+        }
+
+        try {
+            final Database database = Database.class.cast(Thread.currentThread().getContextClassLoader().loadClass(type).newInstance());
+            dictionary = new Dictionary(
+                batchConfig.getProperty("persistence.database.tables.checkpoint", "checkpointentity"),
+                batchConfig.getProperty("persistence.database.tables.job-instance", "jobinstanceentity"),
+                batchConfig.getProperty("persistence.database.tables.job-execution", "jobexecutionentity"),
+                batchConfig.getProperty("persistence.database.tables.step-execution", "stepexecutionentity"),
+                database);
+        } catch (final Exception e) {
             throw new BatchContainerServiceException(e);
         }
     }
@@ -225,7 +176,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         return false;
     }
 
-    private String dbType() throws SQLException {
+    private String guessDictionary() throws SQLException {
         final Connection conn = getConnectionToDefaultSchema();
         final String pn;
         try {
@@ -236,8 +187,9 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         }
 
         if (pn.contains("derby")) {
-            return "derby";
+            return DerbyDatabase.class.getName();
         }
+        /* TODO
         if (pn.contains("mysql")) {
             return "mysql";
         }
@@ -247,14 +199,10 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         if (pn.contains("hsql")) {
             return "hsql";
         }
-        return "generic";
+        */
+        return null;
     }
 
-    /**
-     * Creates the default schema JBATCH or the schema defined in batch-config.
-     *
-     * @throws SQLException
-     */
     private void createSchema() throws SQLException {
         final Connection conn = getConnectionToDefaultSchema();
         final PreparedStatement ps = conn.prepareStatement("CREATE SCHEMA " + schema);
@@ -268,10 +216,10 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
      * @throws SQLException
      */
     private void checkAllTables() throws SQLException {
-        createIfNotExists(SQL.CHECKPOINT, SQL.CREATE_CHECKPOINT);
-        createIfNotExists(SQL.JOB_EXECUTION, SQL.CREATE_JOB_EXECUTION);
-        createIfNotExists(SQL.JOB_INSTANCE, SQL.CREATE_JOB_INSTANCE);
-        createIfNotExists(SQL.STEP_EXECUTION, SQL.CREATE_STEP_EXECUTION);
+        createIfNotExists(dictionary.getCheckpointTable(), dictionary.getCreateCheckpointTable());
+        createIfNotExists(dictionary.getJobExecutionTable(), dictionary.getCreateJobExecutionTable());
+        createIfNotExists(dictionary.getJobInstanceTable(), dictionary.getCreateJobInstanceTable());
+        createIfNotExists(dictionary.getStepExecutionTable(), dictionary.getCreateStepExecutionTable());
     }
 
     protected Connection getConnection() throws SQLException {
@@ -310,7 +258,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         PreparedStatement statement = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.INSERT_CHECKPOINT);
+            statement = conn.prepareStatement(dictionary.getInsertCheckpoint());
 
             statement.setBytes(1, value.getRestartToken());
             statement.setString(2, key.getStepName());
@@ -372,7 +320,11 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
     }
 
     private void setSchemaOnConnection(final Connection connection) throws SQLException {
-        final PreparedStatement ps = connection.prepareStatement("SET SCHEMA ?");
+        if (schema == null) {
+            return;
+        }
+
+        final PreparedStatement ps = connection.prepareStatement("set schema ?");
         ps.setString(1, schema);
         ps.executeUpdate();
         ps.close();
@@ -392,14 +344,14 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         ResultSet rs = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.SELECT_CHECKPOINT);
+            statement = conn.prepareStatement(dictionary.getSelectCheckpoint());
             statement.setLong(1, key.getJobInstanceId());
             statement.setString(2, key.getType().name());
             statement.setString(3, key.getStepName());
             rs = statement.executeQuery();
             if (rs.next()) {
                 final CheckpointData data = new CheckpointData(key.getJobInstanceId(), key.getStepName(), key.getType());
-                data.setRestartToken(rs.getBytes("data"));
+                data.setRestartToken(rs.getBytes(dictionary.checkpointColumn(1)));
                 return data;
             }
             return null;
@@ -423,7 +375,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         PreparedStatement statement = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.UPDATE_CHECKPOINT);
+            statement = conn.prepareStatement(dictionary.getUpdateCheckpoint());
             statement.setBytes(1, value.getRestartToken());
             statement.setLong(2, key.getJobInstanceId());
             statement.setString(3, key.getType().name());
@@ -490,12 +442,12 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         ResultSet rs = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_COUNT);
+            statement = conn.prepareStatement(dictionary.getCountJobInstanceByNameAndTag());
             statement.setString(1, jobName);
             statement.setString(2, appTag);
             rs = statement.executeQuery();
             rs.next();
-            return rs.getInt("jobinstancecount");
+            return rs.getInt("jobinstancecount"); // not a column name so ok
         } catch (final SQLException e) {
             throw new PersistenceException(e);
         } finally {
@@ -510,11 +462,11 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         ResultSet rs = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_COUNT_FROM_NAME);
+            statement = conn.prepareStatement(dictionary.getCountJobInstanceByName());
             statement.setString(1, jobName);
             rs = statement.executeQuery();
             rs.next();
-            return rs.getInt("jobinstancecount");
+            return rs.getInt("jobinstancecount"); // not a column name so ok
         } catch (final SQLException e) {
             throw new PersistenceException(e);
         } finally {
@@ -532,12 +484,12 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         final List<Long> data = new ArrayList<Long>();
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_IDS);
+            statement = conn.prepareStatement(dictionary.getFindJoBInstanceIds());
             statement.setObject(1, jobName);
             statement.setObject(2, appTag);
             rs = statement.executeQuery();
             while (rs.next()) {
-                data.add(rs.getLong("jobinstanceid"));
+                data.add(rs.getLong(dictionary.jobInstanceColumns(0)));
             }
         } catch (final SQLException e) {
             throw new PersistenceException(e);
@@ -565,11 +517,11 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_IDS_FROM_NAME);
+            statement = conn.prepareStatement(dictionary.getFindJobInstanceIdsByName());
             statement.setObject(1, jobName);
             rs = statement.executeQuery();
             while (rs.next()) {
-                data.add(rs.getLong("jobinstanceid"));
+                data.add(rs.getLong(dictionary.jobInstanceColumns(0)));
             }
         } catch (final SQLException e) {
             throw new PersistenceException(e);
@@ -599,10 +551,10 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
             conn = getConnection();
 
             // Filter out 'subjob' parallel execution entries which start with the special character
-            statement = conn.prepareStatement(SQL.EXTERNAL_JOB_INSTANCE);
+            statement = conn.prepareStatement(dictionary.getFindExternalJobInstances());
             rs = statement.executeQuery();
             while (rs.next()) {
-                data.put(rs.getLong("jobinstanceid"), rs.getString("name"));
+                data.put(rs.getLong(dictionary.jobInstanceColumns(0)), rs.getString(dictionary.jobInstanceColumns(3)));
             }
         } catch (final SQLException e) {
             throw new PersistenceException(e);
@@ -625,7 +577,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_TIMESTAMPS);
+            statement = conn.prepareStatement(dictionary.getFindJobExecutionTimestamps());
             statement.setLong(1, key);
             rs = statement.executeQuery();
             while (rs.next()) {
@@ -660,7 +612,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_BATCH_STATUS);
+            statement = conn.prepareStatement(dictionary.getFindJobExecutionBatchStatus());
             statement.setLong(1, key);
             rs = statement.executeQuery();
             if (rs.next()) {
@@ -683,7 +635,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_EXIT_STATUS);
+            statement = conn.prepareStatement(dictionary.getFindJobExecutionExitStatus());
             statement.setLong(1, key);
             rs = statement.executeQuery();
             if (rs.next()) {
@@ -705,12 +657,12 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_PROPERTIES);
+            statement = conn.prepareStatement(dictionary.getFindJobExecutionJobProperties());
             statement.setLong(1, executionId);
             rs = statement.executeQuery();
 
             if (rs.next()) {
-                final byte[] buf = rs.getBytes("jobProperties");
+                final byte[] buf = rs.getBytes(dictionary.jobExecutionColumns(5));
                 return Properties.class.cast(deserialize(buf));
             }
             throw new NoSuchJobExecutionException("Did not find table entry for executionID =" + executionId);
@@ -753,30 +705,30 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.STEPS_FROM_EXECUTION);
+            statement = conn.prepareStatement(dictionary.getFinStepExecutionFromJobExecution());
             statement.setLong(1, execid);
             rs = statement.executeQuery();
 
             while (rs.next()) {
-                jobexecid = rs.getLong("EXECUTION_EXECUTIONID");
-                stepexecid = rs.getLong("id");
-                stepname = rs.getString("stepName");
-                batchstatus = rs.getString("batchStatus");
-                exitstatus = rs.getString("exitStatus");
-                readCount = rs.getLong("READ0");
-                writeCount = rs.getLong("WRITE0");
-                commitCount = rs.getLong("COMMIT0");
-                rollbackCount = rs.getLong("ROLLBACK0");
-                readSkipCount = rs.getLong("readSkip");
-                processSkipCount = rs.getLong("processSkip");
-                filterCount = rs.getLong("filter");
-                writeSkipCount = rs.getLong("writeSkip");
-                startTS = rs.getTimestamp("startTime");
-                endTS = rs.getTimestamp("endTime");
+                jobexecid = rs.getLong(dictionary.stepExecutionColumns(18));
+                stepexecid = rs.getLong(dictionary.stepExecutionColumns(0));
+                stepname = rs.getString(dictionary.stepExecutionColumns(15));
+                batchstatus = rs.getString(dictionary.stepExecutionColumns(1));
+                exitstatus = rs.getString(dictionary.stepExecutionColumns(4));
+                readCount = rs.getLong(dictionary.stepExecutionColumns(10));
+                writeCount = rs.getLong(dictionary.stepExecutionColumns(16));
+                commitCount = rs.getLong(dictionary.stepExecutionColumns(2));
+                rollbackCount = rs.getLong(dictionary.stepExecutionColumns(12));
+                readSkipCount = rs.getLong(dictionary.stepExecutionColumns(11));
+                processSkipCount = rs.getLong(dictionary.stepExecutionColumns(9));
+                filterCount = rs.getLong(dictionary.stepExecutionColumns(5));
+                writeSkipCount = rs.getLong(dictionary.stepExecutionColumns(17));
+                startTS = rs.getTimestamp(dictionary.stepExecutionColumns(14));
+                endTS = rs.getTimestamp(dictionary.stepExecutionColumns(3));
 
                 // get the object based data
                 Serializable persistentData = null;
-                final byte[] pDataBytes = rs.getBytes("persistentData");
+                final byte[] pDataBytes = rs.getBytes(dictionary.stepExecutionColumns(8));
                 if (pDataBytes != null) {
                     objectIn = new TCCLObjectInputStream(new ByteArrayInputStream(pDataBytes));
                     persistentData = (Serializable) objectIn.readObject();
@@ -823,29 +775,29 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.STEP_FROM_ID);
+            statement = conn.prepareStatement(dictionary.getFindStepExecutionFromId());
             statement.setLong(1, stepExecId);
             rs = statement.executeQuery();
             if (rs.next()) {
-                final long jobexecid = rs.getLong("EXECUTION_EXECUTIONID");
-                final long stepExecutionId = rs.getLong("id");
-                final String stepName = rs.getString("stepName");
-                final String batchstatus = rs.getString("batchStatus");
-                final String exitstatus = rs.getString("exitStatus");
-                final long readCount = rs.getLong("READ0");
-                final long writeCount = rs.getLong("WRITE0");
-                final long commitCount = rs.getLong("COMMIT0");
-                final long rollbackCount = rs.getLong("ROLLBACK0");
-                final long readSkipCount = rs.getLong("readSkip");
-                final long processSkipCount = rs.getLong("processSkip");
-                final long filterCount = rs.getLong("filter");
-                final long writeSkipCount = rs.getLong("writeSkip");
-                final Timestamp startTS = rs.getTimestamp("startTime");
-                final Timestamp endTS = rs.getTimestamp("endTime");
+                final long jobexecid = rs.getLong(dictionary.stepExecutionColumns(18));
+                final long stepExecutionId = rs.getLong(dictionary.stepExecutionColumns(0));
+                final String stepName = rs.getString(dictionary.stepExecutionColumns(15));
+                final String batchstatus = rs.getString(dictionary.stepExecutionColumns(1));
+                final String exitstatus = rs.getString(dictionary.stepExecutionColumns(4));
+                final long readCount = rs.getLong(dictionary.stepExecutionColumns(10));
+                final long writeCount = rs.getLong(dictionary.stepExecutionColumns(16));
+                final long commitCount = rs.getLong(dictionary.stepExecutionColumns(2));
+                final long rollbackCount = rs.getLong(dictionary.stepExecutionColumns(12));
+                final long readSkipCount = rs.getLong(dictionary.stepExecutionColumns(11));
+                final long processSkipCount = rs.getLong(dictionary.stepExecutionColumns(9));
+                final long filterCount = rs.getLong(dictionary.stepExecutionColumns(5));
+                final long writeSkipCount = rs.getLong(dictionary.stepExecutionColumns(17));
+                final Timestamp startTS = rs.getTimestamp(dictionary.stepExecutionColumns(14));
+                final Timestamp endTS = rs.getTimestamp(dictionary.stepExecutionColumns(3));
 
                 // get the object based data
                 Serializable persistentData = null;
-                final byte[] pDataBytes = rs.getBytes("persistentData");
+                final byte[] pDataBytes = rs.getBytes(dictionary.stepExecutionColumns(8));
                 if (pDataBytes != null) {
                     persistentData = Serializable.class.cast(new TCCLObjectInputStream(new ByteArrayInputStream(pDataBytes)).readObject());
                 }
@@ -886,7 +838,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         PreparedStatement statement = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_UPDATE);
+            statement = conn.prepareStatement(dictionary.getUpdateJobExecution());
             statement.setString(1, batchStatus.name());
             statement.setTimestamp(2, updatets);
             statement.setLong(3, key);
@@ -909,7 +861,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         PreparedStatement statement = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_SET_FINAL_DATA);
+            statement = conn.prepareStatement(dictionary.getSetJobExecutionFinalData());
 
             statement.setString(1, batchStatus.name());
             statement.setString(2, exitStatus);
@@ -935,7 +887,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_START);
+            statement = conn.prepareStatement(dictionary.getUpdateStartedJobExecution());
 
             statement.setString(1, BatchStatus.STARTED.name());
             statement.setTimestamp(2, startTS);
@@ -962,25 +914,25 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_FIND_BY_ID);
+            statement = conn.prepareStatement(dictionary.getFindJobExecutionById());
             statement.setLong(1, jobExecutionId);
             rs = statement.executeQuery();
             if (rs.next()) {
-                final Timestamp createtime = rs.getTimestamp("createTime");
-                final Timestamp starttime = rs.getTimestamp("startTime");
-                final Timestamp endtime = rs.getTimestamp("endTime");
-                final Timestamp updatetime = rs.getTimestamp("updateTime");
-                final long instanceId = rs.getLong("INSTANCE_JOBINSTANCEID");
+                final Timestamp createtime = rs.getTimestamp(dictionary.jobExecutionColumns(2));
+                final Timestamp starttime = rs.getTimestamp(dictionary.jobExecutionColumns(6));
+                final Timestamp endtime = rs.getTimestamp(dictionary.jobExecutionColumns(3));
+                final Timestamp updatetime = rs.getTimestamp(dictionary.jobExecutionColumns(7));
+                final long instanceId = rs.getLong(dictionary.jobExecutionColumns(8));
 
                 // get the object based data
-                final String batchStatus = rs.getString("batchStatus");
-                final String exitStatus = rs.getString("exitStatus");
+                final String batchStatus = rs.getString(dictionary.jobExecutionColumns(1));
+                final String exitStatus = rs.getString(dictionary.jobExecutionColumns(4));
 
                 // get the object based data
-                final byte[] buf = rs.getBytes("jobProperties");
+                final byte[] buf = rs.getBytes(dictionary.jobExecutionColumns(5));
                 final Properties params = Properties.class.cast(deserialize(buf));
 
-                final String jobName = rs.getString("name");
+                final String jobName = rs.getString(dictionary.jobInstanceColumns(3));
 
                 final JobExecutionImpl jobEx = new JobExecutionImpl(jobExecutionId, instanceId);
                 jobEx.setCreateTime(createtime);
@@ -1014,19 +966,18 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         final List<InternalJobExecution> data = new ArrayList<InternalJobExecution>();
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_FROM_INSTANCE);
+            statement = conn.prepareStatement(dictionary.getFindJobExecutionByInstance());
             statement.setLong(1, jobInstanceId);
             rs = statement.executeQuery();
             while (rs.next()) {
-                final long jobExecutionId = rs.getLong("executionId");
-                final Timestamp createtime = rs.getTimestamp("createTime");
-                final Timestamp starttime = rs.getTimestamp("startTime");
-                final Timestamp endtime = rs.getTimestamp("endTime");
-                final Timestamp updatetime = rs.getTimestamp("updateTime");
-                final String batchStatus = rs.getString("batchStatus");
-                final String exitStatus = rs.getString("exitStatus");
-                final String jobName = rs.getString("name");
-
+                final long jobExecutionId = rs.getLong(dictionary.jobExecutionColumns(0));
+                final Timestamp createtime = rs.getTimestamp(dictionary.jobExecutionColumns(2));
+                final Timestamp starttime = rs.getTimestamp(dictionary.jobExecutionColumns(6));
+                final Timestamp endtime = rs.getTimestamp(dictionary.jobExecutionColumns(3));
+                final Timestamp updatetime = rs.getTimestamp(dictionary.jobExecutionColumns(7));
+                final String batchStatus = rs.getString(dictionary.jobExecutionColumns(1));
+                final String exitStatus = rs.getString(dictionary.jobExecutionColumns(4));
+                final String jobName = rs.getString(dictionary.jobInstanceColumns(3));
 
                 final JobExecutionImpl jobEx = new JobExecutionImpl(jobExecutionId, jobInstanceId);
                 jobEx.setCreateTime(createtime);
@@ -1056,14 +1007,14 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         final Set<Long> executionIds = new HashSet<Long>();
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_RUNNING);
+            statement = conn.prepareStatement(dictionary.getFindRunningJobExecutions());
             statement.setString(1, BatchStatus.STARTED.name());
             statement.setString(2, BatchStatus.STARTING.name());
             statement.setString(3, BatchStatus.STOPPING.name());
             statement.setString(4, jobName);
             rs = statement.executeQuery();
             while (rs.next()) {
-                executionIds.add(rs.getLong("executionId"));
+                executionIds.add(rs.getLong(dictionary.jobExecutionColumns(0)));
             }
 
         } catch (final SQLException e) {
@@ -1082,26 +1033,26 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_STATUS);
+            statement = conn.prepareStatement(dictionary.getFindJobStatus());
             statement.setLong(1, executionId);
             rs = statement.executeQuery();
             if (rs.next()) {
-                final long jobInstanceId = rs.getLong("INSTANCE_JOBINSTANCEID");
-                final String batchStatus = rs.getString("batchStatus");
-                final byte[] jobXmls = rs.getBytes("jobXml");
+                final long jobInstanceId = rs.getLong(dictionary.jobExecutionColumns(8));
+                final String batchStatus = rs.getString(dictionary.jobExecutionColumns(1));
+                final byte[] jobXmls = rs.getBytes(dictionary.jobInstanceColumns(4));
                 final JobInstanceImpl jobInstance;
                 if (jobXmls != null) {
                     jobInstance = new JobInstanceImpl(jobInstanceId, new String(jobXmls, UTF_8));
                 } else {
                     jobInstance = new JobInstanceImpl(jobInstanceId);
                 }
-                jobInstance.setJobName(rs.getString("jobName"));
+                jobInstance.setJobName(rs.getString(dictionary.jobInstanceColumns(3)));
 
                 final JobStatus status = new JobStatus(jobInstanceId);
-                status.setExitStatus(rs.getString("exitStatus"));
-                status.setLatestExecutionId(rs.getLong("latestExecution"));
-                status.setRestartOn(rs.getString("restartOn"));
-                status.setCurrentStepId(rs.getString("step"));
+                status.setExitStatus(rs.getString(dictionary.jobInstanceColumns(2)));
+                status.setLatestExecutionId(rs.getLong(dictionary.jobInstanceColumns(5)));
+                status.setRestartOn(rs.getString(dictionary.jobInstanceColumns(6)));
+                status.setCurrentStepId(rs.getString(dictionary.jobInstanceColumns(7)));
                 status.setJobInstance(jobInstance);
                 if (batchStatus != null) {
                     status.setBatchStatus(BatchStatus.valueOf(batchStatus));
@@ -1124,13 +1075,13 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_FROM_EXECUTION);
+            statement = conn.prepareStatement(dictionary.getFindJobInstanceFromJobExecution());
             statement.setObject(1, executionId);
             rs = statement.executeQuery();
             if (!rs.next()) {
                 throw new NoSuchJobExecutionException("Did not find job instance associated with executionID =" + executionId);
             }
-            return rs.getLong("INSTANCE_JOBINSTANCEID");
+            return rs.getLong(dictionary.jobExecutionColumns(8));
         } catch (final SQLException e) {
             throw new PersistenceException(e);
         } finally {
@@ -1147,7 +1098,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_CREATE, Statement.RETURN_GENERATED_KEYS);
+            statement = conn.prepareStatement(dictionary.getCreateJobInstance(), Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, name);
             statement.setString(2, apptag);
             statement.executeUpdate();
@@ -1176,7 +1127,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_CREATE_WITH_JOB_XML, Statement.RETURN_GENERATED_KEYS);
+            statement = conn.prepareStatement(dictionary.getCreateJobInstanceWithJobXml(), Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, name);
             statement.setString(2, apptag);
             statement.setBytes(3, jobXml.getBytes(UTF_8));
@@ -1216,7 +1167,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         ResultSet rs = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_CREATE, Statement.RETURN_GENERATED_KEYS);
+            statement = conn.prepareStatement(dictionary.getCreateJobExecution(), Statement.RETURN_GENERATED_KEYS);
             statement.setLong(1, jobInstance.getInstanceId());
             statement.setTimestamp(2, timestamp);
             statement.setTimestamp(3, timestamp);
@@ -1305,7 +1256,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.STEP_EXECUTION_CREATE, Statement.RETURN_GENERATED_KEYS);
+            statement = conn.prepareStatement(dictionary.getCreateStepExecution(), Statement.RETURN_GENERATED_KEYS);
             statement.setLong(1, rootJobExecId);
             statement.setString(2, batchStatus);
             statement.setString(3, exitStatus);
@@ -1399,7 +1350,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.STEP_EXECUTION_UPDATE);
+            statement = conn.prepareStatement(dictionary.getUpdateStepExecution());
             statement.setLong(1, jobExecId);
             statement.setString(2, batchStatus);
             statement.setString(3, exitStatus);
@@ -1442,29 +1393,29 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_BY_ID);
+            statement = conn.prepareStatement(dictionary.getFindJobInstance());
             statement.setLong(1, instanceId);
             rs = statement.executeQuery();
             if (rs.next()) {
                 final JobStatus status = new JobStatus(instanceId);
-                status.setCurrentStepId(rs.getString("step"));
-                status.setExitStatus(rs.getString("exitStatus"));
+                status.setCurrentStepId(dictionary.jobExecutionColumns(7));
+                status.setExitStatus(dictionary.jobExecutionColumns(2));
 
-                final byte[] jobXmls = rs.getBytes("jobXml");
+                final byte[] jobXmls = rs.getBytes(dictionary.jobInstanceColumns(4));
                 final JobInstanceImpl instance;
                 if (jobXmls != null) {
                     instance = new JobInstanceImpl(instanceId, new String(jobXmls, UTF_8));
                 } else {
                     instance = new JobInstanceImpl(instanceId);
                 }
-                instance.setJobName(rs.getString("jobName"));
+                instance.setJobName(rs.getString(dictionary.jobInstanceColumns(3)));
 
                 status.setJobInstance(instance);
 
-                status.setLatestExecutionId(rs.getLong("latestExecution"));
-                status.setRestartOn(rs.getString("restartOn"));
+                status.setLatestExecutionId(rs.getLong(dictionary.jobInstanceColumns(5)));
+                status.setRestartOn(rs.getString(dictionary.jobInstanceColumns(6)));
 
-                final String batchStatus = rs.getString("batchStatus");
+                final String batchStatus = rs.getString(dictionary.stepExecutionColumns(1));
                 if (batchStatus != null) {
                     status.setBatchStatus(BatchStatus.valueOf(batchStatus));
                 }
@@ -1488,7 +1439,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         PreparedStatement statement = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_INSTANCE_UPDATE_STATUS);
+            statement = conn.prepareStatement(dictionary.getUpdateJobInstanceStatus());
             if (jobStatus.getBatchStatus() != null) {
                 statement.setString(1, jobStatus.getBatchStatus().name());
             } else {
@@ -1528,25 +1479,25 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.STEP_EXECUTION_BY_INSTANCE_AND_STEP);
+            statement = conn.prepareStatement(dictionary.getFindStepExecutionByJobInstanceAndStepName());
             statement.setLong(1, instanceId);
             statement.setString(2, stepName);
             rs = statement.executeQuery();
             if (rs.next()) {
-                final int startCount = rs.getInt("startCount");
-                final long id = rs.getLong("id");
+                final int startCount = rs.getInt(dictionary.stepExecutionColumns(13));
+                final long id = rs.getLong(dictionary.stepExecutionColumns(0));
                 final StepStatus stepStatus = new StepStatus(id, startCount);
-                final int numPartitions = rs.getInt("numPartitions");
-                final byte[] persistentDatas = rs.getBytes("persistentData");
+                final int numPartitions = rs.getInt(dictionary.stepExecutionColumns(7));
+                final byte[] persistentDatas = rs.getBytes(dictionary.stepExecutionColumns(8));
                 if (numPartitions >= 0) {
                     stepStatus.setNumPartitions(numPartitions);
                 }
                 if (persistentDatas != null) {
                     stepStatus.setPersistentUserData(new PersistentDataWrapper(persistentDatas));
                 }
-                stepStatus.setBatchStatus(BatchStatus.valueOf(rs.getString("batchStatus")));
-                stepStatus.setExitStatus(rs.getString("exitStatus"));
-                stepStatus.setLastRunStepExecutionId(rs.getLong("lastRunStepExecutionId"));
+                stepStatus.setBatchStatus(BatchStatus.valueOf(rs.getString(dictionary.stepExecutionColumns(1))));
+                stepStatus.setExitStatus(rs.getString(dictionary.stepExecutionColumns(4)));
+                stepStatus.setLastRunStepExecutionId(rs.getLong(dictionary.stepExecutionColumns(6)));
                 stepStatus.setStepExecutionId(id);
                 return stepStatus;
             }
@@ -1564,7 +1515,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         PreparedStatement statement = null;
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.STEP_EXECUTION_UPDATE_STATUS);
+            statement = conn.prepareStatement(dictionary.getUpdateStepExecutionStatus());
             statement.setBytes(1, stepStatus.getRawPersistentUserData());
             if (stepStatus.getBatchStatus() != null) {
                 statement.setString(2, stepStatus.getBatchStatus().name());
@@ -1599,7 +1550,7 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
 
         try {
             conn = getConnection();
-            statement = conn.prepareStatement(SQL.JOB_EXECUTION_MOST_RECENT);
+            statement = conn.prepareStatement(dictionary.getFindMostRecentJobExecution());
             statement.setLong(1, jobInstanceId);
             rs = statement.executeQuery();
             if (rs.next()) {
@@ -1618,10 +1569,10 @@ public class JDBCPersistenceManager implements PersistenceManagerService {
         Connection conn = null;
         try {
             conn = getConnection();
-            deleteFromInstanceId(instanceId, conn, SQL.DELETE_STEP_EXECUTION);
-            deleteFromInstanceId(instanceId, conn, SQL.DELETE_CHECKPOINT);
-            deleteFromInstanceId(instanceId, conn, SQL.DELETE_JOB_EXECUTION);
-            deleteFromInstanceId(instanceId, conn, SQL.DELETE_JOB_INSTANCE);
+            deleteFromInstanceId(instanceId, conn, dictionary.getDeleteStepExecution());
+            deleteFromInstanceId(instanceId, conn, dictionary.getDeleteCheckpoint());
+            deleteFromInstanceId(instanceId, conn, dictionary.getDeleteJobExecution());
+            deleteFromInstanceId(instanceId, conn, dictionary.getDeleteJobInstance());
             if (!conn.getAutoCommit()) {
                 conn.commit();
             }

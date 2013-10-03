@@ -66,7 +66,7 @@ public class ContainerLifecycle implements ITestListener {
             .p("openejb.jul.forceReload", Boolean.TRUE.toString())
             .p("openejb.log.color", Boolean.toString(!System.getProperty("os.name").toLowerCase().contains("win")))
             .p(loggerName + ".level", "INFO")
-            .p("openejb.jdbc.log", Boolean.FALSE.toString())
+            .p("openejb.jdbc.log", Boolean.FALSE.toString()) // with jdbc set it to TRUE to get sql queries
 
             .p("jdbc/orderDB", "new://Resource?type=DataSource")
             .p("jdbc/orderDB.JdbcDriver", EmbeddedDriver.class.getName())

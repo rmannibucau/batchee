@@ -67,7 +67,6 @@ public class JobInstanceEntity {
 
     private String step;
     private String exitStatus;
-    private String jobName;
     private String restartOn;
     private long latestExecution;
 
@@ -126,14 +125,6 @@ public class JobInstanceEntity {
         this.exitStatus = exitStatus;
     }
 
-    public String getJobName() {
-        return jobName;
-    }
-
-    public void setJobName(final String jobName) {
-        this.jobName = jobName;
-    }
-
     public String getRestartOn() {
         return restartOn;
     }
@@ -156,7 +147,7 @@ public class JobInstanceEntity {
 
     public JobInstance toJobInstance() {
         final JobInstanceImpl jobInstance = new JobInstanceImpl(jobInstanceId, jobXml);
-        jobInstance.setJobName(jobName);
+        jobInstance.setJobName(name);
         return jobInstance;
     }
 }
