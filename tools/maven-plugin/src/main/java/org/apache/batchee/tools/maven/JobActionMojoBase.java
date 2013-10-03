@@ -18,12 +18,21 @@ package org.apache.batchee.tools.maven;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
+import javax.batch.operations.JobOperator;
+import javax.batch.runtime.BatchStatus;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 
 public abstract class JobActionMojoBase extends BatchEEMojoBase {
+    private static final Collection<BatchStatus> BATCH_END_STATUSES = Arrays.asList(BatchStatus.COMPLETED, BatchStatus.FAILED, BatchStatus.STOPPED, BatchStatus.ABANDONED);
+
     @Parameter
     protected Map<String, String> jobParameters;
+
+    @Parameter(property = "batchee.wait", defaultValue = "false")
+    protected boolean wait;
 
     protected static Properties toProperties(final Map<String, String> jobParameters) {
         final Properties jobParams = new Properties();
@@ -31,5 +40,15 @@ public abstract class JobActionMojoBase extends BatchEEMojoBase {
             jobParams.putAll(jobParameters);
         }
         return jobParams;
+    }
+
+    protected void waitEnd(final JobOperator jobOperator, final long id) {
+        do {
+            try {
+                Thread.sleep(100);
+            } catch (final InterruptedException e) {
+                return;
+            }
+        } while (!BATCH_END_STATUSES.contains(jobOperator.getJobExecution(id).getBatchStatus()));
     }
 }

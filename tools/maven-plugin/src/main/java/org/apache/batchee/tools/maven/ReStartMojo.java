@@ -31,6 +31,10 @@ public class ReStartMojo extends JobActionMojoBase {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        getLog().info("Restarted #" + executionId + ", new id is #" + getOrCreateOperator().restart(executionId, toProperties(jobParameters)));
+        final long restartId = getOrCreateOperator().restart(executionId, toProperties(jobParameters));
+        getLog().info("Restarted #" + executionId + ", new id is #" + restartId);
+        if (wait) {
+            waitEnd(getOrCreateOperator(), restartId);
+        }
     }
 }

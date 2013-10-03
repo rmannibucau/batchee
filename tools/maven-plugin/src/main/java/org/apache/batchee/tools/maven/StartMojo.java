@@ -23,12 +23,10 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import javax.batch.operations.JobOperator;
-import javax.batch.runtime.BatchStatus;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,13 +37,8 @@ import java.util.Set;
  */
 @Mojo(name = "start", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class StartMojo extends JobActionMojoBase {
-    private static final Collection<BatchStatus> BATCH_END_STATUSES = Arrays.asList(BatchStatus.COMPLETED, BatchStatus.FAILED, BatchStatus.STOPPED, BatchStatus.ABANDONED);
-
     @Parameter(required = true, property = "batchee.job")
     protected String jobName;
-
-    @Parameter(property = "batchee.wait", defaultValue = "false")
-    protected boolean wait;
 
     @Parameter(defaultValue = "${project.build.outputDirectory}", required = true, readonly = true )
     protected File projectBinaries;
@@ -76,14 +69,8 @@ public class StartMojo extends JobActionMojoBase {
 
         getLog().info("Started job " + jobName + ", id is #" + id);
 
-        if (wait) { // copied from Batches class to avoid the dependency on BatchEE in the mvn plugin
-            do {
-                try {
-                    Thread.sleep(100);
-                } catch (final InterruptedException e) {
-                    return;
-                }
-            } while (!BATCH_END_STATUSES.contains(jobOperator.getJobExecution(id).getBatchStatus()));
+        if (wait) {
+            waitEnd(jobOperator, id);
         }
     }
 
