@@ -215,7 +215,11 @@ public class MemoryPersistenceManager implements PersistenceManagerService {
     @Override
     public void updateWithFinalExecutionStatusesAndTimestamps(final long key, final BatchStatus batchStatus, final String exitStatus, final Timestamp updatets) {
         final Structures.ExecutionInstanceData toUpdate = data.executionInstanceData.get(key);
-        toUpdate.execution.setBatchStatus(batchStatus.name());
+        if (batchStatus != null) {
+            toUpdate.execution.setBatchStatus(batchStatus.name());
+        } else {
+            toUpdate.execution.setBatchStatus(null);
+        }
         toUpdate.execution.setExitStatus(exitStatus);
         toUpdate.execution.setLastUpdateTime(updatets);
         toUpdate.execution.setEndTime(updatets);
@@ -517,12 +521,19 @@ public class MemoryPersistenceManager implements PersistenceManagerService {
 
     @Override
     public JobStatus getJobStatus(final long instanceId) {
-        return data.jobInstanceData.get(instanceId).status;
+        final Structures.JobInstanceData jobInstanceData = data.jobInstanceData.get(instanceId);
+        if (jobInstanceData == null) {
+            return null;
+        }
+        return jobInstanceData.status;
     }
 
     @Override
     public void updateJobStatus(final long instanceId, final JobStatus jobStatus) {
-        data.jobInstanceData.get(instanceId).status = jobStatus;
+        final Structures.JobInstanceData jobInstanceData = data.jobInstanceData.get(instanceId);
+        if (jobInstanceData != null) {
+            jobInstanceData.status = jobStatus;
+        }
     }
 
     @Override
@@ -550,7 +561,10 @@ public class MemoryPersistenceManager implements PersistenceManagerService {
 
     @Override
     public void updateStepStatus(final long stepExecutionId, final StepStatus stepStatus) {
-        data.stepExecutionInstanceData.get(stepExecutionId).status = stepStatus;
+        final Structures.StepExecutionInstanceData stepExecutionInstanceData = data.stepExecutionInstanceData.get(stepExecutionId);
+        if (stepExecutionInstanceData != null) {
+            stepExecutionInstanceData.status = stepStatus;
+        }
     }
 
     @Override

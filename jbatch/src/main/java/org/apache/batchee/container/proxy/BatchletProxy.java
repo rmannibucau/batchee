@@ -29,7 +29,7 @@ public class BatchletProxy extends AbstractProxy<Batchlet> implements Batchlet {
     public String process() {
         try {
             return this.delegate.process();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }
@@ -39,7 +39,7 @@ public class BatchletProxy extends AbstractProxy<Batchlet> implements Batchlet {
     public void stop() {
         try {
             this.delegate.stop();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             this.stepContext.setException(e);
             throw new BatchContainerRuntimeException(e);
         }

@@ -33,8 +33,8 @@ public class BatcheeThreadFactory implements ThreadFactory {
         Thread.currentThread().setContextClassLoader(BatcheeThreadFactory.class.getClassLoader());
         try {
             final Thread t = new Thread(GROUP, r, PREFIX + THREAD_NUMBER.getAndIncrement(), 0);
-            if (t.isDaemon()) {
-                t.setDaemon(false);
+            if (!t.isDaemon()) {
+                t.setDaemon(true);
             }
             if (t.getPriority() != Thread.NORM_PRIORITY) {
                 t.setPriority(Thread.NORM_PRIORITY);
