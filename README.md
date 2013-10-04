@@ -1151,12 +1151,12 @@ Shortname: `jacksonJSonWriter`
 ### GUI
 #### JAX-RS resource
 
-`org.apache.batchee.gui.service.JBatchResource` maps more or less `javax.batch.operations.JobOperator` API
+`org.apache.batchee.jaxrs.server.JBatchResourceImpl` maps more or less `javax.batch.operations.JobOperator` API
 to JAXRS.
 
 To define it with CXF you can use the `CXFNonSpringServlet` in a servlet container, in a JavaEE container
 you surely already have it and just need to define a custom `javax.ws.rs.core.Application` with `JBatchResource`
-as class in `getClasses` and configure `org.apache.batchee.gui.service.JBatchExceptionMapper` if you want
+as class in `getClasses` and configure `org.apache.batchee.jaxrs.server.JBatchExceptionMapper` if you want
 to map `javax.batch.operations.BatchRuntimeException` to status 500:
 
 ```xml
@@ -1170,13 +1170,13 @@ to map `javax.batch.operations.BatchRuntimeException` to status 500:
     <servlet-class>org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet</servlet-class>
     <init-param>
       <param-name>jaxrs.serviceClasses</param-name>
-      <param-value>org.apache.batchee.gui.service.JBatchResource</param-value>
+      <param-value>org.apache.batchee.jaxrs.server.JBatchResourceImpl</param-value>
     </init-param>
     <init-param>
       <param-name>jaxrs.providers</param-name>
       <param-value>
         com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider,
-        org.apache.batchee.gui.service.JBatchExceptionMapper
+        org.apache.batchee.jaxrs.server.JBatchExceptionMapper
       </param-value>
     </init-param>
     <init-param>
@@ -1211,7 +1211,7 @@ Here is the mapping:
 
 #### Html gui
 
-It is based in `org.apache.batchee.gui.servlet.JBatchController` but since the jar is in a webapp in a servlet 3.0 container,
+It is based in `org.apache.batchee.servlet.JBatchController` but since the jar is in a webapp in a servlet 3.0 container,
 it is automatically added.
 
 The configuration through init parameters is:

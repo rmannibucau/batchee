@@ -79,11 +79,24 @@
         <scope>provided</scope>
       </dependency>
 
-      <!-- Testing libraries -->
       <dependency>
+        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+        <artifactId>jackson-jaxrs-json-provider</artifactId>
+        <version>${jackson.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- Testing libraries -->
+      <dependency> <!-- TCK and default tests -->
         <groupId>org.testng</groupId>
         <artifactId>testng</artifactId>
         <version>6.8.5</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency> <!-- camel/arquillian -->
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.11</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -123,6 +136,7 @@
             <exclude>**/META-INF/services/*</exclude>
             <exclude>**/bootstrap-*</exclude>
             <exclude>**/js/jquery-*</exclude>
+            <exclude>**/*.json</exclude> <!-- json can't get comments -->
           </excludes>
         </configuration>
         <executions>
@@ -159,6 +173,7 @@
   <properties>
     <atinject.version>1.0</atinject.version>
     <batch-api.version>1.0</batch-api.version>
+    <jackson.version>2.2.2</jackson.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 

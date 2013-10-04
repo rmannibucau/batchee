@@ -16,7 +16,7 @@
  */
 package org.apache.batchee.tools.maven;
 
-import org.apache.batchee.tools.maven.impl.JobInstanceImpl;
+import org.apache.batchee.jaxrs.client.impl.JobInstanceImpl;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;

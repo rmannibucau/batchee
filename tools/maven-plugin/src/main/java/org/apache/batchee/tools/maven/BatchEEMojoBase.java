@@ -17,6 +17,7 @@
 package org.apache.batchee.tools.maven;
 
 import org.apache.batchee.container.services.ServicesManager;
+import org.apache.batchee.jaxrs.client.BatchEEJAXRSClientFactory;
 import org.apache.batchee.tools.maven.locator.MavenPluginLocator;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -29,14 +30,37 @@ public abstract class BatchEEMojoBase extends AbstractMojo {
     @Parameter
     protected Map<String, String> properties;
 
+    @Parameter(property = "batchee.base-url")
+    private String baseUrl;
+
+    @Parameter(property = "batchee.job-operator")
+    private String jobOperatorClass;
+
+    @Parameter(property = "batchee.json-provider", defaultValue = "com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider")
+    private String jsonProvider;
+
     protected volatile JobOperator operator = null;
 
     protected JobOperator getOrCreateOperator() {
         if (operator == null) {
             synchronized (this) {
                 if (operator == null) {
-                    configureBatchEE();
-                    operator = BatchRuntime.getJobOperator();
+                    if (jobOperatorClass != null) {
+                        try {
+                            operator = JobOperator.class.cast(Thread.currentThread().getContextClassLoader().loadClass(jobOperatorClass).newInstance());
+                        } catch (final Exception e) {
+                            throw new IllegalArgumentException("JobOperator " + jobOperatorClass + " can't be used", e);
+                        }
+                    } else if (baseUrl == null) {
+                        configureBatchEE();
+                        operator = BatchRuntime.getJobOperator();
+                    } else {
+                        try {
+                            operator = BatchEEJAXRSClientFactory.newClient(baseUrl, Thread.currentThread().getContextClassLoader().loadClass(jsonProvider));
+                        } catch (final ClassNotFoundException e) {
+                            throw new IllegalArgumentException("JSon provider " + jsonProvider + " can't be found", e);
+                        }
+                    }
                 }
             }
         }
