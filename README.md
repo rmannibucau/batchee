@@ -1247,7 +1247,7 @@ The configuration through init parameters is:
 <plugin>
   <groupId>org.apache.batchee</groupId>
   <artifactId>batchee-maven-plugin</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>${batchee.version}</version>
 </plugin>
 ```
 
