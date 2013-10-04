@@ -41,12 +41,6 @@
       <artifactId>batchee-jbatch</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency> <!-- for rest -->
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-gui</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
     <dependency>
       <groupId>org.apache.batchee</groupId>
       <artifactId>batchee-jaxrs-client</artifactId>
