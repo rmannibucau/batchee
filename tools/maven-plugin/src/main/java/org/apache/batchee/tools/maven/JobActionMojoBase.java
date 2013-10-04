@@ -28,9 +28,15 @@ import java.util.Properties;
 public abstract class JobActionMojoBase extends BatchEEMojoBase {
     private static final Collection<BatchStatus> BATCH_END_STATUSES = Arrays.asList(BatchStatus.COMPLETED, BatchStatus.FAILED, BatchStatus.STOPPED, BatchStatus.ABANDONED);
 
+    /**
+     * the job parameters to use.
+     */
     @Parameter
     protected Map<String, String> jobParameters;
 
+    /**
+     * wait or not the end of this task before exiting maven plugin execution.
+     */
     @Parameter(property = "batchee.wait", defaultValue = "false")
     protected boolean wait;
 

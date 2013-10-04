@@ -26,6 +26,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "restart")
 public class ReStartMojo extends JobActionMojoBase {
+    /**
+     * the executionId representing the execution to restart
+     */
     @Parameter(required = true, property = "batchee.executionId")
     protected long executionId;
 

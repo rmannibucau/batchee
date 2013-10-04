@@ -31,6 +31,9 @@ import java.util.Locale;
  */
 @Mojo(name = "step-executions")
 public class StepExecutionsMojo extends BatchEEMojoBase {
+    /**
+     * the executionId used to find step executions.
+     */
     @Parameter(required = true, property = "batchee.executionId")
     protected long executionId;
 

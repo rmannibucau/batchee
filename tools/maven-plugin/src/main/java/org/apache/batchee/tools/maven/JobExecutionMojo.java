@@ -28,6 +28,9 @@ import javax.batch.runtime.JobExecution;
  */
 @Mojo(name = "execution")
 public class JobExecutionMojo extends JobExecutionMojoBase {
+    /**
+     * the executionId to query.
+     */
     @Parameter(required = true, property = "batchee.executionId")
     protected long executionId;
 

@@ -30,9 +30,15 @@ import java.util.List;
  */
 @Mojo(name = "executions")
 public class JobExecutionsMojo extends JobExecutionMojoBase {
+    /**
+     * the job name to use to query job executions
+     */
     @Parameter(required = true, property = "batchee.job")
     protected String jobName;
 
+    /**
+     * the instanceId to use to query job executions
+     */
     @Parameter(required = true, property = "batchee.instance")
     protected long instanceId;
 

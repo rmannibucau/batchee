@@ -26,6 +26,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "stop")
 public class StopMojo extends BatchEEMojoBase {
+    /**
+     * the executionId of the execution to stop
+     */
     @Parameter(required = true, property = "batchee.executionId")
     protected long executionId;
 

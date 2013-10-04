@@ -28,6 +28,9 @@ import java.util.List;
  */
 @Mojo(name = "running")
 public class RunningExecutionsMojo extends BatchEEMojoBase {
+    /**
+     * the job name used to query running executions
+     */
     @Parameter(required = true, property = "batchee.job")
     protected String jobName;
 

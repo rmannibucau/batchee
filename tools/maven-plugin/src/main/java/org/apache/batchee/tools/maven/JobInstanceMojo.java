@@ -28,6 +28,9 @@ import javax.batch.runtime.JobInstance;
  */
 @Mojo(name = "instance")
 public class JobInstanceMojo extends BatchEEMojoBase {
+    /**
+     * the executionId to use to find the corresponding job instance
+     */
     @Parameter(required = true, property = "batchee.executionId")
     protected long executionId;
 

@@ -29,12 +29,21 @@ import java.util.List;
  */
 @Mojo(name = "instances")
 public class JobInstancesMojo extends BatchEEMojoBase {
+    /**
+     * the job name to use to find job instances
+     */
     @Parameter(required = true, property = "batchee.job")
     protected String jobName;
 
+    /**
+     * the first job instance to take into account
+     */
     @Parameter(property = "batchee.start", defaultValue = "0")
     protected int start;
 
+    /**
+     * the maximum number of instance to bring back
+     */
     @Parameter(property = "batchee.count", defaultValue = "10")
     protected int count;
 

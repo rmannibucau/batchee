@@ -37,18 +37,33 @@ import java.util.Set;
  */
 @Mojo(name = "start", requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class StartMojo extends JobActionMojoBase {
+    /**
+     * the job name of the job to start
+     */
     @Parameter(required = true, property = "batchee.job")
     protected String jobName;
 
+    /**
+     * used to find project binaries if running the batch locally
+     */
     @Parameter(defaultValue = "${project.build.outputDirectory}", required = true, readonly = true )
     protected File projectBinaries;
 
+    /**
+     * used to find project dependencies if running the batch locally
+     */
     @Parameter(defaultValue = "${project.artifacts}", readonly = true, required = true)
     protected Set<Artifact> dependencies;
 
+    /**
+     * if the project (binaries + dependencies) should be added during the execution to the classpath
+     */
     @Parameter(property = "batchee.use-project", defaultValue = "true")
     protected boolean useProjectClasspath;
 
+    /**
+     * manual entries added in the execution classpath
+     */
     @Parameter
     protected List<String> additionalClasspathEntries;
 

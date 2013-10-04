@@ -28,6 +28,9 @@ import java.util.Properties;
  */
 @Mojo(name = "parameters")
 public class ParametersMojo extends BatchEEMojoBase {
+    /**
+     * the executionId to query to find parameters
+     */
     @Parameter(required = true, property = "batchee.executionId")
     protected long executionId;
 

@@ -26,6 +26,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "count-instance")
 public class JobInstanceCountMojo extends BatchEEMojoBase {
+    /**
+     * the job name to use to count job instances
+     */
     @Parameter(required = true, property = "batchee.job")
     protected String jobName;
 

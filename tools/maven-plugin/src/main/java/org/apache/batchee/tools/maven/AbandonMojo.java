@@ -26,6 +26,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 @Mojo(name = "abandon")
 public class AbandonMojo extends BatchEEMojoBase {
+    /**
+     * the executionId to abandon.
+     */
     @Parameter(required = true, property = "batchee.executionId")
     protected long executionId;
 

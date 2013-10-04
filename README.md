@@ -37,7 +37,23 @@ A simple integration with Apache Shiro to check permissions when running a batch
 ```xml
 <dependency>
   <groupId>org.apache.batchee</groupId>
-  <artifactId>batchee-gui</artifactId>
+  <artifactId>batchee-servlet</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
+
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-jaxrs-client</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
+
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-jaxrs-server</artifactId>
   <version>${batchee.version}</version>
 </dependency>
 ```
@@ -1152,7 +1168,7 @@ Shortname: `jacksonJSonWriter`
 #### JAX-RS resource
 
 `org.apache.batchee.jaxrs.server.JBatchResourceImpl` maps more or less `javax.batch.operations.JobOperator` API
-to JAXRS.
+to JAXRS. It is available in `batchee-jaxrs-server` module.
 
 To define it with CXF you can use the `CXFNonSpringServlet` in a servlet container, in a JavaEE container
 you surely already have it and just need to define a custom `javax.ws.rs.core.Application` with `JBatchResource`
@@ -1209,13 +1225,351 @@ Here is the mapping:
 * /execution/stop/{id}
 * /execution/abandon/{id}
 
-#### Html gui
+Note: `batchee-jaxrs-client` provides a way to query it through the `JobOperator` API. You need to use
+`org.apache.batchee.jaxrs.client.BatchEEJAXRSClientFactory.newClient(String url, Class<?> jsonProvider, API apiType)`.
+API.AUTO tries to use JAXRS 2 client and if not available uses cxf 2.6 clients. In this last case you need to provide `cxf-rt-frontend-jaxrs`.
 
-It is based in `org.apache.batchee.servlet.JBatchController` but since the jar is in a webapp in a servlet 3.0 container,
-it is automatically added.
+#### HTML gui
+
+It is based on `org.apache.batchee.servlet.JBatchController` but since the jar - `batchee-servlet` - is in a webapp in a servlet 3.0 container,
+it is automatically added and you don't need to define it in your `web.xml`.
 
 The configuration through init parameters is:
 
 * org.apache.batchee.servlet.active: boolean to deactivate it
 * org.apache.batchee.servlet.mapping: mapping for the gui, default /jbatch/*
 * org.apache.batchee.servlet.filter.private: boolean saying if internal jsp should be protected, it adds a filter to check URLs on each request
+
+### Maven Plugin
+#### Coordinates
+
+```xml
+<plugin>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-maven-plugin</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</plugin>
+```
+
+#### Goals
+
+```
+batchee:abandon
+  Abandon a job.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    executionId
+      the executionId to abandon.
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+batchee:count-instance
+  Count job instance.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    jobName
+      the job name to use to count job instances
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+batchee:execution
+  Print job an execution.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    executionId
+      the executionId to query.
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+batchee:executions
+  Print job instance executions.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    instanceId
+      the instanceId to use to query job executions
+      Required: Yes
+
+    jobName
+      the job name to use to query job executions
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+batchee:help
+  Display help information on batchee-maven-plugin.
+  Call mvn batchee:help -Ddetail=true -Dgoal=<goal-name> to display parameter
+  details.
+
+  Available parameters:
+
+    detail
+      If true, display all settable properties for each goal.
+
+    goal
+      The name of the goal for which to show help. If unspecified, all goals
+      will be displayed.
+
+    indentSize
+      The number of spaces per indentation level, should be positive.
+
+    lineLength
+      The maximum length of a display line, should be positive.
+
+batchee:instance
+  Print JobInstance for a particular execution.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    executionId
+      the executionId to use to find the corresponding job instance
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+batchee:instances
+  Print job instances.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    count
+      the maximum number of instance to bring back
+
+    jobName
+      the job name to use to find job instances
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+    start
+      the first job instance to take into account
+
+batchee:job-names
+  List all executed job names.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+batchee:parameters
+  Print parameters for a particular execution.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    executionId
+      the executionId to query to find parameters
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+batchee:restart
+  Restart a job.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    executionId
+      the executionId representing the execution to restart
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jobParameters
+      the job parameters to use.
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+    wait
+      wait or not the end of this task before exiting maven plugin execution.
+
+batchee:running
+  List running executions.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    jobName
+      the job name used to query running executions
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+batchee:start
+  Start a job.
+
+  Available parameters:
+
+    additionalClasspathEntries
+      manual entries added in the execution classpath
+
+    baseUrl
+      when executed remotely the base url
+
+    jobName
+      the job name of the job to start
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jobParameters
+      the job parameters to use.
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+    useProjectClasspath
+      if the project (binaries + dependencies) should be added during the
+      execution to the classpath
+
+    wait
+      wait or not the end of this task before exiting maven plugin execution.
+
+batchee:step-executions
+  Print step executions of a job execution.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    executionId
+      the executionId used to find step executions.
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+batchee:stop
+  Stop a job.
+
+  Available parameters:
+
+    baseUrl
+      when executed remotely the base url
+
+    executionId
+      the executionId of the execution to stop
+      Required: Yes
+
+    jobOperatorClass
+      force to use a custom JobOperator
+
+    jsonProvider
+      The json provider to use to unmarshall responses in remote mode
+
+    properties
+      the BatchEE properties when executed locally
+
+```

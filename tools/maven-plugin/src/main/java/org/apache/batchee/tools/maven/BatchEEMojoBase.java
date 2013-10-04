@@ -27,15 +27,27 @@ import javax.batch.runtime.BatchRuntime;
 import java.util.Map;
 
 public abstract class BatchEEMojoBase extends AbstractMojo {
+    /**
+     * the BatchEE properties when executed locally
+     */
     @Parameter
     protected Map<String, String> properties;
 
+    /**
+     * when executed remotely the base url
+     */
     @Parameter(property = "batchee.base-url")
     private String baseUrl;
 
+    /**
+     * force to use a custom JobOperator
+     */
     @Parameter(property = "batchee.job-operator")
     private String jobOperatorClass;
 
+    /**
+     * The json provider to use to unmarshall responses in remote mode
+     */
     @Parameter(property = "batchee.json-provider", defaultValue = "com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider")
     private String jsonProvider;
 
