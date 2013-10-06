@@ -28,6 +28,7 @@ import javax.batch.operations.JobOperator;
 import javax.batch.runtime.JobExecution;
 import javax.batch.runtime.JobInstance;
 import javax.batch.runtime.StepExecution;
+import javax.ws.rs.ext.RuntimeDelegate;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.List;
@@ -50,6 +51,8 @@ public abstract class ClientTestBase {
         server.close();
 
         mockServer = new FeaturedHttpServerBuilder().port(port).build().start();
+
+        RuntimeDelegate.setInstance(null); // reset
     }
 
     @BeforeMethod

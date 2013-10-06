@@ -26,9 +26,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 public class JAXRS2ClientTest extends ClientTestBase {
-    private static final String JAXRS_API_PACKAGE_PREFIX = "javax.ws.rs.";
-    private static final String JAXRS2_IMPL_PACKAGE_PREFIX = "org.";
-
     private static ClassLoader oldLoader;
 
     @BeforeClass

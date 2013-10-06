@@ -64,7 +64,7 @@
       <version>0.2</version>
       <scope>test</scope>
     </dependency>
-    <dependency> <!-- cxf is not yet compatible with JAXRS 2.0 (final) -->
+    <dependency> <!-- cxf is not yet compatible with JAXRS 2.0 API (final) -->
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-client</artifactId>
       <version>2.3.1</version>
