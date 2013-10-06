@@ -16,13 +16,32 @@
  */
 package org.apache.batchee.jaxrs.client;
 
-import javax.batch.operations.JobOperator;
+public class ClientSecurity {
+    private String username = null;
+    private String password = null;
+    private String type = "Basic";
 
-public class CxfClientTest extends ClientTestBase {
-    @Override
-    protected JobOperator newJobOperator(final int port) {
-        final ClientConfiguration configuration = new ClientConfiguration();
-        configuration.setBaseUrl("http://localhost:" + port + "/");
-        return BatchEEJAXRSClientFactory.newClient(configuration, BatchEEJAXRSClientFactory.API.CXF);
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(final String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(final String password) {
+        this.password = password;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(final String type) {
+        this.type = type;
     }
 }

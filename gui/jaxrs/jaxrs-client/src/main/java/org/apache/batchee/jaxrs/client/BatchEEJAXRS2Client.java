@@ -16,6 +16,7 @@
  */
 package org.apache.batchee.jaxrs.client;
 
+import org.apache.batchee.jaxrs.client.provider.Base64Filter;
 import org.apache.batchee.jaxrs.common.JBatchResource;
 
 import javax.batch.runtime.JobInstance;
@@ -44,15 +45,43 @@ class BatchEEJAXRS2Client extends BatchEEJAXRSClientBase<Response> {
 
     private final WebTarget target;
 
-    public BatchEEJAXRS2Client(final String baseUrl, final Class<?> jsonProvider) {
+    public BatchEEJAXRS2Client(final ClientConfiguration configuration) {
         final String url;
-        if (baseUrl.endsWith("/")) {
-            url = baseUrl + BATCHEE_PATH;
+        if (configuration.getBaseUrl().endsWith("/")) {
+            url = configuration.getBaseUrl() + BATCHEE_PATH;
         } else {
-            url = baseUrl + "/" + BATCHEE_PATH;
+            url = configuration.getBaseUrl() + "/" + BATCHEE_PATH;
         }
 
-        target = ClientBuilder.newClient().target(url).register(jsonProvider);
+        ClientBuilder builder = ClientBuilder.newBuilder();
+        final ClientSslConfiguration ssl = configuration.getSsl();
+        if (ssl != null) {
+            if (ssl.getHostnameVerifier() != null) {
+                builder = builder.hostnameVerifier(ssl.getHostnameVerifier());
+            }
+            if (ssl.getSslContext() != null) {
+                builder = builder.sslContext(ssl.getSslContext());
+            }
+            if (ssl.getKeystore() != null) {
+                builder.keyStore(ssl.getKeystore(), ssl.getKeystorePassword());
+            }
+        }
+
+        WebTarget target = builder.build().target(url);
+        if (configuration.getJsonProvider() != null) {
+            target = target.register(configuration.getJsonProvider());
+        }
+
+        final ClientSecurity security = configuration.getSecurity();
+        if (security != null) {
+            if ("Basic".equalsIgnoreCase(security.getType())) {
+                target = target.register(new Base64Filter(security.getUsername(), security.getPassword()));
+            } else {
+                throw new IllegalArgumentException("Security not supported: " + security.getType());
+            }
+        }
+
+        this.target = target;
     }
 
     @Override

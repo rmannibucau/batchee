@@ -16,22 +16,71 @@
  */
 package org.apache.batchee.jaxrs.client;
 
+import org.apache.batchee.jaxrs.client.http.Base64s;
 import org.apache.batchee.jaxrs.common.JBatchResource;
+import org.apache.cxf.configuration.jsse.TLSClientParameters;
+import org.apache.cxf.configuration.security.AuthorizationPolicy;
 import org.apache.cxf.jaxrs.client.Client;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
+import org.apache.cxf.jaxrs.client.WebClient;
+import org.apache.cxf.transport.http.HTTPConduit;
 
 import javax.batch.runtime.JobInstance;
+import javax.net.ssl.KeyManagerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
-class BatchEEJAXRS1CxfClient extends BatchEEJAXRSClientBase<Object> {
+class BatchEEJAXRS1CxfClient extends BatchEEJAXRSClientBase<Object> implements Base64s {
     private final JBatchResource client;
 
-    public BatchEEJAXRS1CxfClient(final String baseUrl, final Class<?> jsonProvider) {
+    public BatchEEJAXRS1CxfClient(final ClientConfiguration configuration) {
         try {
-            client = JAXRSClientFactory.create(baseUrl, JBatchResource.class, Arrays.asList(jsonProvider.newInstance()));
+            final List<Object> providers = new LinkedList<Object>();
+            if (configuration.getJsonProvider() != null) {
+                providers.add(configuration.getJsonProvider().newInstance());
+            }
+            client = JAXRSClientFactory.create(configuration.getBaseUrl(), JBatchResource.class, providers);
+
+            final HTTPConduit conduit = WebClient.getConfig(client).getHttpConduit();
+
+            final ClientSslConfiguration ssl = configuration.getSsl();
+            if (ssl != null) {
+                final TLSClientParameters params;
+                if (conduit.getTlsClientParameters() == null) {
+                    params = new TLSClientParameters();
+                    conduit.setTlsClientParameters(params);
+                } else {
+                    params = conduit.getTlsClientParameters();
+                }
+
+                if (ssl.getHostnameVerifier() != null) { // not really supported in CXF 2.6
+                    params.setUseHttpsURLConnectionDefaultHostnameVerifier(false);
+                }
+                if (ssl.getSslContext() != null) {
+                    params.setSSLSocketFactory(ssl.getSslContext().getSocketFactory());
+                }
+                if (ssl.getKeystore() != null) {
+                    try {
+                        final KeyManagerFactory tmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                        tmf.init(ssl.getKeystore(), ssl.getKeystorePassword().toCharArray());
+                        params.setKeyManagers(tmf.getKeyManagers());
+                    } catch (final Exception ex) {
+                        throw new IllegalArgumentException(ex);
+                    }
+                }
+            }
+
+            final ClientSecurity security = configuration.getSecurity();
+            if (security != null) {
+                final AuthorizationPolicy authorization = new AuthorizationPolicy();
+                authorization.setUserName(security.getUsername());
+                authorization.setPassword(security.getPassword());
+                authorization.setAuthorizationType(security.getType());
+                conduit.setAuthorization(authorization);
+            }
         } catch (final Exception e) {
             throw new IllegalArgumentException(e);
         }

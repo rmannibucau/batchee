@@ -28,23 +28,23 @@ public final class BatchEEJAXRSClientFactory {
         CXF, JAXRS2, AUTO
     }
 
-    public static JobOperator newClient(final String baseUrl, final Class<?> jsonProvider, final API api) {
+    public static JobOperator newClient(final ClientConfiguration configuration, final API api) {
         InvocationHandler handler;
         switch (api) {
             case AUTO:
                 try { // try JAXRS 2 first
-                    handler = new BatchEEJAXRS2Client(baseUrl, jsonProvider);
+                    handler = new BatchEEJAXRS2Client(configuration);
                 } catch (final Throwable th) {
-                    handler = new BatchEEJAXRS1CxfClient(baseUrl, jsonProvider);
+                    handler = new BatchEEJAXRS1CxfClient(configuration);
                 }
                 break;
 
             case CXF:
-                handler = new BatchEEJAXRS1CxfClient(baseUrl, jsonProvider);
+                handler = new BatchEEJAXRS1CxfClient(configuration);
                 break;
 
             case JAXRS2:
-                handler = new BatchEEJAXRS2Client(baseUrl, jsonProvider);
+                handler = new BatchEEJAXRS2Client(configuration);
                 break;
 
             default:
@@ -54,16 +54,14 @@ public final class BatchEEJAXRSClientFactory {
             Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), PROXY_API, handler));
     }
 
-    public static JobOperator newClient(final String baseUrl, final Class<?> jsonProvider) {
-        return newClient(baseUrl, jsonProvider, API.AUTO);
+    public static JobOperator newClient(final ClientConfiguration configuration) {
+        return newClient(configuration, API.AUTO);
     }
 
     public static JobOperator newClient(final String baseUrl) {
-        try {
-            return newClient(baseUrl, Thread.currentThread().getContextClassLoader().loadClass("com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"), API.AUTO);
-        } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Jackson not available");
-        }
+        final ClientConfiguration configuration = new ClientConfiguration();
+        configuration.setBaseUrl(baseUrl);
+        return newClient(configuration, API.AUTO);
     }
 
     private BatchEEJAXRSClientFactory() {

@@ -16,7 +16,6 @@
  */
 package org.apache.batchee.jaxrs.client;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
@@ -63,6 +62,8 @@ public class JAXRS2ClientTest extends ClientTestBase {
 
     @Override // this client hacks the class loader to be able to use jaxrs 2 api even if we use jaxrs 1 by default
     protected JobOperator newJobOperator(final int port) {
-        return BatchEEJAXRSClientFactory.newClient("http://localhost:" + port + "/", JacksonJsonProvider.class, BatchEEJAXRSClientFactory.API.JAXRS2);
+        final ClientConfiguration configuration = new ClientConfiguration();
+        configuration.setBaseUrl("http://localhost:" + port + "/");
+        return BatchEEJAXRSClientFactory.newClient(configuration, BatchEEJAXRSClientFactory.API.JAXRS2);
     }
 }

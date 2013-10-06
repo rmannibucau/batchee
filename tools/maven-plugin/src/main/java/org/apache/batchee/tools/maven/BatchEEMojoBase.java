@@ -18,6 +18,7 @@ package org.apache.batchee.tools.maven;
 
 import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.jaxrs.client.BatchEEJAXRSClientFactory;
+import org.apache.batchee.jaxrs.client.ClientConfiguration;
 import org.apache.batchee.tools.maven.locator.MavenPluginLocator;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -34,10 +35,10 @@ public abstract class BatchEEMojoBase extends AbstractMojo {
     protected Map<String, String> properties;
 
     /**
-     * when executed remotely the base url
+     * when executed remotely the client configuration
      */
-    @Parameter(property = "batchee.base-url")
-    private String baseUrl;
+    @Parameter
+    private ClientConfiguration clientConfiguration;
 
     /**
      * force to use a custom JobOperator
@@ -63,15 +64,11 @@ public abstract class BatchEEMojoBase extends AbstractMojo {
                         } catch (final Exception e) {
                             throw new IllegalArgumentException("JobOperator " + jobOperatorClass + " can't be used", e);
                         }
-                    } else if (baseUrl == null) {
+                    } else if (clientConfiguration == null) {
                         configureBatchEE();
                         operator = BatchRuntime.getJobOperator();
                     } else {
-                        try {
-                            operator = BatchEEJAXRSClientFactory.newClient(baseUrl, Thread.currentThread().getContextClassLoader().loadClass(jsonProvider));
-                        } catch (final ClassNotFoundException e) {
-                            throw new IllegalArgumentException("JSon provider " + jsonProvider + " can't be found", e);
-                        }
+                        operator = BatchEEJAXRSClientFactory.newClient(clientConfiguration);
                     }
                 }
             }

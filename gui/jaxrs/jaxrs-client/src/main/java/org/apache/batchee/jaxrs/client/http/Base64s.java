@@ -14,15 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.batchee.jaxrs.client;
+package org.apache.batchee.jaxrs.client.http;
 
-import javax.batch.operations.JobOperator;
-
-public class CxfClientTest extends ClientTestBase {
-    @Override
-    protected JobOperator newJobOperator(final int port) {
-        final ClientConfiguration configuration = new ClientConfiguration();
-        configuration.setBaseUrl("http://localhost:" + port + "/");
-        return BatchEEJAXRSClientFactory.newClient(configuration, BatchEEJAXRSClientFactory.API.CXF);
-    }
+public interface Base64s {
+    String BASIC_PREFIX = "BASIC ";
+    String AUTHORIZATION_HEADER = "Authorization";
 }

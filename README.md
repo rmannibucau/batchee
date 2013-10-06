@@ -1251,6 +1251,41 @@ The configuration through init parameters is:
 </plugin>
 ```
 
+#### Configuration for a remote BatchEE instance (JAX-RS client)
+
+```xml
+<plugin>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-maven-plugin</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <configuration>
+    <clientConfiguration>
+      <baseUrl>http://localhost:8080/myapp/</baseUrl>
+      <jsonProvider>com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider</jsonProvider>
+      <security>
+        <type>Basic</type>
+        <username>foo</username>
+        <password>bar</password>
+      </security>
+      <ssl>
+        <hostnameVerifier>org.MyHostVerifier</hostnameVerifier>
+        <keystorePassword>xxx</keystorePassword>
+        <keystoreType>JKS</keystoreType>
+        <keystorePath>/c/cert.crt</keystorePath>
+        <sslContextType>TLS</sslContextType>
+        <keyManagerType>SunX509</keyManagerType>
+        <keyManagerPath>/....</keyManagerPath>
+        <trustManagerAlgorithm>...</trustManagerAlgorithm>
+        <trustManagerProvider>...</trustManagerProvider>
+        <hostnameVerifier>org.MyHostVerifier</hostnameVerifier>
+      </ssl>
+    </clientConfiguration>
+  </configuration>
+</plugin>
+```
+
+
+
 #### Goals
 
 ```
@@ -1259,8 +1294,8 @@ batchee:abandon
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     executionId
       the executionId to abandon.
@@ -1280,8 +1315,8 @@ batchee:count-instance
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     jobName
       the job name to use to count job instances
@@ -1301,8 +1336,8 @@ batchee:execution
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     executionId
       the executionId to query.
@@ -1322,8 +1357,8 @@ batchee:executions
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     instanceId
       the instanceId to use to query job executions
@@ -1367,8 +1402,8 @@ batchee:instance
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     executionId
       the executionId to use to find the corresponding job instance
@@ -1388,8 +1423,8 @@ batchee:instances
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     count
       the maximum number of instance to bring back
@@ -1415,8 +1450,8 @@ batchee:job-names
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     jobOperatorClass
       force to use a custom JobOperator
@@ -1432,8 +1467,8 @@ batchee:parameters
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     executionId
       the executionId to query to find parameters
@@ -1453,8 +1488,8 @@ batchee:restart
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     executionId
       the executionId representing the execution to restart
@@ -1480,8 +1515,8 @@ batchee:running
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     jobName
       the job name used to query running executions
@@ -1504,8 +1539,8 @@ batchee:start
     additionalClasspathEntries
       manual entries added in the execution classpath
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     jobName
       the job name of the job to start
@@ -1535,8 +1570,8 @@ batchee:step-executions
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     executionId
       the executionId used to find step executions.
@@ -1556,8 +1591,8 @@ batchee:stop
 
   Available parameters:
 
-    baseUrl
-      when executed remotely the base url
+    clientConfiguration
+      when executed remotely the client configuration
 
     executionId
       the executionId of the execution to stop
@@ -1571,5 +1606,4 @@ batchee:stop
 
     properties
       the BatchEE properties when executed locally
-
 ```
