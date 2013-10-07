@@ -42,6 +42,7 @@ import javax.batch.runtime.BatchStatus;
 import javax.batch.runtime.JobExecution;
 import javax.batch.runtime.JobInstance;
 import javax.batch.runtime.StepExecution;
+import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -61,7 +62,12 @@ public class JobOperatorImpl implements JobOperator {
 
         if (Boolean.parseBoolean(ServicesManager.value("org.apache.batchee.jmx", "true"))) {
             try {
-                ManagementFactory.getPlatformMBeanServer().registerMBean(BatchEE.INSTANCE, new ObjectName(BatchEE.DEFAULT_OBJECT_NAME));
+                final MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
+                final ObjectName name = new ObjectName(BatchEE.DEFAULT_OBJECT_NAME);
+                if (platformMBeanServer.isRegistered(name)) {
+                    platformMBeanServer.unregisterMBean(name);
+                }
+                platformMBeanServer.registerMBean(BatchEE.INSTANCE, name);
             } catch (final Exception e) {
                 throw new IllegalStateException(e);
             }
