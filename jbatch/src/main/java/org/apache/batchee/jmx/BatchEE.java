@@ -40,7 +40,7 @@ import java.util.Set;
 
 public class BatchEE implements BatchEEMBean {
     public static final BatchEE INSTANCE = new BatchEE();
-    public static final String DEFAULT_OBJECT_NAME = "org.apache.batchee.batch:type=batchee,name=opearator";
+    public static final String DEFAULT_OBJECT_NAME = "org.apache.batchee.batch:type=batchee,name=operator";
 
     private static final JobOperator operator = BatchRuntime.getJobOperator();
 

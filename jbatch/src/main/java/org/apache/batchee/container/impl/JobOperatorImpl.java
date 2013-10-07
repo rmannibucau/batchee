@@ -63,10 +63,18 @@ public class JobOperatorImpl implements JobOperator {
         if (Boolean.parseBoolean(ServicesManager.value("org.apache.batchee.jmx", "true"))) {
             try {
                 final MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
-                final ObjectName name = new ObjectName(BatchEE.DEFAULT_OBJECT_NAME);
+                final String app = ServicesManager.value("org.apache.batchee.jmx.application", "");
+                final ObjectName name;
+                if (app.isEmpty()) {
+                    name = new ObjectName(BatchEE.DEFAULT_OBJECT_NAME);
+                } else {
+                    name = new ObjectName(BatchEE.DEFAULT_OBJECT_NAME + ",application=" + app);
+                }
+
                 if (platformMBeanServer.isRegistered(name)) {
                     platformMBeanServer.unregisterMBean(name);
                 }
+
                 platformMBeanServer.registerMBean(BatchEE.INSTANCE, name);
             } catch (final Exception e) {
                 throw new IllegalStateException(e);
