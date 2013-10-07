@@ -88,7 +88,7 @@ public class BatchCDIInjectionExtension implements Extension {
 
     private static BeanManager resolveBeanManagerViaJndi() {
         try {
-            return (BeanManager) new InitialContext().lookup("java:comp/BeanManager");
+            return BeanManager.class.cast(new InitialContext().lookup("java:comp/BeanManager"));
         } catch (final NamingException e) {
             return null;
         }

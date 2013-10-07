@@ -24,7 +24,6 @@ import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.naming.NamingException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Properties;
@@ -35,6 +34,10 @@ public class CDIBatchArtifactFactory extends DefaultBatchArtifactFactory impleme
     public Instance load(final String batchId) {
         try {
             final BeanManager bm = getBeanManager();
+            if (bm == null) {
+                return super.load(batchId);
+            }
+
             final Set<Bean<?>> beans = bm.getBeans(batchId);
             final Bean<?> bean = bm.resolve(beans);
             if (bean == null) { // fallback to try to instantiate it from TCCL as per the spec
@@ -43,7 +46,7 @@ public class CDIBatchArtifactFactory extends DefaultBatchArtifactFactory impleme
             final Class<?> clazz = bean.getBeanClass();
             final CreationalContext creationalContext = bm.createCreationalContext(bean);
             final Object artifactInstance = bm.getReference(bean, clazz, creationalContext);
-            if (Dependent.class.equals(bean.getScope())) { // need to be released
+            if (Dependent.class.equals(bean.getScope()) || !bm.isNormalScope(bean.getScope())) { // need to be released
                 return new Instance(artifactInstance, new Closeable() {
                     @Override
                     public void close() throws IOException {
@@ -63,7 +66,11 @@ public class CDIBatchArtifactFactory extends DefaultBatchArtifactFactory impleme
         // no-op
     }
 
-    protected BeanManager getBeanManager() throws NamingException {
-        return BatchCDIInjectionExtension.getInstance().getBeanManager();
+    protected BeanManager getBeanManager() {
+        final BatchCDIInjectionExtension instance = BatchCDIInjectionExtension.getInstance();
+        if (instance == null) {
+            return null;
+        }
+        return instance.getBeanManager();
     }
 }

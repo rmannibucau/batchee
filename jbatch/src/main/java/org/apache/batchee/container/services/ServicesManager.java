@@ -20,6 +20,7 @@ package org.apache.batchee.container.services;
 import org.apache.batchee.container.exception.BatchContainerRuntimeException;
 import org.apache.batchee.container.exception.BatchContainerServiceException;
 import org.apache.batchee.container.services.executor.DefaultThreadPoolService;
+import org.apache.batchee.container.services.factory.CDIBatchArtifactFactory;
 import org.apache.batchee.container.services.factory.DefaultBatchArtifactFactory;
 import org.apache.batchee.container.services.kernel.DefaultBatchKernel;
 import org.apache.batchee.container.services.loader.DefaultJobXMLLoaderService;
@@ -63,8 +64,13 @@ public class ServicesManager implements BatchContainerConstants {
         SERVICE_IMPL_CLASS_NAMES.put(BatchThreadPoolService.class.getName(), DefaultThreadPoolService.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(BatchKernelService.class.getName(), DefaultBatchKernel.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(JobXMLLoaderService.class.getName(), DefaultJobXMLLoaderService.class.getName());
-        SERVICE_IMPL_CLASS_NAMES.put(BatchArtifactFactory.class.getName(), DefaultBatchArtifactFactory.class.getName());
         SERVICE_IMPL_CLASS_NAMES.put(SecurityService.class.getName(), DefaultSecurityService.class.getName());
+        try {
+            Thread.currentThread().getContextClassLoader().loadClass("javax.enterprise.inject.spi.BeanManager");
+            SERVICE_IMPL_CLASS_NAMES.put(BatchArtifactFactory.class.getName(), CDIBatchArtifactFactory.class.getName());
+        } catch (final Throwable th) {
+            SERVICE_IMPL_CLASS_NAMES.put(BatchArtifactFactory.class.getName(), DefaultBatchArtifactFactory.class.getName());
+        }
 
         setServicesManagerLocator(SingletonLocator.INSTANCE); // default init
     }
