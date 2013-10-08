@@ -21,6 +21,7 @@
   <ref id="flatWriter" class="org.apache.batchee.extras.flat.FlatFileItemWriter" />
   <ref id="jdbcReader" class="org.apache.batchee.extras.jdbc.JdbcReader" />
   <ref id="jdbcWriter" class="org.apache.batchee.extras.jdbc.JdbcWriter" />
+  <ref id="jdbcBatchlet" class="org.apache.batchee.extras.jdbc.JdbcBatchlet" />
   <ref id="jpaReader" class="org.apache.batchee.extras.jpa.JpaItemReader" />
   <ref id="jpaWriter" class="org.apache.batchee.extras.jpa.JpaItemWriter" />
   <ref id="noopWriter" class="org.apache.batchee.extras.noop.NoopItemWriter" />

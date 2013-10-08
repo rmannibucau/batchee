@@ -60,21 +60,29 @@ public class JdbcReader extends JdbcConnectionConfiguration implements ItemReade
     public Object readItem() throws Exception {
         if (items.isEmpty()) {
             final Connection conn = connection();
-            final PreparedStatement preparedStatement = conn.prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            ResultSet resultSet = null;
             try {
-                resultSet = preparedStatement.executeQuery();
-                while (resultSet.next()) {
-                    items.add(mapper.getValue().map(resultSet));
-                }
-                if (items.isEmpty()) {
-                    return null;
+                final PreparedStatement preparedStatement = conn.prepareStatement(query,
+                    ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_UPDATABLE,
+                    ResultSet.HOLD_CURSORS_OVER_COMMIT);
+
+                ResultSet resultSet = null;
+                try {
+                    resultSet = preparedStatement.executeQuery();
+                    while (resultSet.next()) {
+                        items.add(mapper.getValue().map(resultSet));
+                    }
+                    if (items.isEmpty()) {
+                        return null;
+                    }
+                } finally {
+                    if (resultSet != null) {
+                        resultSet.close();
+                    }
+                    preparedStatement.close();
                 }
             } finally {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
-                preparedStatement.close();
+                conn.close();
             }
         }
         return items.pop();

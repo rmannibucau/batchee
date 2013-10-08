@@ -310,6 +310,39 @@ Configuration:
 
 Shortname: `flatWriter`
 
+### `org.apache.batchee.extras.jdbc.JdbcBatchlet`
+
+A simple `Batchlet` to execute sql.
+
+Sample:
+
+```xml
+<step id="step1">
+  <batchlet ref="jdbcBatchlet">
+    <properties>
+      <property name="sql" value="delete from Person p where p.name = 'forbidden'" />
+
+      <!-- connection info -->
+      <property name="driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
+      <property name="url" value="jdbc:derby:memory:jdbcbatchlet;create=true" />
+      <property name="user" value="app" />
+      <property name="password" value="app" />
+    </properties>
+  </batchlet>
+</step>
+```
+
+Configuration:
+
+* jndi: jndi name of the datasource to use
+* driver: jdbc driver to use if no jndi name was provided
+* url: jdbc url to use if no jndi name was provided
+* user: jdbc user to use if no jndi name was provided
+* password: jdbc password to use if no jndi name was provided
+* sql: the sql to execute
+
+Shortname: `jdbcBatchlet`
+
 ### `org.apache.batchee.extras.jdbc.JdbcReader`
 
 This reader execute a query while the query returns items.
