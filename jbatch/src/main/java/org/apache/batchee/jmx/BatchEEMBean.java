@@ -16,11 +16,11 @@
  */
 package org.apache.batchee.jmx;
 
-import javax.batch.runtime.JobExecution;
-import javax.batch.runtime.StepExecution;
 import javax.management.openmbean.TabularData;
 
 public interface BatchEEMBean {
+    String DEFAULT_OBJECT_NAME = "org.apache.batchee:type=batchee,name=operator";
+
     String[] getJobNames();
     int getJobInstanceCount(String jobName);
     TabularData getJobInstances(String jobName, int start, int count);

@@ -17,7 +17,7 @@
 package org.apache.batchee.servlet;
 
 import org.apache.batchee.container.services.ServicesManager;
-import org.apache.batchee.jmx.BatchEE;
+import org.apache.batchee.jmx.BatchEEMBean;
 import org.apache.batchee.spi.BatchThreadPoolService;
 
 import javax.management.MBeanServer;
@@ -43,7 +43,7 @@ public class CleanUpWebappListener implements ServletContextListener {
             // unregister jmx bean if deployed in an app
             final MBeanServer jmx = ManagementFactory.getPlatformMBeanServer();
             try {
-                final ObjectName objectName = new ObjectName(BatchEE.DEFAULT_OBJECT_NAME);
+                final ObjectName objectName = new ObjectName(BatchEEMBean.DEFAULT_OBJECT_NAME);
                 if (jmx.isRegistered(objectName)) {
                     jmx.unregisterMBean(objectName);
                 }

@@ -17,7 +17,7 @@
 package org.apache.batchee.test.jmx;
 
 import org.apache.batchee.container.services.ServicesManager;
-import org.apache.batchee.jmx.BatchEE;
+import org.apache.batchee.jmx.BatchEEMBean;
 import org.apache.batchee.spi.PersistenceManagerService;
 import org.apache.batchee.util.Batches;
 import org.testng.annotations.AfterClass;
@@ -45,7 +45,7 @@ public class JMXTest {
     @BeforeClass
     public static void createAJob() throws Exception {
         server = ManagementFactory.getPlatformMBeanServer();
-        on = new ObjectName(BatchEE.DEFAULT_OBJECT_NAME);
+        on = new ObjectName(BatchEEMBean.DEFAULT_OBJECT_NAME);
 
         final JobOperator jobOperator = BatchRuntime.getJobOperator();
         id = jobOperator.start("jmx", new Properties() {{ setProperty("foo", "bar"); }});

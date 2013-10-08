@@ -24,6 +24,7 @@ import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.jmx.BatchEE;
 import org.apache.batchee.jmx.BatchEEMBean;
+import org.apache.batchee.jmx.BatchEEMBeanImpl;
 import org.apache.batchee.spi.JobXMLLoaderService;
 import org.apache.batchee.spi.PersistenceManagerService;
 import org.apache.batchee.spi.SecurityService;
@@ -69,16 +70,19 @@ public class JobOperatorImpl implements JobOperator {
                 final String app = ServicesManager.value("org.apache.batchee.jmx.application", "");
                 final ObjectName name;
                 if (app.isEmpty()) {
-                    name = new ObjectName(BatchEE.DEFAULT_OBJECT_NAME);
+                    name = new ObjectName(BatchEEMBean.DEFAULT_OBJECT_NAME);
                 } else {
-                    name = new ObjectName(BatchEE.DEFAULT_OBJECT_NAME + ",application=" + app);
+                    name = new ObjectName(BatchEEMBean.DEFAULT_OBJECT_NAME + ",application=" + app);
                 }
 
                 if (platformMBeanServer.isRegistered(name)) {
                     platformMBeanServer.unregisterMBean(name);
                 }
 
-                platformMBeanServer.registerMBean(makeLoaderAware(BatchEEMBean.class, new Class<?>[]{ BatchEEMBean.class }, BatchEE.INSTANCE), name);
+                platformMBeanServer.registerMBean(
+                    new BatchEE(
+                        makeLoaderAware(BatchEEMBean.class, new Class<?>[]{ BatchEEMBean.class }, BatchEEMBeanImpl.INSTANCE)),
+                    name);
             } catch (final Exception e) {
                 throw new IllegalStateException(e);
             }
