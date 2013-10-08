@@ -18,6 +18,7 @@ package org.apache.batchee.container.proxy;
 
 import org.apache.batchee.container.impl.StepContextImpl;
 import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
+import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.jaxb.JSLJob;
 import org.apache.batchee.jaxb.Listener;
 import org.apache.batchee.jaxb.Listeners;
@@ -37,15 +38,17 @@ import javax.batch.api.chunk.listener.SkipWriteListener;
 import javax.batch.api.listener.JobListener;
 import javax.batch.api.listener.StepListener;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class ListenerFactory {
     private List<ListenerInfo> jobLevelListenerInfo = null;
 
-    private Map<String, List<ListenerInfo>> stepLevelListenerInfo = new HashMap<String, List<ListenerInfo>>();
+    private Map<String, List<ListenerInfo>> stepLevelListenerInfo = new ConcurrentHashMap<String, List<ListenerInfo>>();
 
     /*
      * Build job-level ListenerInfo(s) up-front, but build step-level ones
@@ -56,12 +59,31 @@ public class ListenerFactory {
 
         Listeners jobLevelListeners = jobModel.getListeners();
 
+        jobLevelListenerInfo.addAll(globalListeners("org.apache.batchee.job.listeners.before", injectionRefs, execution));
         if (jobLevelListeners != null) {
-            for (Listener listener : jobLevelListeners.getListenerList()) {
-                ListenerInfo info = buildListenerInfo(listener, injectionRefs, execution);
-                jobLevelListenerInfo.add(info);
+            for (final Listener listener : jobLevelListeners.getListenerList()) {
+                jobLevelListenerInfo.add(buildListenerInfo(listener, injectionRefs, execution));
             }
         }
+        jobLevelListenerInfo.addAll(globalListeners("org.apache.batchee.job.listeners.after", injectionRefs, execution));
+    }
+
+    private static Collection<ListenerInfo> globalListeners(final String key, final InjectionReferences injectionRefs, final RuntimeJobExecution execution) {
+        final String globalListeners = ServicesManager.value(key, null);
+        if (globalListeners != null) {
+            final String[] refs = globalListeners.split(",");
+
+            final Collection<ListenerInfo> list = new ArrayList<ListenerInfo>(refs.length);
+            for (final String ref : refs) {
+                final Listener listener = new Listener();
+                listener.setRef(ref);
+
+                list.add(buildListenerInfo(listener, injectionRefs, execution));
+            }
+
+            return list;
+        }
+        return Collections.emptyList();
     }
 
     /*
@@ -69,26 +91,32 @@ public class ListenerFactory {
      * 
      * @JobListener, even if that is the only type of listener annotation found.
      */
-    private synchronized List<ListenerInfo> getStepListenerInfo(final Step step, final InjectionReferences injectionRefs, final RuntimeJobExecution execution) {
-        if (!stepLevelListenerInfo.containsKey(step.getId())) {
-            List<ListenerInfo> stepListenerInfoList = new ArrayList<ListenerInfo>();
-            stepLevelListenerInfo.put(step.getId(), stepListenerInfoList);
+    private List<ListenerInfo> getStepListenerInfo(final Step step, final InjectionReferences injectionRefs, final RuntimeJobExecution execution) {
+        List<ListenerInfo> stepListenerInfoList = stepLevelListenerInfo.get(step.getId());
+        if (stepListenerInfoList == null) {
+            synchronized (this) {
+                stepListenerInfoList = stepLevelListenerInfo.get(step.getId());
+                if (stepListenerInfoList == null) {
+                    stepListenerInfoList = new ArrayList<ListenerInfo>();
+                    stepLevelListenerInfo.put(step.getId(), stepListenerInfoList);
 
-            Listeners stepLevelListeners = step.getListeners();
-            if (stepLevelListeners != null) {
-                for (Listener listener : stepLevelListeners.getListenerList()) {
-                    ListenerInfo info = buildListenerInfo(listener, injectionRefs, execution);
-                    stepListenerInfoList.add(info);
+                    stepListenerInfoList.addAll(globalListeners("org.apache.batchee.step.listeners.before", injectionRefs, execution));
+
+                    final Listeners stepLevelListeners = step.getListeners();
+                    if (stepLevelListeners != null) {
+                        for (final Listener listener : stepLevelListeners.getListenerList()) {
+                            stepListenerInfoList.add(buildListenerInfo(listener, injectionRefs, execution));
+                        }
+                    }
+
+                    stepListenerInfoList.addAll(globalListeners("org.apache.batchee.step.listeners.after", injectionRefs, execution));
                 }
             }
-
-            return stepListenerInfoList;
-        } else {
-            return stepLevelListenerInfo.get(step.getId());
         }
+        return stepListenerInfoList;
     }
 
-    private ListenerInfo buildListenerInfo(final Listener listener, final InjectionReferences injectionRefs, final RuntimeJobExecution execution) {
+    private static ListenerInfo buildListenerInfo(final Listener listener, final InjectionReferences injectionRefs, final RuntimeJobExecution execution) {
         final String id = listener.getRef();
         final List<Property> propList = (listener.getProperties() == null) ? null : listener.getProperties().getPropertyList();
 
@@ -265,7 +293,7 @@ public class ListenerFactory {
         return retVal;
     }
 
-    private class ListenerInfo {
+    private static class ListenerInfo {
         private Object listenerArtifact = null;
         private Class listenerArtifactClass = null;
 

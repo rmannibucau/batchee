@@ -21,49 +21,38 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>batchee-parent</artifactId>
+    <artifactId>batchee-extensions</artifactId>
     <groupId>org.apache.batchee</groupId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>batchee-extensions</artifactId>
-  <name>BatchEE :: Extensions</name>
-  <packaging>pom</packaging>
-
-  <modules>
-    <module>shiro</module>
-    <module>extras</module>
-    <module>beanio</module>
-    <module>camel</module>
-    <module>groovy</module>
-    <module>jsefa</module>
-    <module>jackson</module>
-    <module>cdi</module>
-  </modules>
+  <artifactId>batchee-cdi</artifactId>
+  <name>BatchEE :: Extensions :: CDI</name>
+  <description>This module implements some CDI scopes batch oriented.</description>
 
   <dependencies>
     <dependency>
-      <groupId>javax.batch</groupId>
-      <artifactId>javax.batch-api</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-atinject_1.0_spec</artifactId>
+      <artifactId>geronimo-jcdi_1.0_spec</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-jbatch</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-servlet_3.0_spec</artifactId>
+      <version>1.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-interceptor_1.1_spec</artifactId>
+      <version>1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.openwebbeans.test</groupId>
+      <artifactId>cditest-owb</artifactId>
+      <version>1.2.1-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

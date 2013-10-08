@@ -124,6 +124,22 @@ to add some dynamicity to batches.
 
 A simple integration with Apache Camel.
 
+
+### CDI
+#### Dependency
+
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-cdi</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
+
+#### Goal
+
+Provides basic batch oriented scopes (`@JobScoped` and `@StepScoped`).
+
 # Configuration
 ## batchee.properties
 
@@ -169,10 +185,14 @@ For instance to use shiro security service create a batchee.properties with:
 
 Some more configuration is available in batchee.properties:
 
-* org.apache.batchee.jmx: a boolean activating (by default) or not the JMX facade for the `JobOperator`
-* org.apache.batchee.jmx.application: a name to distinguish job operator between applications when batchee is not shared (will be shown in JMX name)
-* org.apache.batchee.init.verbose: boolean activating BatchEE logo print at startup
-* org.apache.batchee.init.verbose.sysout: use `System.out` to print BatchEE logo instead of JUL
+* `org.apache.batchee.jmx`: a boolean activating (by default) or not the JMX facade for the `JobOperator`
+* `org.apache.batchee.jmx.application`: a name to distinguish job operator between applications when batchee is not shared (will be shown in JMX name)
+* `org.apache.batchee.init.verbose`: boolean activating BatchEE logo print at startup
+* `org.apache.batchee.init.verbose.sysout`: use `System.out` to print BatchEE logo instead of JUL
+* `org.apache.batchee.step.listeners.before`: global step listener references executed before all others
+* `org.apache.batchee.step.listeners.after`: global step listener references executed after all others
+* `org.apache.batchee.job.listeners.before`: global job listener references executed before all others
+* `org.apache.batchee.job.listeners.after`: global job listener references executed after all others
 
 # Extensions
 ## Extras
@@ -1164,6 +1184,36 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 * fieldNameGeneratorClass: if skipRoot is not true or null it will be used to generate the field name (and force the root to be an object). "default" means use "item1", "item2", .... Otherwise set a qualified name `org.apache.batchee.jackson.FieldNameGenerator`.
 
 Shortname: `jacksonJSonWriter`
+
+
+###  CDI scopes
+
+`@org.apache.batchee.cdi.scope.JobScoped` allows you to define a bean scoped to a job execution.
+`@org.apache.batchee.cdi.scope.StepScoped` allows you to define a bean scoped to a step execution.
+
+To activate these scopes you need to define 4 listeners:
+* `org.apache.batchee.cdi.listener.BeforeJobScopeListener`
+* `org.apache.batchee.cdi.listener.AfterJobScopeListener`
+* `org.apache.batchee.cdi.listener.BeforeStepScopeListener`
+* `org.apache.batchee.cdi.listener.AfterStepScopeListener`
+
+If your implementation supports ordering on listeners use them to ensure `Before*` are executed first and
+`After*` are executed last. This will let you use these scopes in your own listeners. `*JobScopeListener` are
+`javax.batch.api.listener.JobListener` and `*StepScopeListener` are `javax.batch.api.listener.StepListener`.
+
+NB: these listeners are `@Named` so you can use their CDI name to reference them (not mandatory)
+
+If the implementation doesn't provide any ordering of the listeners be aware these scopes will only work
+in steps.
+
+For BatchEE you can add them in `batchee.properties` this way:
+
+```
+org.apache.batchee.job.listeners.before = beforeJobScopeListener
+org.apache.batchee.job.listeners.after = afterJobScopeListener
+org.apache.batchee.step.listeners.before = beforeStepScopeListener
+org.apache.batchee.step.listeners.after = afterStepScopeListener
+```
 
 ### GUI
 #### JAX-RS resource
