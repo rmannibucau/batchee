@@ -23,6 +23,12 @@ import java.lang.annotation.Annotation;
 import static org.apache.batchee.cdi.impl.LocationHolder.currentJob;
 
 public class JobContextImpl extends BaseContext<JobContextImpl.JobKey> {
+    public static final BaseContext<?> INSTANCE = new JobContextImpl();
+
+    private JobContextImpl() {
+        // no-op
+    }
+
     @Override
     public Class<? extends Annotation> getScope() {
         return JobScoped.class;

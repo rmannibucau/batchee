@@ -32,12 +32,12 @@ public abstract class LocationHolder {
         STEP.get().add(sc);
     }
 
-    protected static void exitStep() {
-        cleanUp(STEP);
+    protected static void exitStep(final BaseContext<?> context) {
+        cleanUp(context, STEP);
     }
 
-    protected static void exitJob() {
-        cleanUp(STEP);
+    protected static void exitJob(final BaseContext<?> context) {
+        cleanUp(context, JOB);
     }
 
     public static JobContext currentJob() {
@@ -52,7 +52,9 @@ public abstract class LocationHolder {
         return STEP.get();
     }
 
-    private static <T> void cleanUp(final StashThreadLocal<T> stash) {
+    private static <T, K> void cleanUp(final BaseContext<K> context, final StashThreadLocal<T> stash) {
+        context.endContext();
+
         final LinkedList<T> stepContexts = stash.get();
         stepContexts.removeLast();
         if (stepContexts.isEmpty()) {

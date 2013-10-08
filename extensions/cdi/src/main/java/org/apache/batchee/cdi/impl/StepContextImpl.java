@@ -25,6 +25,12 @@ import java.util.List;
 import static org.apache.batchee.cdi.impl.LocationHolder.currentSteps;
 
 public class StepContextImpl extends BaseContext<StepContextImpl.StepKey> {
+    public static final BaseContext<?> INSTANCE = new StepContextImpl();
+
+    private StepContextImpl() {
+        // no-op
+    }
+
     @Override
     public Class<? extends Annotation> getScope() {
         return StepScoped.class;

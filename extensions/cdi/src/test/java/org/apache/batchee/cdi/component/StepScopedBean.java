@@ -18,9 +18,12 @@ package org.apache.batchee.cdi.component;
 
 import org.apache.batchee.cdi.scope.StepScoped;
 
+import javax.annotation.PreDestroy;
+
 @StepScoped
 public class StepScopedBean {
     private long id;
+    private static boolean destroyed = false;
 
     public StepScopedBean() {
         this.id = System.nanoTime();
@@ -28,5 +31,14 @@ public class StepScopedBean {
 
     public long getId() {
         return id;
+    }
+
+    public static boolean isDestroyed() {
+        return destroyed;
+    }
+
+    @PreDestroy
+    void destroy() {
+        destroyed = true;
     }
 }

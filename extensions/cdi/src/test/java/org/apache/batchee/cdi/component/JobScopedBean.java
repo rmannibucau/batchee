@@ -18,9 +18,12 @@ package org.apache.batchee.cdi.component;
 
 import org.apache.batchee.cdi.scope.JobScoped;
 
+import javax.annotation.PreDestroy;
+
 @JobScoped
 public class JobScopedBean {
     private long id;
+    private static boolean destroyed = false;
 
     public JobScopedBean() {
         this.id = System.nanoTime();
@@ -28,5 +31,14 @@ public class JobScopedBean {
 
     public long getId() {
         return id;
+    }
+
+    public static boolean isDestroyed() {
+        return destroyed;
+    }
+
+    @PreDestroy
+    void destroy() {
+        destroyed = true;
     }
 }

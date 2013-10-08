@@ -17,6 +17,7 @@
 package org.apache.batchee.cdi.listener;
 
 import org.apache.batchee.cdi.impl.LocationHolder;
+import org.apache.batchee.cdi.impl.StepContextImpl;
 
 import javax.batch.api.listener.StepListener;
 import javax.inject.Named;
@@ -30,6 +31,6 @@ public class AfterStepScopeListener extends LocationHolder implements StepListen
 
     @Override
     public void afterStep() throws Exception {
-        exitStep();
+        exitStep(StepContextImpl.INSTANCE);
     }
 }

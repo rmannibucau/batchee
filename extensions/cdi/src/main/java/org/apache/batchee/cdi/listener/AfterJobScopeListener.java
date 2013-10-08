@@ -16,6 +16,7 @@
  */
 package org.apache.batchee.cdi.listener;
 
+import org.apache.batchee.cdi.impl.JobContextImpl;
 import org.apache.batchee.cdi.impl.LocationHolder;
 
 import javax.batch.api.listener.JobListener;
@@ -30,6 +31,6 @@ public class AfterJobScopeListener extends LocationHolder implements JobListener
 
     @Override
     public void afterJob() throws Exception {
-        exitJob();
+        exitJob(JobContextImpl.INSTANCE);
     }
 }

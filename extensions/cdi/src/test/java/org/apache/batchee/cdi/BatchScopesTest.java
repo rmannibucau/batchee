@@ -17,6 +17,8 @@
 package org.apache.batchee.cdi;
 
 import org.apache.batchee.cdi.component.Holder;
+import org.apache.batchee.cdi.component.JobScopedBean;
+import org.apache.batchee.cdi.component.StepScopedBean;
 import org.apache.batchee.cdi.testng.CdiContainerLifecycle;
 import org.apache.batchee.util.Batches;
 import org.testng.annotations.Listeners;
@@ -27,6 +29,7 @@ import javax.batch.runtime.BatchRuntime;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotSame;
+import static org.testng.Assert.assertTrue;
 
 @Listeners(CdiContainerLifecycle.class)
 public class BatchScopesTest {
@@ -40,5 +43,8 @@ public class BatchScopesTest {
 
         assertEquals(Holder.JOB_SCOPED_IDS.get(0), Holder.JOB_SCOPED_IDS.get(1));
         assertNotSame(Holder.STEP_SCOPED_IDS.get(0), Holder.STEP_SCOPED_IDS.get(1));
+
+        assertTrue(JobScopedBean.isDestroyed());
+        assertTrue(StepScopedBean.isDestroyed());
     }
 }
