@@ -88,11 +88,15 @@ public class BatchEE implements BatchEEMBean {
         }
     }
 
-    private static Properties toProperties(final String restartParameters) {
-        Properties properties = new Properties();
-        if (restartParameters != null) {
-            for (final String kv : restartParameters.split("|")) {
+    private static Properties toProperties(final String params) {
+        final Properties properties = new Properties();
+        if (params != null && !params.isEmpty()) {
+            for (final String kv : params.split("|")) {
                 final String[] split = kv.split("=");
+                if (split.length == 1) {
+                    continue;
+                }
+
                 properties.setProperty(split[0], split[1]);
             }
         }
