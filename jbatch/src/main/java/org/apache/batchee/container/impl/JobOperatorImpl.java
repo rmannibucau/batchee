@@ -23,6 +23,7 @@ import org.apache.batchee.container.services.JobStatusManagerService;
 import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.container.status.JobStatus;
 import org.apache.batchee.jmx.BatchEE;
+import org.apache.batchee.jmx.BatchEEMBean;
 import org.apache.batchee.spi.JobXMLLoaderService;
 import org.apache.batchee.spi.PersistenceManagerService;
 import org.apache.batchee.spi.SecurityService;
@@ -55,6 +56,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import static org.apache.batchee.container.util.ClassLoaderAwareHandler.makeLoaderAware;
+
 
 public class JobOperatorImpl implements JobOperator {
     static {
@@ -75,7 +78,7 @@ public class JobOperatorImpl implements JobOperator {
                     platformMBeanServer.unregisterMBean(name);
                 }
 
-                platformMBeanServer.registerMBean(BatchEE.INSTANCE, name);
+                platformMBeanServer.registerMBean(makeLoaderAware(BatchEEMBean.class, new Class<?>[]{ BatchEEMBean.class }, BatchEE.INSTANCE), name);
             } catch (final Exception e) {
                 throw new IllegalStateException(e);
             }
