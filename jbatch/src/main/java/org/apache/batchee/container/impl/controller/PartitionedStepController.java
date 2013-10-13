@@ -302,10 +302,11 @@ public class PartitionedStepController extends BaseStepController {
 
         //Start up to to the max num we are allowed from the num threads attribute
         for (int i = 0; i < this.threads && i < numTotalForThisExecution; i++, numCurrentSubmitted++) {
+            final BatchWorkUnit workUnit = parallelBatchWorkUnits.get(i);
             if (stepStatus.getStartCount() > 1 && !plan.getPartitionsOverride()) {
-                BATCH_KERNEL.restartGeneratedJob(parallelBatchWorkUnits.get(i));
+                BATCH_KERNEL.restartGeneratedJob(workUnit);
             } else {
-                BATCH_KERNEL.startGeneratedJob(parallelBatchWorkUnits.get(i));
+                BATCH_KERNEL.startGeneratedJob(workUnit);
             }
         }
 

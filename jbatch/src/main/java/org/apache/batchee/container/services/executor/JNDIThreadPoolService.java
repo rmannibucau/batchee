@@ -25,6 +25,8 @@ import javax.naming.NamingException;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
+import static org.apache.batchee.container.util.ClassLoaderAwareHandler.runnableLoaderAware;
+
 public class JNDIThreadPoolService implements BatchThreadPoolService {
     public static final String THREADPOOL_JNDI_LOCATION = "thread-pool.jndi";
 
@@ -42,7 +44,7 @@ public class JNDIThreadPoolService implements BatchThreadPoolService {
         try {
             final Context ctx = new InitialContext();
             final ExecutorService delegateService = (ExecutorService) ctx.lookup(jndiLocation);
-            delegateService.execute(work);
+            delegateService.execute(runnableLoaderAware(work));
         } catch (final NamingException e) {
             throw new BatchContainerServiceException(e);
         }

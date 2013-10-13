@@ -23,7 +23,6 @@ import org.apache.batchee.container.impl.jobinstance.RuntimeFlowInSplitExecution
 import org.apache.batchee.container.impl.jobinstance.RuntimeJobExecution;
 import org.apache.batchee.container.services.BatchKernelService;
 import org.apache.batchee.container.services.InternalJobExecution;
-import org.apache.batchee.spi.PersistenceManagerService;
 import org.apache.batchee.container.services.ServicesManager;
 import org.apache.batchee.container.util.BatchFlowInSplitWorkUnit;
 import org.apache.batchee.container.util.BatchPartitionWorkUnit;
@@ -32,6 +31,7 @@ import org.apache.batchee.container.util.FlowInSplitBuilderConfig;
 import org.apache.batchee.container.util.PartitionsBuilderConfig;
 import org.apache.batchee.jaxb.JSLJob;
 import org.apache.batchee.spi.BatchThreadPoolService;
+import org.apache.batchee.spi.PersistenceManagerService;
 
 import javax.batch.operations.JobExecutionAlreadyCompleteException;
 import javax.batch.operations.JobExecutionNotMostRecentException;

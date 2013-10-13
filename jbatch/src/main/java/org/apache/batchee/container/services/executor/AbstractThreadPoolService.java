@@ -17,15 +17,14 @@
 package org.apache.batchee.container.services.executor;
 
 import org.apache.batchee.container.exception.BatchContainerServiceException;
-import org.apache.batchee.container.util.ClassLoaderAwareHandler;
 import org.apache.batchee.spi.BatchThreadPoolService;
 
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
-public abstract class AbstractThreadPoolService implements BatchThreadPoolService {
-    private static final Class<?>[] RUNNABLE_API = new Class<?>[]{ Runnable.class };
+import static org.apache.batchee.container.util.ClassLoaderAwareHandler.runnableLoaderAware;
 
+public abstract class AbstractThreadPoolService implements BatchThreadPoolService {
     protected ExecutorService executorService;
 
     protected abstract ExecutorService newExecutorService(Properties batchConfig);
@@ -43,6 +42,6 @@ public abstract class AbstractThreadPoolService implements BatchThreadPoolServic
 
     @Override
     public void executeTask(final Runnable work, final Object config) {
-        executorService.execute(ClassLoaderAwareHandler.makeLoaderAware(Runnable.class, RUNNABLE_API, work));
+        executorService.execute(runnableLoaderAware(work));
     }
 }

@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Properties;
 
 public interface BatchKernelService extends BatchService {
-
     InternalJobExecution getJobExecution(long executionId) throws NoSuchJobExecutionException;
 
     InternalJobExecution restartJob(long executionID, Properties overrideJobParameters) throws JobRestartException, JobExecutionAlreadyCompleteException, JobExecutionNotMostRecentException, NoSuchJobExecutionException;

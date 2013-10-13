@@ -21,6 +21,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 public class ClassLoaderAwareHandler implements InvocationHandler {
+    private static final Class<?>[] RUNNABLE_API = new Class<?>[]{Runnable.class};
+
     private final ClassLoader loader;
     private final Object delegate;
 
@@ -43,5 +45,10 @@ public class ClassLoaderAwareHandler implements InvocationHandler {
     public static <T> T makeLoaderAware(final Class<T> mainApi, final Class<?>[] clazz, final Object instance) {
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         return mainApi.cast(Proxy.newProxyInstance(contextClassLoader, clazz, new ClassLoaderAwareHandler(contextClassLoader, instance)));
+    }
+
+    public static Runnable runnableLoaderAware(final Object instance) { // too common to not get a shortcut
+        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        return Runnable.class.cast(Proxy.newProxyInstance(contextClassLoader, RUNNABLE_API, new ClassLoaderAwareHandler(contextClassLoader, instance)));
     }
 }
