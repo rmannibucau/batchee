@@ -31,6 +31,23 @@ Implements JBatch (aka JSR 352).
 
 A simple integration with Apache Shiro to check permissions when running a batch.
 
+
+### Hazelcast
+#### Dependency
+
+```xml
+<dependency>
+  <groupId>org.apache.batchee</groupId>
+  <artifactId>batchee-hazelcast</artifactId>
+  <version>${batchee.version}</version>
+</dependency>
+```
+
+#### Goal
+
+A module based on Hazelcast API to allow distributed locks.
+
+
 ### GUI/Web module
 #### Dependency
 
@@ -1218,6 +1235,59 @@ Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for d
 
 Shortname: `jacksonJSonWriter`
 
+###  `org.apache.batchee.hazelcast.HazelcastLockBatchlet`
+
+A batchlet getting a hazelcast lock.
+
+Sample:
+
+```xml
+<step id="lock" next="check-lock">
+  <batchlet ref="hazelcastLock">
+    <properties>
+      <property name="instanceName" value="batchee-test"/>
+      <property name="lockName" value="batchee-lock"/>
+    </properties>
+  </batchlet>
+</step>
+```
+
+Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
+
+* local: a boolean to determine if the `HazelcastInstance` is local or remote (ie if the `HazelcastInstance` is a member of the cluster or a client)
+* instanceName: the instance name when `local = true`
+* xmlConfiguration: the xml configuration of the instance
+* lockName: the lock name to use
+* tryDuration: if set the lock is tried to be hold for this duration
+* tryDurationUnit: the unit to use to try to get the lock (see `tryDuration`)
+
+Shortname: `hazelcastLock`
+
+###  `org.apache.batchee.hazelcast.HazelcastUnlockBatchlet`
+
+A batchlet releasing a hazelcast lock.
+
+Sample:
+
+```xml
+<step id="unlock" next="check-unlock">
+  <batchlet ref="hazelcastUnlock">
+    <properties>
+      <property name="instanceName" value="batchee-test"/>
+      <property name="lockName" value="batchee-lock"/>
+    </properties>
+  </batchlet>
+</step>
+```
+
+Configuration (excepted for file see org.jsefa.flr.config.FlrConfiguration for detail):
+
+* local: a boolean to determine if the `HazelcastInstance` is local or remote (ie if the `HazelcastInstance` is a member of the cluster or a client)
+* instanceName: the instance name when `local = true`
+* xmlConfiguration: the xml configuration of the instance
+* lockName: the lock name to use
+
+Shortname: `hazelcastUnlock`
 
 ###  CDI scopes
 

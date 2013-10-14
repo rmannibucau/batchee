@@ -21,50 +21,34 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>batchee-parent</artifactId>
+    <artifactId>batchee-extensions</artifactId>
     <groupId>org.apache.batchee</groupId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>batchee-extensions</artifactId>
-  <name>BatchEE :: Extensions</name>
-  <packaging>pom</packaging>
-
-  <modules>
-    <module>shiro</module>
-    <module>extras</module>
-    <module>beanio</module>
-    <module>camel</module>
-    <module>groovy</module>
-    <module>jsefa</module>
-    <module>jackson</module>
-    <module>cdi</module>
-    <module>hazelcast</module>
-  </modules>
+  <artifactId>batchee-hazelcast</artifactId>
+  <name>BatchEE :: Extensions :: Hazelcast</name>
 
   <dependencies>
     <dependency>
-      <groupId>javax.batch</groupId>
-      <artifactId>javax.batch-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-atinject_1.0_spec</artifactId>
+      <groupId>com.hazelcast</groupId>
+      <artifactId>hazelcast</artifactId>
+      <version>${hazelcast.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.hazelcast</groupId>
+      <artifactId>hazelcast-client</artifactId>
+      <version>${hazelcast.version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.batchee</groupId>
-      <artifactId>batchee-jbatch</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
-    </dependency>
   </dependencies>
+
+  <properties>
+    <hazelcast.version>3.1</hazelcast.version>
+  </properties>
 </project>
