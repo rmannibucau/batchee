@@ -32,9 +32,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>javax.batch</groupId>
-      <artifactId>javax.batch-api</artifactId>
-      <scope>compile</scope>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jbatch_1.0_spec</artifactId>
+        <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.batchee</groupId>

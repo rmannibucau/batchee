@@ -31,8 +31,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>javax.batch</groupId>
-      <artifactId>javax.batch-api</artifactId>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jbatch_1.0_spec</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -139,14 +139,9 @@
             <version>${atinject.version}</version>
           </dependency>
           <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-atinject_1.0_spec</artifactId>
-            <version>${atinject.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>javax.batch</groupId>
-            <artifactId>javax.batch-api</artifactId>
-            <version>${batch-api.version}</version>
+              <groupId>org.apache.geronimo.specs</groupId>
+              <artifactId>geronimo-jbatch_1.0_spec</artifactId>
+              <version>${batch-api.version}</version>
           </dependency>
           <dependency>
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
