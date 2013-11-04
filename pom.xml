@@ -61,6 +61,7 @@
         <module>extensions</module>
         <module>gui</module>
         <module>tools</module>
+        <module>samples</module>
     </modules>
 
     <dependencyManagement>
