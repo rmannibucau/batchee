@@ -37,7 +37,7 @@ public abstract class JobActionMojoBase extends BatchEEMojoBase {
     /**
      * wait or not the end of this task before exiting maven plugin execution.
      */
-    @Parameter(property = "batchee.wait", defaultValue = "false")
+    @Parameter(property = "batchee.wait", defaultValue = "true")
     protected boolean wait;
 
     protected static Properties toProperties(final Map<String, String> jobParameters) {
